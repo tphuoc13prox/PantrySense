@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PantrySense</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <h1 class="app-title">PantrySense</h1>
+      <p class="app-subtitle">What ingredients do you have?</p>
+    </header>
+
+    <!-- Search View -->
+    <main id="search-view" class="view">
+      <section class="input-section">
+        <form id="ingredient-form" class="ingredient-form" onsubmit="return false;">
+          <input
+            type="text"
+            id="ingredient-input"
+            class="ingredient-input"
+            placeholder="e.g. Chicken, Tomato, Egg"
+            autocomplete="off"
+            aria-label="Enter ingredient"
+          />
+          <button type="button" id="add-btn" class="btn btn-secondary">Add</button>
+        </form>
+
+        <div class="ingredients-container">
+          <div class="section-label">Current ingredients</div>
+          <div id="ingredient-chips" class="ingredient-chips">
+            <span class="placeholder-text">No ingredients added yet. Type an ingredient above and click Add.</span>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="search-btn" class="btn btn-primary">Find Recipes</button>
+          <button type="button" id="clear-btn" class="btn btn-outline">Clear</button>
+        </div>
+      </section>
+
+      <!-- Status / Loader Area -->
+      <div id="status-message" class="status-message hidden" role="status"></div>
+
+      <!-- Results Section -->
+      <section id="results-section" class="results-section hidden">
+        <h2 class="section-title">Possible Meals</h2>
+        <div id="recipe-list" class="recipe-list"></div>
+      </section>
+    </main>
+
+    <!-- Recipe Detail View -->
+    <main id="detail-view" class="view hidden">
+      <button type="button" id="back-btn" class="btn btn-outline back-btn">
+        &larr; Back to Results
+      </button>
+
+      <div id="detail-status-message" class="status-message hidden" role="status"></div>
+
+      <article id="recipe-detail-content" class="recipe-detail-content hidden">
+        <h2 id="detail-title" class="recipe-detail-title"></h2>
+
+        <div class="recipe-meta">
+          <span id="detail-time" class="meta-badge"></span>
+          <span id="detail-difficulty" class="meta-badge"></span>
+          <span id="detail-servings" class="meta-badge"></span>
+          <span id="detail-category" class="meta-badge"></span>
+        </div>
+
+        <section class="detail-section">
+          <h3 class="detail-section-title">Ingredients</h3>
+          <ul id="detail-ingredients" class="ingredient-list"></ul>
+        </section>
+
+        <section class="detail-section">
+          <h3 class="detail-section-title">Instructions</h3>
+          <ol id="detail-instructions" class="instruction-list"></ol>
+        </section>
+      </article>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
