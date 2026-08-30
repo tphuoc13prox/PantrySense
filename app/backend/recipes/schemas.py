@@ -16,7 +16,10 @@ class RecipeSummary(BaseModel):
     required_count: int = 0
     coverage: float = 0.0
     semantic_score: float | None = None
+    bm25_score: float | None = None
+    rrf_score: float | None = None
     retrieval_rank: int | None = None
+
 
 
 class RecipeSearchResponse(BaseModel):
