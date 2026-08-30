@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_DB_PATH = BASE_DIR / "data" / "recipes.db"
 DEFAULT_VECTOR_INDEX_PATH = BASE_DIR / "data" / "recipe_vectors.index"
 DEFAULT_VECTOR_IDS_PATH = BASE_DIR / "data" / "recipe_vector_ids.json"
+DEFAULT_BM25_INDEX_PATH = BASE_DIR / "data" / "recipe_bm25.json"
 
 
 def get_database_path() -> Path:
@@ -23,7 +24,7 @@ def get_match_threshold() -> float:
 
 
 def get_retrieval_mode() -> str:
-    return os.getenv("PANTRYSENSE_RETRIEVAL_MODE", "semantic").strip().lower()
+    return os.getenv("PANTRYSENSE_RETRIEVAL_MODE", "hybrid").strip().lower()
 
 
 def get_embedding_model_name() -> str:
@@ -44,6 +45,14 @@ def get_vector_index_path() -> Path:
 
 def get_vector_ids_path() -> Path:
     return Path(os.getenv("PANTRYSENSE_VECTOR_IDS_PATH", DEFAULT_VECTOR_IDS_PATH))
+
+
+def get_bm25_index_path() -> Path:
+    return Path(os.getenv("PANTRYSENSE_BM25_INDEX_PATH", DEFAULT_BM25_INDEX_PATH))
+
+
+def get_rrf_k() -> int:
+    return int(os.getenv("PANTRYSENSE_RRF_K", "60"))
 
 
 def get_auto_open_browser() -> bool:

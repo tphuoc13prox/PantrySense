@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from app.backend.api.recipes import router as recipes_router
 from app.backend.config import (
     get_auto_open_browser,
+    get_bm25_index_path,
     get_retrieval_mode,
     get_vector_ids_path,
     get_vector_index_path,
@@ -39,17 +40,25 @@ def _open_default_browser() -> None:
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     initialize_database()
 
-    # Check semantic retrieval index status on startup
-    if get_retrieval_mode() == "semantic":
-        index_path = get_vector_index_path()
+    # Smart Auto-Build on first startup if indices are missing
+    mode = get_retrieval_mode()
+    if mode in ("semantic", "hybrid", "lexical"):
         ids_path = get_vector_ids_path()
-        if not ids_path.exists():
-            logger.warning(
-                "Semantic index not found at '%s'. Run 'python scripts/build_vector_index.py' to build the index.",
-                index_path,
-            )
+        bm25_path = get_bm25_index_path()
+
+        sem_missing = mode in ("semantic", "hybrid") and not ids_path.exists()
+        bm25_missing = mode in ("lexical", "hybrid") and not bm25_path.exists()
+
+        if sem_missing or bm25_missing:
+            logger.info("Retrieval index files missing for mode '%s'. Automatically building indices...", mode)
+            try:
+                from scripts.build_vector_index import build_indices
+                build_indices()
+                logger.info("Auto-built retrieval indices successfully.")
+            except Exception as e:
+                logger.error("Failed to auto-build indices: %s", e)
         else:
-            logger.info("Semantic vector index detected at '%s'.", index_path)
+            logger.info("Retrieval indices verified for mode '%s'.", mode)
 
     # Start heartbeat monitor
     monitor = get_heartbeat_monitor()
@@ -65,7 +74,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await monitor.stop()
 
 
-app = FastAPI(title="PantrySense API", version="0.4.1", lifespan=lifespan)
+app = FastAPI(title="PantrySense API", version="0.5.0", lifespan=lifespan)
 app.include_router(recipes_router)
 app.include_router(system_router)
 

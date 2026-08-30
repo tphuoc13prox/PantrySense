@@ -1,8 +1,8 @@
 # PantrySense
 
-PantrySense is an offline-first, local AI/ML-oriented recipe discovery application. In v0.4.1, PantrySense features local **Semantic Retrieval** (Sentence Transformers + FAISS), auto-opens the default external browser tab upon startup, and automatically shuts down the server when all browser tabs have been closed for 10 seconds.
+PantrySense is an offline-first, local AI/ML-oriented recipe discovery and recommendation application. In v0.5.0, PantrySense introduces **Hybrid Retrieval**, combining **Sparse Lexical Matching (BM25)** with **Dense Semantic Vector Search (FAISS)** using **Reciprocal Rank Fusion (RRF)** for optimal candidate recipe retrieval, backed by deterministic ingredient feasibility analysis.
 
-Current version: v0.4.1
+Current version: v0.5.0
 
 ## Architecture
 
@@ -15,75 +15,79 @@ Current version: v0.4.1
                                             ▼
                                   RecipeSearchService
                                             │
-                      ┌─────────────────────┴─────────────────────┐
-                      ▼                                           ▼
-             Rule-Based Mode                               Semantic Mode
-                      │                                           │
-                      │                                    Normalized Query
-                      │                                           │
-                      │                                  Query Representation
-                      │                                           │
-                      │                                 IngredientEmbedder
-                      │                                 (all-MiniLM-L6-v2)
-                      │                                           │
-                      │                                   FaissVectorStore
-                      │                                   (IndexFlatIP Search)
-                      │                                           │
-                      │                                Top-K Candidates (IDs)
-                      │                                           │
-                      └─────────────────────┬─────────────────────┘
-                                            ▼
-                               Candidate Database Fetch
-                                            │
-                                            ▼
-                               IngredientMatcher (v0.3.x)
-                                 ├── Matched Ingredients
-                                 ├── Missing Ingredients
-                                 └── Coverage Ratio
-                                            │
-                                            ▼
-                                 RecipeRanker (v0.3.x)
-                                            │
-                                            ▼
-                                      Recipe Results
+           ┌────────────────────────────────┼────────────────────────────────┐
+           ▼                                ▼                                ▼
+    Rule-Based Mode                  Semantic Mode                     Hybrid Mode
+        (v0.3)                           (v0.4)                       (v0.5 MỚI)
+           │                                │                                │
+           │                                │                ┌───────────────┴───────────────┐
+           │                                │                ▼                               ▼
+           │                                │           Sparse BM25                     Dense FAISS
+           │                                │         (Lexical Match)                (Semantic Vector)
+           │                                │                │                               │
+           │                                │                └───────────────┬───────────────┘
+           │                                │                                ▼
+           │                                │                     Reciprocal Rank Fusion
+           │                                │                             (RRF)
+           │                                │                                │
+           │                                └────────────────┬───────────────┘
+           │                                                 ▼
+           └────────────────────────────────────────┬────────┘
+                                                    ▼
+                                         Top-K Candidate Recipes
+                                                    │
+                                                    ▼
+                                        Ingredient Feasibility (v0.3.x)
+                                          ├── Matched Ingredients
+                                          ├── Missing Ingredients
+                                          └── Coverage Calculation
+                                                    │
+                                                    ▼
+                                          RecipeRanker (v0.3.x)
+                                                    │
+                                                    ▼
+                                              Final Results
 ```
 
-### Candidate Generation vs. Feasibility Analysis
-- **Semantic Retrieval**: Answers *"Which recipes might be semantically relevant to the user's ingredients?"*
-- **Ingredient Matching**: Answers *"How well do the user's ingredients actually satisfy the candidate recipes?"*
+### Why Hybrid Retrieval?
+- **Sparse BM25**: Excels at exact keyword matching and rare/unique ingredient terms.
+- **Dense FAISS**: Excels at semantic context, synonyms, and morphological variations.
+- **Reciprocal Rank Fusion (RRF)**: Merges ranked candidate lists without needing fragile score calibration:
+  $$\text{RRF\_Score}(d) = \sum_{m \in \{\text{Dense}, \text{Sparse}\}} \frac{1}{k + \text{rank}_m(d)} \quad (k=60)$$
 
 ## Implemented Features
 
 - Local web application UI (HTML5, Vanilla CSS, Vanilla JavaScript).
 - **Auto-Open Browser**: Automatically opens a new tab in your default browser once the server is ready.
-- **Auto-Shutdown on Inactivity**: Tracks active browser tabs via client heartbeat. If no active tab is detected for **10 seconds** (after an initial 15s startup grace period), the server automatically shuts down cleanly to release resources.
-- **Local Semantic Retrieval Layer**:
-  - `sentence-transformers/all-MiniLM-L6-v2` (384-dimensional dense vectors)
-  - `FAISS` (`IndexFlatIP` cosine similarity search) with NumPy fallback
-  - Deterministic recipe and user query representations
-  - Pre-built offline index (loaded once at startup)
-- **Dual Retrieval Modes** (`PANTRYSENSE_RETRIEVAL_MODE`):
-  - `semantic` (default): Dense candidate retrieval followed by ingredient feasibility analysis.
+- **Auto-Shutdown on Inactivity**: Automatically shuts down server when no active tabs remain for 10 seconds.
+- **Hybrid Retrieval Layer (v0.5.0)**:
+  - BM25Okapi sparse lexical indexing and scoring.
+  - Sentence Transformers (`all-MiniLM-L6-v2`) dense vector embedding.
+  - FAISS (`IndexFlatIP`) cosine similarity search.
+  - Reciprocal Rank Fusion (RRF) candidate fusion.
+- **Multi-Mode Retrieval Toggle (`PANTRYSENSE_RETRIEVAL_MODE`)**:
+  - `hybrid` (default): BM25 + FAISS + RRF.
+  - `semantic`: FAISS dense retrieval only.
+  - `lexical`: BM25 sparse lexical search only.
   - `rule_based`: Deterministic v0.3.x set-matching baseline.
 - Deterministic Ingredient Matching: matched ingredients, missing ingredients, matched count, required count, and coverage.
 - Single-page view switching between search results and recipe details (with back navigation).
-- Offline Vector Index Build Script (`scripts/build_vector_index.py`).
-- Empirical Retrieval Benchmark Script (`scripts/evaluate_retrieval.py`).
-- Full automated test suite covering unit tests, vector store, retriever, heartbeat monitor, and regression.
+- Offline Vector & BM25 Index Build Script (`scripts/build_vector_index.py`).
+- 4-Way Retrieval Benchmark Script (`scripts/evaluate_retrieval.py`).
+- Full automated test suite covering unit tests, vector store, BM25, RRF fusion, retriever, heartbeat monitor, and regression.
 
-## Not Implemented in v0.4.1
+## Not Implemented in v0.5.0
 
-- BM25 / Sparse lexical indexing
-- Reciprocal Rank Fusion (RRF) / Hybrid Fusion
 - Learning-to-Rank / Machine Learning Ranking (LambdaMART, LightGBM)
 - User Personalization & Cooking history
+- Controlled Ingredient Autocomplete / Pantry Management (v0.8.0)
 - Computer Vision / Image ingredient recognition
 - Cloud / LLM external APIs
 
 ## Requirements
 
 - Python 3.11 or newer
-- Dependencies in `requirements.txt` (FastAPI, Uvicorn, pytest, httpx, sentence-transformers, faiss-cpu, numpy)
+- Dependencies in `requirements.txt` (FastAPI, Uvicorn, pytest, httpx, sentence-transformers, faiss-cpu, numpy, rank-bm25)
 
 ## Installation
 
@@ -91,18 +95,22 @@ Current version: v0.4.1
 python -m pip install -r requirements.txt
 ```
 
-## First-Time Setup: Build the Vector Index
+## Indexing & First-Time Setup
 
-Generate the local SQLite database and pre-compute recipe vector embeddings:
+PantrySense features **Smart Auto-Indexing**: when starting the server, if index files are missing, it will automatically compute and cache them on the first run.
+
+You can also manually build or refresh the indices anytime:
 
 ```powershell
 python scripts/build_vector_index.py
 ```
 
-This will create:
+This generates:
 - `data/recipes.db` (SQLite recipe database)
 - `data/recipe_vectors.index` (FAISS vector index)
 - `data/recipe_vector_ids.json` (ID mappings and index metadata)
+- `data/recipe_bm25.json` (BM25 lexical index)
+
 
 ## Run the Application
 
@@ -113,13 +121,13 @@ python -m uvicorn app.backend.main:app --host 127.0.0.1 --port 8000
 ```
 
 > **Behavior**:
-> 1. The server starts up and loads the SQLite database and FAISS index.
-> 2. Once ready, a new tab opens automatically in your default external browser at `http://localhost:8000`.
-> 3. When you close all PantrySense browser tabs, the server automatically shuts down after **10 seconds** of inactivity.
+> 1. Server starts and loads SQLite, FAISS, and BM25 indices.
+> 2. Automatically opens your default external browser at `http://localhost:8000`.
+> 3. Automatically shuts down after **10 seconds** if all PantrySense tabs are closed.
 
-## Retrieval Benchmark Evaluation
+## Multi-Mode Benchmark Evaluation
 
-Compare retrieval accuracy between Rule-Based and Semantic Retrieval across 5 benchmark categories (Synonyms, Morphology, Specific/General, Multi-ingredient, Negative queries):
+Compare retrieval accuracy across all 4 modes (Rule-Based vs. BM25 vs. Semantic vs. Hybrid):
 
 ```powershell
 python scripts/evaluate_retrieval.py
@@ -131,24 +139,20 @@ You can configure PantrySense using environment variables:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PANTRYSENSE_AUTO_OPEN_BROWSER` | `true` | Automatically open default browser upon server startup (`true`/`false`). |
-| `PANTRYSENSE_AUTO_SHUTDOWN` | `true` | Automatically shut down server when no active tabs remain (`true`/`false`). |
-| `PANTRYSENSE_INACTIVE_TIMEOUT` | `10.0` | Inactivity duration (in seconds) before automatic shutdown. |
-| `PANTRYSENSE_STARTUP_GRACE_PERIOD` | `15.0` | Initial grace period (in seconds) allowing browser to open and connect. |
-| `PANTRYSENSE_RETRIEVAL_MODE` | `semantic` | Retrieval mode: `semantic` or `rule_based`. |
-| `PANTRYSENSE_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Hugging Face model identifier for embeddings. |
-| `PANTRYSENSE_SEMANTIC_TOP_K` | `20` | Maximum candidate recipes retrieved via vector search. |
-| `PANTRYSENSE_SEMANTIC_THRESHOLD` | `0.35` | Minimum cosine similarity threshold for candidates. |
-| `PANTRYSENSE_MINIMUM_COVERAGE` | `0.34` | Minimum ingredient coverage threshold for recipe display. |
-| `PANTRYSENSE_DB_PATH` | `data/recipes.db` | Path to SQLite database file. |
-| `PANTRYSENSE_VECTOR_INDEX_PATH` | `data/recipe_vectors.index` | Path to FAISS index file. |
+| `PANTRYSENSE_RETRIEVAL_MODE` | `hybrid` | Mode: `hybrid`, `semantic`, `lexical`, `rule_based`. |
+| `PANTRYSENSE_RRF_K` | `60` | Constant $k$ for Reciprocal Rank Fusion. |
+| `PANTRYSENSE_AUTO_OPEN_BROWSER` | `true` | Auto-open browser on startup (`true`/`false`). |
+| `PANTRYSENSE_AUTO_SHUTDOWN` | `true` | Auto-shutdown on 10s inactivity (`true`/`false`). |
+| `PANTRYSENSE_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model identifier. |
+| `PANTRYSENSE_SEMANTIC_TOP_K` | `20` | Maximum candidate pool size. |
+| `PANTRYSENSE_SEMANTIC_THRESHOLD` | `0.35` | Minimum cosine similarity threshold for dense candidates. |
+| `PANTRYSENSE_MINIMUM_COVERAGE` | `0.34` | Minimum ingredient coverage threshold for display. |
+| `PANTRYSENSE_DB_PATH` | `data/recipes.db` | SQLite database path. |
+| `PANTRYSENSE_VECTOR_INDEX_PATH` | `data/recipe_vectors.index` | FAISS index path. |
+| `PANTRYSENSE_BM25_INDEX_PATH` | `data/recipe_bm25.json` | BM25 index path. |
 
 ## Run Automated Tests
 
 ```powershell
 python -m pytest
 ```
-
-## Known Limitations
-
-`all-MiniLM-L6-v2` is a general-purpose sentence transformer, not a dedicated culinary ontology. It improves retrieval for natural variations (e.g. `scallions`, `chicken breast`), but semantic similarity is not equivalent to perfect culinary knowledge. This serves as the dense retrieval baseline for future hybrid and learning-to-rank improvements.

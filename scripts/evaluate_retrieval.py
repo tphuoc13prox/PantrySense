@@ -7,9 +7,7 @@ from pathlib import Path
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.backend.database.init_db import initialize_database
 from app.backend.recipes.service import RecipeSearchService
-from app.backend.retrieval.semantic import SemanticRetriever
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -23,7 +21,7 @@ BENCHMARK_CASES = [
     {
         "category": "A. Synonym variation",
         "query": ["capsicum"],
-        "expected_titles": ["Chicken Tomato Stir Fry"],  # or pepper
+        "expected_titles": ["Chicken Tomato Stir Fry"],
     },
     # Category B: Morphological variation
     {
@@ -68,89 +66,82 @@ BENCHMARK_CASES = [
 
 
 def run_benchmark() -> None:
-    print("=" * 80)
-    print("PantrySense Retrieval Benchmark: v0.3.x Rule-Based vs. v0.4.0 Semantic Retrieval")
-    print("=" * 80)
+    print("=" * 105)
+    print("PantrySense Retrieval Benchmark: Rule-Based vs. BM25 vs. Semantic vs. Hybrid (RRF)")
+    print("=" * 105)
 
-    # Initialize services
     rule_service = RecipeSearchService(retrieval_mode="rule_based", match_threshold=0.0)
+    bm25_service = RecipeSearchService(retrieval_mode="lexical", match_threshold=0.0)
     semantic_service = RecipeSearchService(retrieval_mode="semantic", match_threshold=0.0)
+    hybrid_service = RecipeSearchService(retrieval_mode="hybrid", match_threshold=0.0)
 
-    # Check if semantic retriever is ready
-    if not semantic_service.retriever.is_ready():
-        print("\n[ERROR] Semantic index not found. Please build the index first with:")
+    # Check readiness
+    if not hybrid_service.hybrid_retriever.is_ready():
+        print("\n[ERROR] Hybrid indices (FAISS/BM25) not found. Please build them first with:")
         print("    python scripts/build_vector_index.py\n")
         sys.exit(1)
 
-    rule_hits = 0
-    semantic_hits = 0
+    modes = [
+        ("Rule-Based", rule_service),
+        ("BM25 (Lexical)", bm25_service),
+        ("Semantic (Dense)", semantic_service),
+        ("Hybrid (RRF)", hybrid_service),
+    ]
+
+    stats = {
+        name: {"hits": 0, "rr_list": []}
+        for name, _ in modes
+    }
     total_evaluable = 0
 
-    rule_reciprocal_ranks: list[float] = []
-    semantic_reciprocal_ranks: list[float] = []
-
-    print(f"{'Category':<22} | {'Query':<22} | {'Rule-Based':<14} | {'Semantic (Rank / Score)':<24}")
-    print("-" * 88)
+    header = f"{'Query':<22} | {'Rule-Based':<14} | {'BM25':<14} | {'Semantic':<18} | {'Hybrid (RRF)':<20}"
+    print(header)
+    print("-" * len(header))
 
     for case in BENCHMARK_CASES:
-        category = case["category"]
         query = case["query"]
         expected = case["expected_titles"]
         query_str = ", ".join(query)
-
-        # Run Rule-Based
-        rule_results = rule_service.search(query)
-        rule_titles = [r.title for r in rule_results]
-
-        # Run Semantic
-        semantic_results = semantic_service.search(query)
-        semantic_titles = [r.title for r in semantic_results]
-
         is_negative = len(expected) == 0
+
+        row_displays = []
 
         if not is_negative:
             total_evaluable += 1
 
-            # Rule-based evaluation
-            rule_rank = next((i + 1 for i, t in enumerate(rule_titles) if t in expected), None)
-            if rule_rank is not None:
-                rule_hits += 1
-                rule_reciprocal_ranks.append(1.0 / rule_rank)
-                rule_display = f"FOUND (Rank {rule_rank})"
+        for name, srv in modes:
+            results = srv.search(query)
+            titles = [r.title for r in results]
+
+            if not is_negative:
+                rank = next((i + 1 for i, t in enumerate(titles) if t in expected), None)
+                if rank is not None:
+                    stats[name]["hits"] += 1
+                    stats[name]["rr_list"].append(1.0 / rank)
+                    disp = f"Rank {rank}"
+                else:
+                    stats[name]["rr_list"].append(0.0)
+                    disp = "NOT FOUND"
             else:
-                rule_reciprocal_ranks.append(0.0)
-                rule_display = "NOT FOUND"
+                disp = "PASS (0)" if len(results) == 0 else f"FOUND ({len(results)})"
 
-            # Semantic evaluation
-            semantic_rank = next((i + 1 for i, t in enumerate(semantic_titles) if t in expected), None)
-            if semantic_rank is not None:
-                semantic_hits += 1
-                semantic_reciprocal_ranks.append(1.0 / semantic_rank)
-                matched_recipe = next(r for r in semantic_results if r.title in expected)
-                score_str = f"{matched_recipe.semantic_score:.3f}" if matched_recipe.semantic_score else "N/A"
-                semantic_display = f"FOUND (Rank {semantic_rank}, {score_str})"
-            else:
-                semantic_reciprocal_ranks.append(0.0)
-                semantic_display = "NOT FOUND"
-        else:
-            # Negative queries evaluation
-            rule_display = "PASS (0 results)" if len(rule_results) == 0 else f"FOUND ({len(rule_results)})"
-            semantic_display = "PASS (0 results)" if len(semantic_results) == 0 else f"FOUND ({len(semantic_results)})"
+            row_displays.append(disp)
 
-        print(f"{category:<22} | {query_str:<22} | {rule_display:<14} | {semantic_display:<24}")
+        print(f"{query_str:<22} | {row_displays[0]:<14} | {row_displays[1]:<14} | {row_displays[2]:<18} | {row_displays[3]:<20}")
 
-    print("=" * 88)
+    print("=" * 105)
     print("Aggregate Benchmark Summary (Positive Retrieval Queries):")
-    rule_recall = (rule_hits / total_evaluable) * 100 if total_evaluable else 0.0
-    semantic_recall = (semantic_hits / total_evaluable) * 100 if total_evaluable else 0.0
+    print(f"{'Mode':<20} | {'Hits / Total':<15} | {'Recall':<12} | {'MRR':<10}")
+    print("-" * 65)
 
-    rule_mrr = sum(rule_reciprocal_ranks) / len(rule_reciprocal_ranks) if rule_reciprocal_ranks else 0.0
-    semantic_mrr = sum(semantic_reciprocal_ranks) / len(semantic_reciprocal_ranks) if semantic_reciprocal_ranks else 0.0
+    for name, _ in modes:
+        hits = stats[name]["hits"]
+        recall = (hits / total_evaluable) * 100 if total_evaluable else 0.0
+        rr_list = stats[name]["rr_list"]
+        mrr = sum(rr_list) / len(rr_list) if rr_list else 0.0
+        print(f"{name:<20} | {hits}/{total_evaluable:<13} | {recall:>6.1f}%     | {mrr:>6.3f}")
 
-    print(f"  Total Test Cases Evaluated : {total_evaluable}")
-    print(f"  Rule-Based Hit Rate / Recall: {rule_hits}/{total_evaluable} ({rule_recall:.1f}%) | MRR: {rule_mrr:.3f}")
-    print(f"  Semantic Hit Rate / Recall  : {semantic_hits}/{total_evaluable} ({semantic_recall:.1f}%) | MRR: {semantic_mrr:.3f}")
-    print("=" * 88)
+    print("=" * 105)
 
 
 if __name__ == "__main__":
