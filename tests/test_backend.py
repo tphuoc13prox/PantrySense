@@ -17,8 +17,11 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     database_path = tmp_path / "recipes.db"
     monkeypatch.setenv("PANTRYSENSE_DB_PATH", str(database_path))
     monkeypatch.setenv("PANTRYSENSE_RETRIEVAL_MODE", "rule_based")
+    monkeypatch.setenv("PANTRYSENSE_AUTO_OPEN_BROWSER", "false")
+    monkeypatch.setenv("PANTRYSENSE_AUTO_SHUTDOWN", "false")
     initialize_database(database_path)
     return TestClient(app)
+
 
 
 

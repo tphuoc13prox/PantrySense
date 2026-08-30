@@ -1,6 +1,35 @@
 // PantrySense — Vanilla JavaScript Client
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Tab Heartbeat Tracking
+  const tabId =
+    sessionStorage.getItem("pantrysense_tab_id") ||
+    "tab_" + Math.random().toString(36).substring(2, 15) + "_" + Date.now();
+  sessionStorage.setItem("pantrysense_tab_id", tabId);
+
+  function sendHeartbeat() {
+    fetch("/api/system/heartbeat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tab_id: tabId }),
+    }).catch(() => {});
+  }
+
+  // Send immediately and periodically every 2.5 seconds
+  sendHeartbeat();
+  const heartbeatInterval = setInterval(sendHeartbeat, 2500);
+
+  // Notify server when tab closes
+  window.addEventListener("pagehide", () => {
+    clearInterval(heartbeatInterval);
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(
+        "/api/system/heartbeat/leave",
+        new Blob([JSON.stringify({ tab_id: tabId })], { type: "application/json" })
+      );
+    }
+  });
+
   // State
   let ingredients = [];
   let currentRecipes = [];
@@ -188,7 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Server returned status ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Server returned status ${response.status}`);
       }
 
       const data = await response.json();
@@ -198,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Search failed:", err);
       setStatus(
         statusMessage,
-        "Unable to connect to the backend server. Please make sure the server is running.",
+        err.message || "Unable to connect to the backend server. Please make sure the server is running.",
         "error"
       );
       resultsSection.classList.add("hidden");

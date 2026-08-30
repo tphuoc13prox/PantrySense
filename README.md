@@ -1,15 +1,15 @@
 # PantrySense
 
-PantrySense is an offline-first, local AI/ML-oriented recipe discovery application. In v0.4.0, PantrySense introduces a local **Semantic Retrieval** layer powered by Sentence Transformers and FAISS, enabling intelligent candidate recipe retrieval across linguistic variations while preserving deterministic ingredient feasibility analysis.
+PantrySense is an offline-first, local AI/ML-oriented recipe discovery application. In v0.4.1, PantrySense features local **Semantic Retrieval** (Sentence Transformers + FAISS), auto-opens the default external browser tab upon startup, and automatically shuts down the server when all browser tabs have been closed for 10 seconds.
 
-Current version: v0.4.0
+Current version: v0.4.1
 
 ## Architecture
 
 ```text
                                 Web Browser (localhost:8000)
                                             │
-                                            ▼
+                                            ▼ (Heartbeat ping every 2.5s)
                                      FastAPI Backend
                                             │
                                             ▼
@@ -54,7 +54,9 @@ Current version: v0.4.0
 
 ## Implemented Features
 
-- Local web application UI (HTML5, Vanilla CSS, Vanilla JavaScript)
+- Local web application UI (HTML5, Vanilla CSS, Vanilla JavaScript).
+- **Auto-Open Browser**: Automatically opens a new tab in your default browser once the server is ready.
+- **Auto-Shutdown on Inactivity**: Tracks active browser tabs via client heartbeat. If no active tab is detected for **10 seconds** (after an initial 15s startup grace period), the server automatically shuts down cleanly to release resources.
 - **Local Semantic Retrieval Layer**:
   - `sentence-transformers/all-MiniLM-L6-v2` (384-dimensional dense vectors)
   - `FAISS` (`IndexFlatIP` cosine similarity search) with NumPy fallback
@@ -67,9 +69,9 @@ Current version: v0.4.0
 - Single-page view switching between search results and recipe details (with back navigation).
 - Offline Vector Index Build Script (`scripts/build_vector_index.py`).
 - Empirical Retrieval Benchmark Script (`scripts/evaluate_retrieval.py`).
-- Full automated test suite covering unit tests, vector store, retriever, and regression.
+- Full automated test suite covering unit tests, vector store, retriever, heartbeat monitor, and regression.
 
-## Not Implemented in v0.4.0
+## Not Implemented in v0.4.1
 
 - BM25 / Sparse lexical indexing
 - Reciprocal Rank Fusion (RRF) / Hybrid Fusion
@@ -110,12 +112,10 @@ Start the backend server:
 python -m uvicorn app.backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-Open your web browser at:
-
-```text
-http://localhost:8000
-```
-*(or `http://127.0.0.1:8000`)*
+> **Behavior**:
+> 1. The server starts up and loads the SQLite database and FAISS index.
+> 2. Once ready, a new tab opens automatically in your default external browser at `http://localhost:8000`.
+> 3. When you close all PantrySense browser tabs, the server automatically shuts down after **10 seconds** of inactivity.
 
 ## Retrieval Benchmark Evaluation
 
@@ -131,6 +131,10 @@ You can configure PantrySense using environment variables:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
+| `PANTRYSENSE_AUTO_OPEN_BROWSER` | `true` | Automatically open default browser upon server startup (`true`/`false`). |
+| `PANTRYSENSE_AUTO_SHUTDOWN` | `true` | Automatically shut down server when no active tabs remain (`true`/`false`). |
+| `PANTRYSENSE_INACTIVE_TIMEOUT` | `10.0` | Inactivity duration (in seconds) before automatic shutdown. |
+| `PANTRYSENSE_STARTUP_GRACE_PERIOD` | `15.0` | Initial grace period (in seconds) allowing browser to open and connect. |
 | `PANTRYSENSE_RETRIEVAL_MODE` | `semantic` | Retrieval mode: `semantic` or `rule_based`. |
 | `PANTRYSENSE_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Hugging Face model identifier for embeddings. |
 | `PANTRYSENSE_SEMANTIC_TOP_K` | `20` | Maximum candidate recipes retrieved via vector search. |
@@ -147,4 +151,4 @@ python -m pytest
 
 ## Known Limitations
 
-`all-MiniLM-L6-v2` is a general-purpose sentence transformer, not a dedicated culinary ontology. It improves retrieval for many natural variations (e.g. `scallions`, `chicken breast`), but semantic similarity is not equivalent to perfect culinary knowledge. This serves as the dense retrieval baseline for future hybrid and learning-to-rank improvements.
+`all-MiniLM-L6-v2` is a general-purpose sentence transformer, not a dedicated culinary ontology. It improves retrieval for natural variations (e.g. `scallions`, `chicken breast`), but semantic similarity is not equivalent to perfect culinary knowledge. This serves as the dense retrieval baseline for future hybrid and learning-to-rank improvements.

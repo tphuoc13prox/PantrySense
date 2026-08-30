@@ -44,3 +44,21 @@ def get_vector_index_path() -> Path:
 
 def get_vector_ids_path() -> Path:
     return Path(os.getenv("PANTRYSENSE_VECTOR_IDS_PATH", DEFAULT_VECTOR_IDS_PATH))
+
+
+def get_auto_open_browser() -> bool:
+    val = os.getenv("PANTRYSENSE_AUTO_OPEN_BROWSER", "true").strip().lower()
+    return val in ("true", "1", "yes", "on")
+
+
+def get_auto_shutdown_enabled() -> bool:
+    val = os.getenv("PANTRYSENSE_AUTO_SHUTDOWN", "true").strip().lower()
+    return val in ("true", "1", "yes", "on")
+
+
+def get_inactive_timeout_seconds() -> float:
+    return float(os.getenv("PANTRYSENSE_INACTIVE_TIMEOUT", "10.0"))
+
+
+def get_startup_grace_period_seconds() -> float:
+    return float(os.getenv("PANTRYSENSE_STARTUP_GRACE_PERIOD", "15.0"))
