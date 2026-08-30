@@ -15,6 +15,8 @@ class RecipeSummary(BaseModel):
     matched_count: int = 0
     required_count: int = 0
     coverage: float = 0.0
+    semantic_score: float | None = None
+    retrieval_rank: int | None = None
 
 
 class RecipeSearchResponse(BaseModel):

@@ -1,91 +1,106 @@
 # PantrySense
 
-PantrySense is an offline-first recipe discovery application. In v0.3.1, the application runs as a local web application accessible through your browser. Users enter ingredients they have at home, receive ranked recipe matches from a local SQLite database, see ingredient coverage and missing ingredients, and select a recipe to view details.
+PantrySense is an offline-first, local AI/ML-oriented recipe discovery application. In v0.4.0, PantrySense introduces a local **Semantic Retrieval** layer powered by Sentence Transformers and FAISS, enabling intelligent candidate recipe retrieval across linguistic variations while preserving deterministic ingredient feasibility analysis.
 
-Current version: v0.3.1
+Current version: v0.4.0
 
 ## Architecture
 
 ```text
-Web Browser (HTML5 / CSS / Vanilla JS)
-        |
-        | localhost HTTP (http://localhost:8000)
-        v
-FastAPI Python Backend
-        |
-        v
-SQLite Recipe Database
-        |
-        v
-Smart Ingredient Matching
+                                Web Browser (localhost:8000)
+                                            │
+                                            ▼
+                                     FastAPI Backend
+                                            │
+                                            ▼
+                                  RecipeSearchService
+                                            │
+                      ┌─────────────────────┴─────────────────────┐
+                      ▼                                           ▼
+             Rule-Based Mode                               Semantic Mode
+                      │                                           │
+                      │                                    Normalized Query
+                      │                                           │
+                      │                                  Query Representation
+                      │                                           │
+                      │                                 IngredientEmbedder
+                      │                                 (all-MiniLM-L6-v2)
+                      │                                           │
+                      │                                   FaissVectorStore
+                      │                                   (IndexFlatIP Search)
+                      │                                           │
+                      │                                Top-K Candidates (IDs)
+                      │                                           │
+                      └─────────────────────┬─────────────────────┘
+                                            ▼
+                               Candidate Database Fetch
+                                            │
+                                            ▼
+                               IngredientMatcher (v0.3.x)
+                                 ├── Matched Ingredients
+                                 ├── Missing Ingredients
+                                 └── Coverage Ratio
+                                            │
+                                            ▼
+                                 RecipeRanker (v0.3.x)
+                                            │
+                                            ▼
+                                      Recipe Results
 ```
 
-The browser UI sends ingredient names to the FastAPI backend. The backend normalizes strings, searches SQLite, performs deterministic set-based matching, calculates ingredient coverage and missing ingredients, ranks results with simple rules, and returns recipe IDs, titles, and match information.
-
-When a user selects a recipe, the web UI requests details from the backend (`GET /api/recipes/{recipe_id}`) and displays the local database content.
+### Candidate Generation vs. Feasibility Analysis
+- **Semantic Retrieval**: Answers *"Which recipes might be semantically relevant to the user's ingredients?"*
+- **Ingredient Matching**: Answers *"How well do the user's ingredients actually satisfy the candidate recipes?"*
 
 ## Implemented Features
 
 - Local web application UI (HTML5, Vanilla CSS, Vanilla JavaScript)
-- Ingredient input, add (with Enter key support), individual remove ('x'), and clear actions
-- Recipe search button and user-friendly status/loading messages
-- Backend error state handling in the web UI
-- `GET /` (serves the PantrySense web application)
-- `GET /health`
-- `POST /api/recipes/search`
-- `GET /api/recipes/{recipe_id}`
-- SQLite recipe database initialization
-- Small seed/demo recipe dataset
-- Recipe detail fields: ingredients, quantities where available, instructions, cooking time, difficulty, servings, and category
-- Single-page view switching between search results and recipe details (with back navigation)
-- Smart Ingredient Matching with matched ingredients, missing ingredients, matched count, required count, and coverage
-- Small deterministic synonym map for terms such as `tomatoes`, `eggs`, `bell pepper`, and `capsicum`
-- Rule-based ranking by coverage, matched count, missing count, and title
-- Configurable minimum coverage through `PANTRYSENSE_MINIMUM_COVERAGE`
-- Backend tests for root HTML serving, static assets, health, search, search regression, recipe details, missing recipes, empty input, unknown ingredients, and malformed requests
+- **Local Semantic Retrieval Layer**:
+  - `sentence-transformers/all-MiniLM-L6-v2` (384-dimensional dense vectors)
+  - `FAISS` (`IndexFlatIP` cosine similarity search) with NumPy fallback
+  - Deterministic recipe and user query representations
+  - Pre-built offline index (loaded once at startup)
+- **Dual Retrieval Modes** (`PANTRYSENSE_RETRIEVAL_MODE`):
+  - `semantic` (default): Dense candidate retrieval followed by ingredient feasibility analysis.
+  - `rule_based`: Deterministic v0.3.x set-matching baseline.
+- Deterministic Ingredient Matching: matched ingredients, missing ingredients, matched count, required count, and coverage.
+- Single-page view switching between search results and recipe details (with back navigation).
+- Offline Vector Index Build Script (`scripts/build_vector_index.py`).
+- Empirical Retrieval Benchmark Script (`scripts/evaluate_retrieval.py`).
+- Full automated test suite covering unit tests, vector store, retriever, and regression.
 
-## Not Implemented in v0.3.1
+## Not Implemented in v0.4.0
 
-- BM25
-- FAISS
-- Embeddings
-- ML ranking
-- Personalization
-- Computer vision
-- LLM or cloud AI APIs
-- User accounts or authentication
+- BM25 / Sparse lexical indexing
+- Reciprocal Rank Fusion (RRF) / Hybrid Fusion
+- Learning-to-Rank / Machine Learning Ranking (LambdaMART, LightGBM)
+- User Personalization & Cooking history
+- Computer Vision / Image ingredient recognition
+- Cloud / LLM external APIs
 
 ## Requirements
 
 - Python 3.11 or newer
-- Dependencies listed in `requirements.txt` (FastAPI, Uvicorn, pytest, httpx)
+- Dependencies in `requirements.txt` (FastAPI, Uvicorn, pytest, httpx, sentence-transformers, faiss-cpu, numpy)
 
-## Install Dependencies
+## Installation
 
 ```powershell
 python -m pip install -r requirements.txt
 ```
 
-## Initialize the Database
+## First-Time Setup: Build the Vector Index
 
-The backend initializes the SQLite database automatically on startup. You can also initialize it manually:
-
-```powershell
-python scripts/initialize_db.py
-```
-
-The default database path is:
-
-```text
-data/recipes.db
-```
-
-To use a different database path:
+Generate the local SQLite database and pre-compute recipe vector embeddings:
 
 ```powershell
-$env:PANTRYSENSE_DB_PATH = "C:\path\to\recipes.db"
-python scripts/initialize_db.py
+python scripts/build_vector_index.py
 ```
+
+This will create:
+- `data/recipes.db` (SQLite recipe database)
+- `data/recipe_vectors.index` (FAISS vector index)
+- `data/recipe_vector_ids.json` (ID mappings and index metadata)
 
 ## Run the Application
 
@@ -95,123 +110,41 @@ Start the backend server:
 python -m uvicorn app.backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-Then open your web browser and navigate to:
+Open your web browser at:
 
 ```text
 http://localhost:8000
 ```
+*(or `http://127.0.0.1:8000`)*
 
-or:
+## Retrieval Benchmark Evaluation
 
-```text
-http://127.0.0.1:8000
-```
-
-### Health Check
+Compare retrieval accuracy between Rule-Based and Semantic Retrieval across 5 benchmark categories (Synonyms, Morphology, Specific/General, Multi-ingredient, Negative queries):
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/health
+python scripts/evaluate_retrieval.py
 ```
 
-### Recipe Search Example
+## Configuration
 
-```powershell
-Invoke-RestMethod `
-  -Method Post `
-  -Uri http://127.0.0.1:8000/api/recipes/search `
-  -ContentType "application/json" `
-  -Body '{"ingredients":["chicken","tomato","egg"]}'
-```
+You can configure PantrySense using environment variables:
 
-Search response shape:
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `PANTRYSENSE_RETRIEVAL_MODE` | `semantic` | Retrieval mode: `semantic` or `rule_based`. |
+| `PANTRYSENSE_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Hugging Face model identifier for embeddings. |
+| `PANTRYSENSE_SEMANTIC_TOP_K` | `20` | Maximum candidate recipes retrieved via vector search. |
+| `PANTRYSENSE_SEMANTIC_THRESHOLD` | `0.35` | Minimum cosine similarity threshold for candidates. |
+| `PANTRYSENSE_MINIMUM_COVERAGE` | `0.34` | Minimum ingredient coverage threshold for recipe display. |
+| `PANTRYSENSE_DB_PATH` | `data/recipes.db` | Path to SQLite database file. |
+| `PANTRYSENSE_VECTOR_INDEX_PATH` | `data/recipe_vectors.index` | Path to FAISS index file. |
 
-```json
-{
-  "recipes": [
-    {
-      "id": 3,
-      "title": "Chicken Omelette",
-      "matched_ingredients": ["chicken", "egg"],
-      "missing_ingredients": ["butter", "onion"],
-      "matched_count": 2,
-      "required_count": 4,
-      "coverage": 0.5
-    },
-    {
-      "id": 1,
-      "title": "Chicken Tomato Stir Fry",
-      "matched_ingredients": ["chicken", "tomato"],
-      "missing_ingredients": ["cooking oil", "garlic", "onion"],
-      "matched_count": 2,
-      "required_count": 5,
-      "coverage": 0.4
-    }
-  ]
-}
-```
-
-### Recipe Detail Example
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:8000/api/recipes/3
-```
-
-## Run Tests
+## Run Automated Tests
 
 ```powershell
 python -m pytest
 ```
 
-## Recipe Database
+## Known Limitations
 
-The v0.3.1 database continues to use one simple table:
-
-```text
-recipes
-- id INTEGER PRIMARY KEY
-- title TEXT
-- ingredients TEXT
-- ingredient_details TEXT
-- instructions TEXT
-- cooking_time INTEGER
-- difficulty TEXT
-- servings INTEGER
-- category TEXT
-```
-
-Ingredients, ingredient details, and instructions are stored as JSON text for the seed/demo dataset.
-
-## Smart Ingredient Matching
-
-The backend compares normalized user ingredients with each recipe's ingredient set. A recipe is returned when ingredient coverage reaches the configured threshold.
-
-Normalization currently handles:
-
-- lowercase
-- leading/trailing whitespace
-- repeated spaces
-- simple safe plural forms
-- a small synonym map
-
-Default threshold:
-
-```text
-PANTRYSENSE_MINIMUM_COVERAGE=0.34
-```
-
-`PANTRYSENSE_MATCH_THRESHOLD` is still accepted as a backward-compatible fallback.
-
-Coverage is calculated as:
-
-```text
-matched_required_ingredients / total_required_ingredients
-```
-
-Results are ranked by:
-
-```text
-1. coverage descending
-2. matched ingredient count descending
-3. missing ingredient count ascending
-4. title ascending
-```
+`all-MiniLM-L6-v2` is a general-purpose sentence transformer, not a dedicated culinary ontology. It improves retrieval for many natural variations (e.g. `scallions`, `chicken breast`), but semantic similarity is not equivalent to perfect culinary knowledge. This serves as the dense retrieval baseline for future hybrid and learning-to-rank improvements.

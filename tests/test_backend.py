@@ -16,8 +16,10 @@ from app.backend.recipes.schemas import RecipeSummary
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     database_path = tmp_path / "recipes.db"
     monkeypatch.setenv("PANTRYSENSE_DB_PATH", str(database_path))
+    monkeypatch.setenv("PANTRYSENSE_RETRIEVAL_MODE", "rule_based")
     initialize_database(database_path)
     return TestClient(app)
+
 
 
 def test_health_returns_ok(client: TestClient) -> None:
