@@ -12,6 +12,7 @@ from app.backend.config import (
     get_auto_shutdown_enabled,
     get_inactive_timeout_seconds,
     get_startup_grace_period_seconds,
+    get_tab_ttl_seconds,
 )
 
 logger = logging.getLogger("pantrysense.heartbeat")
@@ -22,12 +23,12 @@ class HeartbeatMonitor:
 
     def __init__(
         self,
-        tab_ttl: float = 6.0,
+        tab_ttl: float | None = None,
         inactive_timeout: float | None = None,
         grace_period: float | None = None,
         on_shutdown: Callable[[], None] | None = None,
     ) -> None:
-        self.tab_ttl = tab_ttl
+        self.tab_ttl = tab_ttl if tab_ttl is not None else get_tab_ttl_seconds()
         self.inactive_timeout = (
             inactive_timeout if inactive_timeout is not None else get_inactive_timeout_seconds()
         )
@@ -78,9 +79,10 @@ class HeartbeatMonitor:
 
     async def start(self) -> None:
         """Start the background monitor loop."""
-        if not get_auto_shutdown_enabled():
+        if not get_auto_shutdown_enabled() and self._on_shutdown == self._default_shutdown:
             logger.info("Auto-shutdown is disabled by configuration.")
             return
+
 
         self._running = True
         self._start_time = time.time()
@@ -105,9 +107,11 @@ class HeartbeatMonitor:
 
     async def _monitor_loop(self) -> None:
         """Periodic loop checking tab activity."""
+        check_interval = min(0.5, max(0.05, self.inactive_timeout / 4))
         while self._running:
-            await asyncio.sleep(1.0)
+            await asyncio.sleep(check_interval)
             now = time.time()
+
             uptime = now - self._start_time
             active_count = self.get_active_tab_count()
 

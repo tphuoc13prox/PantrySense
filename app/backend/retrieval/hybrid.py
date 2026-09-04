@@ -33,8 +33,13 @@ class HybridRetriever:
     ) -> None:
         self.semantic_retriever = semantic_retriever or SemanticRetriever()
         self.bm25_store = bm25_store or BM25Store()
-        self.bm25_path = bm25_path or get_bm25_index_path()
+        self._bm25_path = bm25_path
         self._loaded = False
+
+    @property
+    def bm25_path(self) -> Path:
+        return self._bm25_path if self._bm25_path is not None else get_bm25_index_path()
+
 
     def ensure_loaded(self) -> bool:
         """Attempt to load both semantic and BM25 indices from disk."""

@@ -55,9 +55,18 @@ class SemanticRetriever:
     ) -> None:
         self.embedder = embedder or IngredientEmbedder()
         self.vector_store = vector_store or FaissVectorStore(dimension=self.embedder.dimension)
-        self.index_path = index_path or get_vector_index_path()
-        self.ids_path = ids_path or get_vector_ids_path()
+        self._index_path = index_path
+        self._ids_path = ids_path
         self._loaded = False
+
+    @property
+    def index_path(self) -> Path:
+        return self._index_path if self._index_path is not None else get_vector_index_path()
+
+    @property
+    def ids_path(self) -> Path:
+        return self._ids_path if self._ids_path is not None else get_vector_ids_path()
+
 
     def ensure_loaded(self) -> bool:
         """Attempt to load the index from disk if not already loaded."""
