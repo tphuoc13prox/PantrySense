@@ -53,33 +53,35 @@ def test_heartbeat_monitor_tab_ttl() -> None:
     assert monitor.get_active_tab_count() == 0
 
 
-@pytest.mark.asyncio
-async def test_heartbeat_monitor_triggers_shutdown_after_inactivity() -> None:
-    shutdown_triggered = False
+def test_heartbeat_monitor_triggers_shutdown_after_inactivity() -> None:
+    async def _async_run():
+        shutdown_triggered = False
 
-    def on_shutdown() -> None:
-        nonlocal shutdown_triggered
-        shutdown_triggered = True
+        def on_shutdown() -> None:
+            nonlocal shutdown_triggered
+            shutdown_triggered = True
 
-    monitor = HeartbeatMonitor(
-        tab_ttl=0.1,
-        inactive_timeout=0.2,
-        grace_period=0.1,
-        on_shutdown=on_shutdown,
-    )
+        monitor = HeartbeatMonitor(
+            tab_ttl=0.1,
+            inactive_timeout=0.2,
+            grace_period=0.1,
+            on_shutdown=on_shutdown,
+        )
 
-    await monitor.start()
+        await monitor.start()
 
-    # Record heartbeat
-    monitor.record_heartbeat("test_tab")
-    assert monitor.get_active_tab_count() == 1
+        # Record heartbeat
+        monitor.record_heartbeat("test_tab")
+        assert monitor.get_active_tab_count() == 1
 
-    # Unregister tab
-    monitor.unregister_tab("test_tab")
-    assert monitor.get_active_tab_count() == 0
+        # Unregister tab
+        monitor.unregister_tab("test_tab")
+        assert monitor.get_active_tab_count() == 0
 
-    # Wait for inactive timeout (0.2s + margin)
-    await asyncio.sleep(0.4)
+        # Wait for inactive timeout (0.2s + margin)
+        await asyncio.sleep(0.4)
 
-    assert shutdown_triggered is True
-    await monitor.stop()
+        assert shutdown_triggered is True
+        await monitor.stop()
+
+    asyncio.run(_async_run())

@@ -189,3 +189,21 @@ def test_v030_search_behavior_regression(client: TestClient) -> None:
     assert "Chicken Tomato Stir Fry" in titles
     assert "Tomato Egg Stir Fry" in titles
 
+
+def test_system_status_and_set_engine(client: TestClient) -> None:
+    status_resp = client.get("/api/system/setup-status")
+    assert status_resp.status_code == 200
+    assert "is_ready" in status_resp.json()
+    assert "selected_engine" in status_resp.json()
+
+    # Test setting engine to onnx
+    set_onnx = client.post("/api/system/set-engine", json={"engine": "onnx"})
+    assert set_onnx.status_code == 200
+    assert set_onnx.json()["success"] is True
+
+    # Test setting engine to cuda
+    set_cuda = client.post("/api/system/set-engine", json={"engine": "cuda"})
+    assert set_cuda.status_code == 200
+    assert set_cuda.json()["success"] is True
+
+

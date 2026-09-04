@@ -3,9 +3,11 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
-from app.backend.config import get_match_threshold, get_retrieval_mode
+from app.backend.config import get_match_threshold, get_ranking_mode, get_retrieval_mode
 from app.backend.database.connection import get_connection
+from app.backend.ranking.ml_ranker import MLRecipeRanker
 from app.backend.recipes.matching import IngredientMatcher
 from app.backend.recipes.ranking import RecipeRanker
 from app.backend.recipes.schemas import IngredientDetail, RecipeDetail, RecipeSummary
@@ -20,8 +22,10 @@ class RecipeSearchService:
     database_path: Path | None = None
     match_threshold: float | None = None
     retrieval_mode: str | None = None
+    ranking_mode: str | None = None
     matcher: IngredientMatcher = IngredientMatcher()
     ranker: RecipeRanker = RecipeRanker()
+    ml_ranker: MLRecipeRanker = MLRecipeRanker()
     retriever: SemanticRetriever = SemanticRetriever()
     hybrid_retriever: HybridRetriever = HybridRetriever()
     bm25_store: BM25Store = BM25Store()
@@ -31,7 +35,12 @@ class RecipeSearchService:
             return []
 
         mode = self.retrieval_mode if self.retrieval_mode is not None else get_retrieval_mode()
-        threshold = self.match_threshold if self.match_threshold is not None else get_match_threshold()
+        if self.match_threshold is not None:
+            threshold = self.match_threshold
+        elif len(raw_ingredients) <= 2:
+            threshold = min(get_match_threshold(), 0.10)
+        else:
+            threshold = get_match_threshold()
 
         if mode == "hybrid":
             candidates = self.hybrid_retriever.retrieve(raw_ingredients)
@@ -71,16 +80,23 @@ class RecipeSearchService:
         placeholders = ",".join("?" for _ in candidate_ids)
         with get_connection(self.database_path) as connection:
             rows = connection.execute(
-                f"SELECT id, title, ingredients FROM recipes WHERE id IN ({placeholders})",
+                f"""
+                SELECT id, title, ingredients, cooking_time, difficulty
+                FROM recipes
+                WHERE id IN ({placeholders})
+                """,
                 candidate_ids,
             ).fetchall()
 
         matches: list[RecipeSummary] = []
+        details_map: dict[int, dict[str, Any]] = {}
+
         for row in rows:
             recipe_id = row["id"]
             cand = candidate_map.get(recipe_id)
             recipe_ingredients = json.loads(row["ingredients"])
             match = self.matcher.match(raw_ingredients, recipe_ingredients)
+
             matches.append(
                 RecipeSummary(
                     id=recipe_id,
@@ -97,6 +113,16 @@ class RecipeSearchService:
                 )
             )
 
+            details_map[recipe_id] = {
+                "cooking_time": row["cooking_time"],
+                "difficulty": row["difficulty"],
+                "ingredients": recipe_ingredients,
+            }
+
+        # Apply ML Ranking (or fallback to heuristic)
+        r_mode = self.ranking_mode if self.ranking_mode is not None else get_ranking_mode()
+        if r_mode == "ml":
+            return self.ml_ranker.rank(matches, details_map=details_map, minimum_coverage=threshold)
         return self.ranker.rank(matches, threshold)
 
     def _search_rule_based(self, raw_ingredients: list[str], threshold: float) -> list[RecipeSummary]:

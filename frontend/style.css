@@ -44,8 +44,16 @@ body {
 
 /* Header */
 .app-header {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-content {
+  text-align: left;
 }
 
 .app-title {
@@ -61,6 +69,54 @@ body {
   margin-top: 0.25rem;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-engine-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+}
+
+.engine-select-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.engine-select-dropdown {
+  background: transparent;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+
+.engine-select-dropdown:focus {
+  outline: 2px solid var(--primary);
+  border-radius: var(--radius-sm);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.825rem;
+}
+
+
 /* Views */
 .view {
   display: block;
@@ -70,6 +126,250 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* Setup Onboarding Card */
+.setup-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow-hover);
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.setup-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.setup-title {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.setup-subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.progress-container {
+  background-color: #e2e8f0;
+  border-radius: 9999px;
+  height: 12px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.progress-bar-fill {
+  background: linear-gradient(90deg, #059669, #10b981);
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+
+/* 8-Step Visual Stepper Grid */
+.setup-stepper-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+@media (max-width: 600px) {
+  .setup-stepper-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stepper-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.stepper-item .step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.stepper-item.active {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.stepper-item.active .step-num {
+  background-color: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+}
+
+.stepper-item.completed {
+  background-color: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.stepper-item.completed .step-num {
+  background-color: #059669;
+  color: #ffffff;
+}
+
+/* Setup Options (Hardware & Dataset Scale) */
+.setup-options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+  text-align: left;
+}
+
+.options-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.options-group-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.options-radio-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .options-radio-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.option-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  background-color: #f8fafc;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.option-card:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.option-card input[type="radio"] {
+  margin-top: 0.25rem;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.option-card:has(input[type="radio"]:checked) {
+  background-color: #ecfdf5;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.option-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.option-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.option-desc {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.badge-recommended {
+  font-size: 0.675rem;
+  font-weight: 700;
+  color: #047857;
+  background-color: #d1fae5;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.setup-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-reset {
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.btn-reset:hover {
+  background-color: #fee2e2;
+  border-color: #f87171;
+  color: #991b1b;
+}
+
+
 
 /* Input Section */
 .input-section {
@@ -292,6 +592,12 @@ body {
   color: var(--text-main);
 }
 
+.badges-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .coverage-badge {
   display: inline-block;
   background-color: var(--primary-light);
@@ -299,6 +605,17 @@ body {
   font-size: 0.85rem;
   font-weight: 700;
   padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.ml-badge {
+  display: inline-block;
+  background-color: #e0e7ff;
+  color: #3730a3;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
   border-radius: 9999px;
   white-space: nowrap;
 }

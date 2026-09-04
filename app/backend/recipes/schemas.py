@@ -18,7 +18,9 @@ class RecipeSummary(BaseModel):
     semantic_score: float | None = None
     bm25_score: float | None = None
     rrf_score: float | None = None
+    ml_score: float | None = None
     retrieval_rank: int | None = None
+
 
 
 

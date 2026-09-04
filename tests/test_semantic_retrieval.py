@@ -163,6 +163,8 @@ def test_api_returns_503_when_semantic_index_missing(
     monkeypatch.setenv("PANTRYSENSE_VECTOR_IDS_PATH", str(tmp_path / "missing.json"))
     monkeypatch.setenv("PANTRYSENSE_AUTO_OPEN_BROWSER", "false")
     monkeypatch.setenv("PANTRYSENSE_AUTO_SHUTDOWN", "false")
+    monkeypatch.setenv("PANTRYSENSE_AUTO_BUILD_INDEX", "false")
+
 
 
     client = TestClient(app)

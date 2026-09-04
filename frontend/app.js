@@ -1,13 +1,17 @@
 // PantrySense — Vanilla JavaScript Client
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Tab Heartbeat Tracking
+  // Tab Heartbeat Tracking (Robust against background tab throttling)
   const tabId =
     sessionStorage.getItem("pantrysense_tab_id") ||
     "tab_" + Math.random().toString(36).substring(2, 15) + "_" + Date.now();
   sessionStorage.setItem("pantrysense_tab_id", tabId);
 
-  function sendHeartbeat() {
+  let lastHeartbeatTime = 0;
+  function sendHeartbeat(force = false) {
+    const now = Date.now();
+    if (!force && now - lastHeartbeatTime < 1000) return;
+    lastHeartbeatTime = now;
     fetch("/api/system/heartbeat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -15,12 +19,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }).catch(() => {});
   }
 
-  // Send immediately and periodically every 2.5 seconds
-  sendHeartbeat();
-  const heartbeatInterval = setInterval(sendHeartbeat, 2500);
+  // Send immediately and periodically every 2 seconds
+  sendHeartbeat(true);
+  const heartbeatInterval = setInterval(() => sendHeartbeat(), 2000);
 
-  // Notify server when tab closes
-  window.addEventListener("pagehide", () => {
+  // Web Worker timer to prevent browsers from throttling background tabs
+  try {
+    const workerBlob = new Blob(
+      ["setInterval(function() { postMessage('pulse'); }, 2000);"],
+      { type: "application/javascript" }
+    );
+    const pulseWorker = new Worker(URL.createObjectURL(workerBlob));
+    pulseWorker.onmessage = function () {
+      sendHeartbeat();
+    };
+  } catch (e) {
+    console.debug("Web worker heartbeat fallback to standard interval:", e);
+  }
+
+  // Send heartbeat on user interactions and tab visibility changes
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      sendHeartbeat(true);
+    }
+  });
+  window.addEventListener("focus", () => sendHeartbeat(true));
+  window.addEventListener("pageshow", () => sendHeartbeat(true));
+  window.addEventListener("click", () => sendHeartbeat(false));
+  window.addEventListener("keydown", () => sendHeartbeat(false));
+
+  // Notify server when tab actually closes or navigates away
+  function notifyLeave() {
     clearInterval(heartbeatInterval);
     if (navigator.sendBeacon) {
       navigator.sendBeacon(
@@ -28,15 +57,27 @@ document.addEventListener("DOMContentLoaded", () => {
         new Blob([JSON.stringify({ tab_id: tabId })], { type: "application/json" })
       );
     }
-  });
+  }
+
+  window.addEventListener("pagehide", notifyLeave);
+  window.addEventListener("beforeunload", notifyLeave);
 
   // State
   let ingredients = [];
   let currentRecipes = [];
 
+  // DOM Elements - Header Actions
+  const engineSelect = document.getElementById("engine-select");
+
   // DOM Elements - Views
+  const setupView = document.getElementById("setup-view");
   const searchView = document.getElementById("search-view");
   const detailView = document.getElementById("detail-view");
+
+  // DOM Elements - Setup View
+  const setupProgressBar = document.getElementById("setup-progress-bar");
+  const setupStatusText = document.getElementById("setup-status-text");
+  const setupProgressPercent = document.getElementById("setup-progress-percent");
 
   // DOM Elements - Search View
   const ingredientInput = document.getElementById("ingredient-input");
@@ -60,7 +101,171 @@ document.addEventListener("DOMContentLoaded", () => {
   const detailIngredients = document.getElementById("detail-ingredients");
   const detailInstructions = document.getElementById("detail-instructions");
 
+  let setupPollInterval = null;
+
+  // --- Initial Setup & State Synchronization ---
+
+  async function checkInitialSetup() {
+    try {
+      const res = await fetch("/api/system/setup-status");
+      if (!res.ok) return;
+
+      const data = await res.json();
+
+      // Configure Hardware options based on detected GPU
+      if (engineSelect) {
+        if (data.selected_engine) {
+          engineSelect.value = data.selected_engine;
+        } else if (data.cuda_available) {
+          engineSelect.value = "cuda";
+        } else {
+          engineSelect.value = "onnx";
+        }
+      }
+
+      if (!data.is_ready) {
+        // Show Automatic Setup View
+        searchView.classList.add("hidden");
+        detailView.classList.add("hidden");
+        setupView.classList.remove("hidden");
+
+        if (!data.is_running) {
+          const chosenEngine = engineSelect ? engineSelect.value : (data.cuda_available ? "cuda" : "onnx");
+          autoStartSetup(chosenEngine);
+        } else {
+          pollSetupProgress();
+        }
+      } else {
+        // App is already initialized with dataset - enter Search View immediately
+        setupView.classList.add("hidden");
+        detailView.classList.add("hidden");
+        searchView.classList.remove("hidden");
+        ingredientInput.focus();
+      }
+    } catch (err) {
+      console.warn("Could not check setup status:", err);
+    }
+  }
+
+  function updateStepperProgress(currentStep, progress, message) {
+    const prog = Math.round(progress || 0);
+    setupProgressBar.style.width = `${prog}%`;
+    setupProgressPercent.textContent = `${prog}%`;
+    setupStatusText.textContent = message || "Processing setup...";
+
+    for (let i = 1; i <= 8; i++) {
+      const el = document.getElementById(`step-item-${i}`);
+      if (!el) continue;
+
+      if (i < currentStep) {
+        el.className = "stepper-item completed";
+      } else if (i === currentStep) {
+        el.className = "stepper-item active";
+      } else {
+        el.className = "stepper-item";
+      }
+    }
+  }
+
+  function autoStartSetup(engine) {
+    setupProgressBar.style.width = "5%";
+    setupProgressPercent.textContent = "5%";
+    setupStatusText.textContent = "Step 1/8: Initializing recipe database schema...";
+
+    const step1 = document.getElementById("step-item-1");
+    if (step1) step1.className = "stepper-item active";
+
+    fetch("/api/system/setup-init", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        engine: engine || "onnx",
+        dataset_limit: 50000,
+      }),
+    })
+      .then((res) => res.json())
+      .then(() => pollSetupProgress())
+      .catch((e) => {
+        console.error("Setup auto-init error:", e);
+        setupStatusText.textContent = "Failed to start automatic setup. Retrying in 3s...";
+        setTimeout(() => autoStartSetup(engine), 3000);
+      });
+  }
+
+  function pollSetupProgress() {
+    if (setupPollInterval) {
+      clearInterval(setupPollInterval);
+    }
+
+    setupPollInterval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/system/setup-status");
+        if (!res.ok) return;
+
+        const data = await res.json();
+        updateStepperProgress(data.current_step || 1, data.progress || 0, data.message);
+
+        // Error Handling
+        if (data.status === "error") {
+          clearInterval(setupPollInterval);
+          setupPollInterval = null;
+          setupStatusText.textContent = data.message || "Setup encountered an error.";
+          return;
+        }
+
+        // Complete state
+        const isComplete = data.is_ready || data.progress >= 100 || data.status === "ready";
+        if (isComplete) {
+          clearInterval(setupPollInterval);
+          setupPollInterval = null;
+
+          setupProgressBar.style.width = "100%";
+          setupProgressPercent.textContent = "100%";
+
+          for (let i = 1; i <= 8; i++) {
+            const el = document.getElementById(`step-item-${i}`);
+            if (el) el.className = "stepper-item completed";
+          }
+
+          setupStatusText.textContent = "Setup complete! Opening PantrySense...";
+
+          setTimeout(() => {
+            setupView.classList.add("hidden");
+            searchView.classList.remove("hidden");
+            ingredientInput.focus();
+          }, 600);
+        }
+      } catch (e) {
+        console.error("Error polling setup:", e);
+      }
+    }, 300);
+  }
+
+  async function handleEngineChange(newEngine) {
+    try {
+      await fetch("/api/system/set-engine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ engine: newEngine }),
+      });
+      // Re-trigger search if ingredients are present
+      if (ingredients.length > 0) {
+        searchRecipes();
+      }
+    } catch (e) {
+      console.error("Failed to switch engine:", e);
+    }
+  }
+
   // --- Helper Functions ---
+
+  function formatErrorMessage(err) {
+    if (!err) return "An unexpected error occurred.";
+    if (err.name === "TypeError" && (err.message === "Failed to fetch" || (typeof err.message === "string" && err.message.includes("fetch")))) {
+      return "Cannot connect to server. Please ensure the backend server is running (python -m uvicorn app.backend.main:app).";
+    }
+    return err.message || "An unexpected error occurred.";
+  }
 
   function setStatus(element, text, type = "info") {
     if (!text) {
@@ -103,13 +308,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function addIngredient() {
-    const value = ingredientInput.value.trim();
-    if (!value) return;
+    const rawValue = ingredientInput.value.trim();
+    if (!rawValue) return;
 
-    // Avoid duplicate ingredients (case-insensitive)
-    const exists = ingredients.some((item) => item.toLowerCase() === value.toLowerCase());
-    if (!exists) {
-      ingredients.push(value);
+    // Support single ingredient or comma/semicolon/newline separated list
+    const items = rawValue
+      .split(/[,;\n]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    let addedAny = false;
+    for (const item of items) {
+      const exists = ingredients.some(
+        (existing) => existing.toLowerCase() === item.toLowerCase()
+      );
+      if (!exists) {
+        ingredients.push(item);
+        addedAny = true;
+      }
+    }
+
+    if (addedAny) {
       renderChips();
     }
 
@@ -159,13 +378,25 @@ document.addEventListener("DOMContentLoaded", () => {
       title.className = "recipe-card-title";
       title.textContent = recipe.title;
 
+      const badgesGroup = document.createElement("div");
+      badgesGroup.className = "badges-group";
+
       const coveragePercent = Math.round(recipe.coverage * 100);
       const badge = document.createElement("span");
       badge.className = "coverage-badge";
       badge.textContent = `${coveragePercent}% match`;
+      badgesGroup.appendChild(badge);
+
+      if (recipe.ml_score !== null && recipe.ml_score !== undefined) {
+        const mlBadge = document.createElement("span");
+        mlBadge.className = "ml-badge";
+        mlBadge.title = "Learning-to-Rank Score";
+        mlBadge.textContent = `★ ${recipe.ml_score.toFixed(2)}`;
+        badgesGroup.appendChild(mlBadge);
+      }
 
       header.appendChild(title);
-      header.appendChild(badge);
+      header.appendChild(badgesGroup);
 
       const availability = document.createElement("div");
       availability.className = "recipe-card-availability";
@@ -203,7 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    setStatus(statusMessage, "Searching for matching recipes...", "info");
+    setStatus(statusMessage, "Searching & ranking matching recipes...", "info");
     resultsSection.classList.add("hidden");
     searchBtn.disabled = true;
 
@@ -228,7 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Search failed:", err);
       setStatus(
         statusMessage,
-        err.message || "Unable to connect to the backend server. Please make sure the server is running.",
+        formatErrorMessage(err),
         "error"
       );
       resultsSection.classList.add("hidden");
@@ -261,7 +492,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Failed to load recipe detail:", err);
       setStatus(
         detailStatusMessage,
-        err.message || "Failed to load recipe details. Please try again.",
+        formatErrorMessage(err),
         "error"
       );
     }
@@ -322,6 +553,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Event Listeners ---
 
+  if (engineSelect) {
+    engineSelect.addEventListener("change", (e) => handleEngineChange(e.target.value));
+  }
+
+  const ingredientForm = document.getElementById("ingredient-form");
+  if (ingredientForm) {
+    ingredientForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      addIngredient();
+    });
+  }
+
   addBtn.addEventListener("click", addIngredient);
 
   ingredientInput.addEventListener("keydown", (e) => {
@@ -335,6 +578,7 @@ document.addEventListener("DOMContentLoaded", () => {
   clearBtn.addEventListener("click", clearAll);
   backBtn.addEventListener("click", backToResults);
 
-  // Initial render
+  // Initial setup check
+  checkInitialSetup();
   renderChips();
 });

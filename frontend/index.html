@@ -10,9 +10,75 @@
   <div class="container">
     <!-- Header -->
     <header class="app-header">
-      <h1 class="app-title">PantrySense</h1>
-      <p class="app-subtitle">What ingredients do you have?</p>
+      <div class="header-content">
+        <h1 class="app-title">PantrySense</h1>
+        <p class="app-subtitle">What ingredients do you have?</p>
+      </div>
+      <div class="header-actions">
+        <div class="header-engine-selector">
+          <label for="engine-select" class="engine-select-label">AI Engine:</label>
+          <select id="engine-select" class="engine-select-dropdown" title="Select AI Embedding Model Engine">
+            <option value="cuda">🚀 PyTorch CUDA (all-MiniLM-L6-v2) - GPU</option>
+            <option value="onnx">⚡ FastEmbed ONNX INT8 (all-MiniLM-L6-v2) - CPU</option>
+          </select>
+        </div>
+      </div>
     </header>
+
+    <!-- First-Time / Automatic Onboarding Setup View -->
+    <main id="setup-view" class="view hidden">
+      <section class="setup-card">
+        <div class="setup-icon">🍳</div>
+        <h2 class="setup-title">Preparing 50,000 Recipe Archive</h2>
+        <p class="setup-subtitle">
+          PantrySense is automatically downloading the complete recipe dataset and building AI vector search indices...
+        </p>
+
+        <div class="progress-container">
+          <div id="setup-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+        <div class="progress-info">
+          <span id="setup-status-text">Initializing dataset download...</span>
+          <span id="setup-progress-percent">0%</span>
+        </div>
+
+        <!-- 8-Step Visual Stepper -->
+        <div class="setup-stepper-grid">
+          <div class="stepper-item" id="step-item-1">
+            <span class="step-num">1</span>
+            <span class="step-label">Init SQLite Schema</span>
+          </div>
+          <div class="stepper-item" id="step-item-2">
+            <span class="step-num">2</span>
+            <span class="step-label">Download Parquet Archive</span>
+          </div>
+          <div class="stepper-item" id="step-item-3">
+            <span class="step-num">3</span>
+            <span class="step-label">Normalize & Ingest Data</span>
+          </div>
+          <div class="stepper-item" id="step-item-4">
+            <span class="step-num">4</span>
+            <span class="step-label">Generate AI Embeddings</span>
+          </div>
+          <div class="stepper-item" id="step-item-5">
+            <span class="step-num">5</span>
+            <span class="step-label">Build FAISS Vector Index</span>
+          </div>
+          <div class="stepper-item" id="step-item-6">
+            <span class="step-num">6</span>
+            <span class="step-label">Build BM25 Lexical Index</span>
+          </div>
+          <div class="stepper-item" id="step-item-7">
+            <span class="step-num">7</span>
+            <span class="step-label">Train Machine Learning Ranker</span>
+          </div>
+          <div class="stepper-item" id="step-item-8">
+            <span class="step-num">8</span>
+            <span class="step-label">Ready & Verified</span>
+          </div>
+        </div>
+      </section>
+    </main>
 
     <!-- Search View -->
     <main id="search-view" class="view">
@@ -22,7 +88,7 @@
             type="text"
             id="ingredient-input"
             class="ingredient-input"
-            placeholder="e.g. Chicken, Tomato, Egg"
+            placeholder="e.g. Noodles, Milk, Egg"
             autocomplete="off"
             aria-label="Enter ingredient"
           />
