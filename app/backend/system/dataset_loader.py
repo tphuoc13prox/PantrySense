@@ -62,6 +62,29 @@ def _parse_duration_minutes(val: Any) -> int:
     return min(max(total, 5), 180) if total > 0 else 20
 
 
+def _parse_quantity(val: Any) -> float:
+    if not val:
+        return 1.0
+    if isinstance(val, (int, float)):
+        return float(val)
+    val_str = str(val).strip()
+    if not val_str:
+        return 1.0
+    if "/" in val_str:
+        parts = val_str.split("/")
+        if len(parts) == 2:
+            try:
+                num = float(parts[0].strip())
+                den = float(parts[1].strip())
+                return num / den if den != 0 else 1.0
+            except Exception:
+                pass
+    try:
+        return float(val_str)
+    except Exception:
+        return 1.0
+
+
 def _parse_hf_recipe_text(row_dict: dict[str, Any]) -> dict[str, Any] | None:
     try:
         title = (
@@ -232,7 +255,7 @@ def load_recipes_from_parquet(
         "RecipeServings",
     ]
 
-    for batch in pf.iter_batches(batch_size=2500, columns=columns):
+    for batch in pf.iter_batches(batch_size=10000, columns=columns):
         pydict = batch.to_pydict()
         names = pydict.get("Name", [])
         ing_parts = pydict.get("RecipeIngredientParts", [])
@@ -262,10 +285,7 @@ def load_recipes_from_parquet(
                         parsed_ingredients.append(short_name)
                         q_val = 1.0
                         if idx < len(raw_q):
-                            try:
-                                q_val = float(eval(raw_q[idx]))
-                            except Exception:
-                                q_val = 1.0
+                            q_val = _parse_quantity(raw_q[idx])
                         ingredient_details.append({"name": short_name, "quantity": q_val, "unit": "portion"})
 
             if not parsed_ingredients:
@@ -316,13 +336,13 @@ def load_recipes_from_parquet(
                 "category": category,
             })
 
-            if len(recipes) >= limit:
+            if limit > 0 and len(recipes) >= limit:
                 break
 
         if progress_callback:
             progress_callback(len(recipes), limit)
 
-        if len(recipes) >= limit:
+        if limit > 0 and len(recipes) >= limit:
             break
 
     logger.info("Loaded and parsed %d recipes from parquet file.", len(recipes))
@@ -1049,8 +1069,12 @@ class SetupManager:
 
             online_recipes = []
             if parquet_path and parquet_path.exists():
-                self._update_step(2, 33.0, "step2", f"Step 2/8: Parsing {target_limit} recipes from parquet archive...")
-                online_recipes = load_recipes_from_parquet(parquet_path, limit=target_limit)
+                def parse_cb(parsed_so_far: int, target: int) -> None:
+                    pct = 25.0 + (parsed_so_far / target) * 10.0
+                    self._update_step(2, pct, "step2", f"Step 2/8: Parsed {parsed_so_far:,} / {target:,} recipes from parquet archive...")
+
+                self._update_step(2, 25.0, "step2", f"Step 2/8: Parsing {target_limit:,} recipes from parquet archive...")
+                online_recipes = load_recipes_from_parquet(parquet_path, limit=target_limit, progress_callback=parse_cb)
 
             if len(online_recipes) < min(100, target_limit):
                 self._update_step(2, 34.0, "step2", f"Step 2/8: Fetching online recipes from Hugging Face...")
@@ -1060,14 +1084,16 @@ class SetupManager:
                         online_recipes.append(r)
 
             all_recipes = list(CORE_RECIPE_CATALOG)
+            seen_titles = {r["title"].strip().lower() for r in all_recipes}
             for r in online_recipes:
-                if not any(existing["title"].lower() == r["title"].lower() for existing in all_recipes):
+                clean_t = r["title"].strip().lower()
+                if clean_t not in seen_titles:
+                    seen_titles.add(clean_t)
                     all_recipes.append(r)
             total = len(all_recipes)
-            time.sleep(0.3)
 
             # Step 3: Fast Batch Ingestion into SQLite
-            self._update_step(3, 38.0, "step3", f"Step 3/8: Ingesting and normalizing {total} recipes into SQLite database...")
+            self._update_step(3, 35.0, "step3", f"Step 3/8: Ingesting and normalizing {total:,} recipes into SQLite database...")
             with get_connection(db_path) as conn:
                 conn.execute("DELETE FROM recipes")
                 batch_records = []
@@ -1082,18 +1108,24 @@ class SetupManager:
                         r["servings"],
                         r["category"],
                     ))
-                conn.executemany(
-                    """
-                    INSERT INTO recipes (title, ingredients, ingredient_details, instructions, cooking_time, difficulty, servings, category)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    batch_records,
-                )
-                conn.commit()
+                chunk_size = 25000
+                for c_idx in range(0, len(batch_records), chunk_size):
+                    slice_records = batch_records[c_idx : c_idx + chunk_size]
+                    conn.executemany(
+                        """
+                        INSERT INTO recipes (title, ingredients, ingredient_details, instructions, cooking_time, difficulty, servings, category)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        slice_records,
+                    )
+                    conn.commit()
+                    inserted_cnt = min(total, c_idx + len(slice_records))
+                    step3_pct = 35.0 + (inserted_cnt / total) * 5.0
+                    self._update_step(3, step3_pct, "step3", f"Step 3/8: Ingested {inserted_cnt:,} / {total:,} recipes into SQLite...")
             time.sleep(0.3)
 
             # Step 4: AI Embedder Pre-warm & Embeddings
-            self._update_step(4, 50.0, "step4", f"Step 4/8: Computing 384-dim embeddings ({engine_name}) for {total} recipes...")
+            self._update_step(4, 40.0, "step4", f"Step 4/8: Computing 384-dim embeddings ({engine_name}) for {total:,} recipes...")
             embedder = IngredientEmbedder(engine=engine)
             with get_connection(db_path) as conn:
                 rows = conn.execute("SELECT id, title, ingredients FROM recipes ORDER BY id").fetchall()
@@ -1105,18 +1137,29 @@ class SetupManager:
                 ingredients = json.loads(row["ingredients"] or "[]")
                 recipe_texts.append(build_recipe_representation(row["title"], ingredients))
 
-            embeddings = embedder.embed_texts(recipe_texts)
+            chunk_size = 10000
+            all_embeddings = []
+            for idx in range(0, total, chunk_size):
+                sub_texts = recipe_texts[idx : idx + chunk_size]
+                sub_emb = embedder.embed_texts(sub_texts)
+                all_embeddings.append(sub_emb)
+                done_count = min(total, idx + len(sub_texts))
+                pct = 40.0 + (done_count / total) * 28.0
+                self._update_step(4, pct, "step4", f"Step 4/8: Computed {done_count:,} / {total:,} embeddings ({engine_name})...")
+
+            import numpy as np
+            embeddings = np.vstack(all_embeddings) if all_embeddings else np.empty((0, embedder.dimension), dtype=np.float32)
             time.sleep(0.3)
 
             # Step 5: FAISS Dense Vector Index
-            self._update_step(5, 70.0, "step5", f"Step 5/8: Building FAISS IndexFlatIP dense vector store ({total} vectors)...")
+            self._update_step(5, 70.0, "step5", f"Step 5/8: Building FAISS IndexFlatIP dense vector store ({total:,} vectors)...")
             vector_store = FaissVectorStore(dimension=embedder.dimension)
             vector_store.add(embeddings, recipe_ids)
             vector_store.save(get_vector_index_path(), get_vector_ids_path())
             time.sleep(0.3)
 
             # Step 6: BM25 Sparse Lexical Index
-            self._update_step(6, 80.0, "step6", f"Step 6/8: Building BM25Okapi sparse lexical search index ({total} docs)...")
+            self._update_step(6, 80.0, "step6", f"Step 6/8: Building BM25Okapi sparse lexical search index ({total:,} docs)...")
             bm25_store = BM25Store()
             bm25_store.add_corpus(recipe_ids, recipe_texts)
             bm25_store.save(get_bm25_index_path())

@@ -1,8 +1,53 @@
+# Python & Bytecode
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testing & Caches
 .pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Environments & Virtual Envs
 .venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vs/
 bin/
 obj/
-.vs/
+
+# Runtime Datasets, Databases, Indices & Artifacts
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+data/*.parquet
+data/*.tmp
+data/*.index
+data/*.json
+data/*.joblib
+data/*.bin
+!data/.gitkeep
+
+# Root/Global binary & dataset patterns
 *.parquet
+*.db
+*.joblib
+*.index
+
+# OS files
+.DS_Store
+Thumbs.db
