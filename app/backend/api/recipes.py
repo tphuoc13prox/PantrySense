@@ -13,7 +13,12 @@ router = APIRouter(prefix="/api/recipes", tags=["recipes"])
 def search_recipes(request: RecipeSearchRequest) -> RecipeSearchResponse:
     service = RecipeSearchService()
     try:
-        results = service.search(request.ingredients)
+        results = service.search(
+            raw_ingredients=request.ingredients,
+            filters=request.filters,
+            max_cooking_time=request.max_cooking_time,
+            category=request.category,
+        )
         return RecipeSearchResponse(recipes=results)
     except SemanticIndexNotFoundError as e:
         raise HTTPException(

@@ -4,26 +4,47 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PantrySense</title>
-  <link rel="stylesheet" href="/style.css?v=0.8.2" />
+  <link rel="stylesheet" href="/style.css?v=1.0.0" />
 </head>
 <body>
   <div class="container">
     <!-- Header -->
     <header class="app-header">
       <div class="header-content">
-        <h1 class="app-title">PantrySense</h1>
-        <p class="app-subtitle">What ingredients do you have?</p>
+        <div class="header-logo-row">
+          <span class="logo-emoji">🍳</span>
+          <div>
+            <h1 class="app-title">PantrySense <span class="app-version-badge">v1.0</span></h1>
+            <p class="app-subtitle">AI-Powered Recipe Discovery, Pantry & Meal Planner</p>
+          </div>
+        </div>
       </div>
       <div class="header-actions">
         <div class="header-engine-selector">
           <label for="engine-select" class="engine-select-label">AI Engine:</label>
           <select id="engine-select" class="engine-select-dropdown" title="Select AI Embedding Model Engine">
-            <option value="cuda">🚀 PyTorch CUDA (all-MiniLM-L6-v2) - GPU</option>
-            <option value="onnx">⚡ FastEmbed ONNX INT8 (all-MiniLM-L6-v2) - CPU</option>
+            <option value="cuda">🚀 PyTorch CUDA (GPU)</option>
+            <option value="onnx">⚡ FastEmbed ONNX (CPU)</option>
           </select>
         </div>
       </div>
     </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="app-nav-tabs">
+      <button type="button" class="nav-tab active" data-target="search-view">
+        <span class="nav-icon">🔍</span> Search Recipes
+      </button>
+      <button type="button" class="nav-tab" data-target="pantry-view">
+        <span class="nav-icon">🥑</span> My Pantry <span id="pantry-badge" class="nav-count-badge hidden">0</span>
+      </button>
+      <button type="button" class="nav-tab" data-target="planner-view">
+        <span class="nav-icon">📅</span> Meal Planner
+      </button>
+      <button type="button" class="nav-tab" data-target="favorites-view">
+        <span class="nav-icon">⭐</span> Favorites <span id="fav-badge" class="nav-count-badge hidden">0</span>
+      </button>
+    </nav>
 
     <!-- First-Time / Automatic Onboarding Setup View -->
     <main id="setup-view" class="view hidden">
@@ -31,7 +52,7 @@
         <div class="setup-icon">🍳</div>
         <h2 class="setup-title">Preparing 380,000 Recipe Archive</h2>
         <p class="setup-subtitle">
-          PantrySense is automatically processing the complete 380,000 recipe dataset and building AI vector search indices...
+          PantrySense is automatically processing the complete recipe dataset and building AI vector search indices...
         </p>
 
         <div class="progress-container">
@@ -44,44 +65,20 @@
 
         <!-- 8-Step Visual Stepper -->
         <div class="setup-stepper-grid">
-          <div class="stepper-item" id="step-item-1">
-            <span class="step-num">1</span>
-            <span class="step-label">Init SQLite Schema</span>
-          </div>
-          <div class="stepper-item" id="step-item-2">
-            <span class="step-num">2</span>
-            <span class="step-label">Download Parquet Archive</span>
-          </div>
-          <div class="stepper-item" id="step-item-3">
-            <span class="step-num">3</span>
-            <span class="step-label">Normalize & Ingest Data</span>
-          </div>
-          <div class="stepper-item" id="step-item-4">
-            <span class="step-num">4</span>
-            <span class="step-label">Generate AI Embeddings</span>
-          </div>
-          <div class="stepper-item" id="step-item-5">
-            <span class="step-num">5</span>
-            <span class="step-label">Build FAISS Vector Index</span>
-          </div>
-          <div class="stepper-item" id="step-item-6">
-            <span class="step-num">6</span>
-            <span class="step-label">Build BM25 Lexical Index</span>
-          </div>
-          <div class="stepper-item" id="step-item-7">
-            <span class="step-num">7</span>
-            <span class="step-label">Train Machine Learning Ranker</span>
-          </div>
-          <div class="stepper-item" id="step-item-8">
-            <span class="step-num">8</span>
-            <span class="step-label">Ready & Verified</span>
-          </div>
+          <div class="stepper-item" id="step-item-1"><span class="step-num">1</span><span class="step-label">Init SQLite Schema</span></div>
+          <div class="stepper-item" id="step-item-2"><span class="step-num">2</span><span class="step-label">Download Parquet Archive</span></div>
+          <div class="stepper-item" id="step-item-3"><span class="step-num">3</span><span class="step-label">Normalize & Ingest Data</span></div>
+          <div class="stepper-item" id="step-item-4"><span class="step-num">4</span><span class="step-label">Generate AI Embeddings</span></div>
+          <div class="stepper-item" id="step-item-5"><span class="step-num">5</span><span class="step-label">Build FAISS Vector Index</span></div>
+          <div class="stepper-item" id="step-item-6"><span class="step-num">6</span><span class="step-label">Build BM25 Lexical Index</span></div>
+          <div class="stepper-item" id="step-item-7"><span class="step-num">7</span><span class="step-label">Train Machine Learning Ranker</span></div>
+          <div class="stepper-item" id="step-item-8"><span class="step-num">8</span><span class="step-label">Ready & Verified</span></div>
         </div>
       </section>
     </main>
 
-    <!-- Search View -->
-    <main id="search-view" class="view">
+    <!-- 1. Search Recipes View -->
+    <main id="search-view" class="tab-view view">
       <section class="input-section">
         <form id="ingredient-form" class="ingredient-form" onsubmit="return false;">
           <div class="autocomplete-wrapper">
@@ -89,7 +86,7 @@
               type="text"
               id="ingredient-input"
               class="ingredient-input"
-              placeholder="e.g. Noodles, Milk, Egg"
+              placeholder="e.g. Chicken, Tomato, Garlic, Olive oil"
               autocomplete="off"
               aria-label="Enter ingredient"
             />
@@ -99,9 +96,74 @@
         </form>
 
         <div class="ingredients-container">
-          <div class="section-label">Current ingredients</div>
+          <div class="ingredients-header-row">
+            <span class="section-label">Selected Ingredients</span>
+            <button type="button" id="load-from-pantry-btn" class="btn-text-action">
+              ⚡ Load All from My Pantry
+            </button>
+          </div>
           <div id="ingredient-chips" class="ingredient-chips">
-            <span class="placeholder-text">No ingredients added yet. Type an ingredient above and click Add.</span>
+            <span class="placeholder-text">No ingredients added yet. Type an ingredient above or load from your pantry.</span>
+          </div>
+        </div>
+
+        <!-- Dietary & Filter Controls -->
+        <div class="filters-panel">
+          <div class="filters-header">
+            <span class="filter-title">Dietary Preferences & Time:</span>
+          </div>
+          <div class="filter-chips-row">
+            <label class="filter-chip">
+              <input type="checkbox" id="filter-vegetarian" />
+              <span>🌱 Vegetarian</span>
+            </label>
+            <label class="filter-chip">
+              <input type="checkbox" id="filter-vegan" />
+              <span>🌿 Vegan</span>
+            </label>
+            <label class="filter-chip">
+              <input type="checkbox" id="filter-gluten-free" />
+              <span>🌾 Gluten-Free</span>
+            </label>
+            <label class="filter-chip">
+              <input type="checkbox" id="filter-dairy-free" />
+              <span>🥛 Dairy-Free</span>
+            </label>
+            <label class="filter-chip">
+              <input type="checkbox" id="filter-nut-free" />
+              <span>🥜 Nut-Free</span>
+            </label>
+            <label class="filter-chip">
+              <input type="checkbox" id="filter-keto" />
+              <span>🥩 Keto / Low-Carb</span>
+            </label>
+          </div>
+
+          <div class="secondary-filters-row">
+            <div class="filter-group">
+              <label for="filter-time">Max Cooking Time:</label>
+              <select id="filter-time" class="filter-select">
+                <option value="">Any Duration</option>
+                <option value="15">⚡ Under 15 mins</option>
+                <option value="30">⏱ Under 30 mins</option>
+                <option value="45">⏱ Under 45 mins</option>
+                <option value="60">⏱ Under 60 mins</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-allergen">Exclude Allergen:</label>
+              <select id="filter-allergen" class="filter-select">
+                <option value="">None</option>
+                <option value="peanuts">Peanuts</option>
+                <option value="tree_nuts">Tree Nuts</option>
+                <option value="dairy">Dairy</option>
+                <option value="eggs">Eggs</option>
+                <option value="gluten">Gluten</option>
+                <option value="shellfish">Shellfish</option>
+                <option value="fish">Fish</option>
+                <option value="soy">Soy</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -116,16 +178,111 @@
 
       <!-- Results Section -->
       <section id="results-section" class="results-section hidden">
-        <h2 class="section-title">Possible Meals</h2>
+        <h2 class="section-title">Matching Recipes</h2>
         <div id="recipe-list" class="recipe-list"></div>
+      </section>
+    </main>
+
+    <!-- 2. My Pantry View -->
+    <main id="pantry-view" class="tab-view view hidden">
+      <section class="pantry-card">
+        <div class="pantry-header-row">
+          <div>
+            <h2 class="section-title">My Virtual Pantry</h2>
+            <p class="section-desc">Track what items you have in stock and their expiration dates.</p>
+          </div>
+          <button type="button" id="pantry-search-recipes-btn" class="btn btn-primary">
+            🔍 Find Recipes with My Pantry
+          </button>
+        </div>
+
+        <!-- Expiry Warning Banner -->
+        <div id="pantry-alert-banner" class="pantry-alert-banner hidden"></div>
+
+        <!-- Add Pantry Item Form -->
+        <form id="pantry-add-form" class="pantry-add-form" onsubmit="return false;">
+          <div class="pantry-form-grid">
+            <input type="text" id="pantry-item-name" class="form-input" placeholder="Ingredient name (e.g. Milk)" required />
+            <input type="number" id="pantry-item-qty" class="form-input" placeholder="Qty" value="1" min="0.1" step="0.1" />
+            <input type="text" id="pantry-item-unit" class="form-input" placeholder="Unit (pcs, cups, g)" value="pcs" />
+            <select id="pantry-item-cat" class="form-input">
+              <option value="General">General</option>
+              <option value="Produce">Produce / Veggies</option>
+              <option value="Dairy & Eggs">Dairy & Eggs</option>
+              <option value="Meat & Seafood">Meat & Seafood</option>
+              <option value="Pantry & Grains">Pantry & Grains</option>
+              <option value="Condiments">Condiments & Spices</option>
+            </select>
+            <input type="date" id="pantry-item-expiry" class="form-input" title="Expiration Date" />
+            <button type="button" id="pantry-add-btn" class="btn btn-secondary">+ Add to Pantry</button>
+          </div>
+        </form>
+
+        <!-- Pantry Inventory Table/List -->
+        <div class="pantry-inventory-container">
+          <div id="pantry-items-list" class="pantry-items-list">
+            <div class="empty-state">Loading your pantry...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 3. Meal Planner View -->
+    <main id="planner-view" class="tab-view view hidden">
+      <section class="planner-card">
+        <div class="planner-header-row">
+          <div>
+            <h2 class="section-title">Weekly Meal Planner</h2>
+            <p class="section-desc">Plan your meals for the next 7 days and auto-generate grocery lists.</p>
+          </div>
+          <div class="planner-actions">
+            <button type="button" id="generate-shopping-list-btn" class="btn btn-primary">
+              🛒 Generate Grocery List
+            </button>
+            <button type="button" id="clear-all-plans-btn" class="btn btn-outline">
+              Clear Week
+            </button>
+          </div>
+        </div>
+
+        <!-- 7-Day Grid -->
+        <div id="meal-plan-grid" class="meal-plan-grid"></div>
+      </section>
+    </main>
+
+    <!-- 4. Favorites View -->
+    <main id="favorites-view" class="tab-view view hidden">
+      <section class="favorites-card">
+        <div class="favorites-header-row">
+          <div>
+            <h2 class="section-title">Saved Recipes</h2>
+            <p class="section-desc">Quickly access your bookmarked favorite meals.</p>
+          </div>
+        </div>
+        <div id="favorites-list" class="recipe-list">
+          <div class="empty-state">No favorite recipes bookmarked yet. Click the ⭐ icon on any recipe to save it here!</div>
+        </div>
       </section>
     </main>
 
     <!-- Recipe Detail View -->
     <main id="detail-view" class="view hidden">
-      <button type="button" id="back-btn" class="btn btn-outline back-btn">
-        &larr; Back to Results
-      </button>
+      <div class="detail-top-nav">
+        <button type="button" id="back-btn" class="btn btn-outline back-btn">
+          &larr; Back
+        </button>
+        <div class="detail-top-actions">
+          <button type="button" id="favorite-toggle-btn" class="btn btn-outline" title="Bookmark Recipe">
+            ⭐ Bookmark
+          </button>
+          <button type="button" id="start-cooking-btn" class="btn btn-primary">
+            🚀 Step-by-Step Cooking Mode
+          </button>
+          <button type="button" id="add-to-plan-btn" class="btn btn-secondary">
+            📅 Add to Meal Plan
+          </button>
+        </div>
+      </div>
 
       <div id="detail-status-message" class="status-message hidden" role="status"></div>
 
@@ -139,6 +296,26 @@
           <span id="detail-category" class="meta-badge"></span>
         </div>
 
+        <div id="detail-dietary-tags" class="detail-dietary-tags"></div>
+
+        <!-- Nutrition Overview Card -->
+        <div id="detail-nutrition-card" class="nutrition-card">
+          <h3 class="card-subtitle">Estimated Nutrition (per serving)</h3>
+          <div class="nutrition-macros-grid">
+            <div class="macro-pill macro-cal"><span class="macro-val" id="macro-calories">0</span><span class="macro-label">Calories</span></div>
+            <div class="macro-pill macro-pro"><span class="macro-val" id="macro-protein">0g</span><span class="macro-label">Protein</span></div>
+            <div class="macro-pill macro-carb"><span class="macro-val" id="macro-carbs">0g</span><span class="macro-label">Carbs</span></div>
+            <div class="macro-pill macro-fat"><span class="macro-val" id="macro-fat">0g</span><span class="macro-label">Fat</span></div>
+            <div class="macro-pill macro-fiber"><span class="macro-val" id="macro-fiber">0g</span><span class="macro-label">Fiber</span></div>
+          </div>
+        </div>
+
+        <!-- Smart Substitutions Card -->
+        <div id="detail-substitutions-card" class="substitutions-card hidden">
+          <h3 class="card-subtitle">💡 Smart Ingredient Substitutions</h3>
+          <div id="substitutions-list" class="substitutions-list"></div>
+        </div>
+
         <section class="detail-section">
           <h3 class="detail-section-title">Ingredients</h3>
           <ul id="detail-ingredients" class="ingredient-list"></ul>
@@ -150,8 +327,111 @@
         </section>
       </article>
     </main>
+
+    <!-- Modal: Interactive Step-by-Step Cooking Assistant -->
+    <div id="cooking-modal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">👨‍🍳 Cooking Assistant</h3>
+          <button type="button" id="close-cooking-modal" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="cooking-modal-body">
+          <div class="cooking-step-progress-bar">
+            <div id="cooking-step-progress" class="cooking-step-progress-fill" style="width: 0%;"></div>
+          </div>
+          <div class="cooking-step-header">
+            <span id="cooking-step-badge" class="step-indicator-badge">Step 1 of 5</span>
+            <span id="cooking-recipe-name" class="cooking-recipe-name">Recipe Title</span>
+          </div>
+          <div id="cooking-step-instruction" class="cooking-step-text">
+            Instruction text appears here...
+          </div>
+
+          <!-- Built-in Timer UI -->
+          <div id="cooking-timer-box" class="cooking-timer-box hidden">
+            <div class="timer-display-row">
+              <span class="timer-icon">⏳</span>
+              <span id="timer-countdown" class="timer-countdown">00:00</span>
+              <span id="timer-label" class="timer-label">Timer</span>
+            </div>
+            <div class="timer-controls">
+              <button type="button" id="timer-start-btn" class="btn btn-sm btn-primary">Start Timer</button>
+              <button type="button" id="timer-reset-btn" class="btn btn-sm btn-outline">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="cooking-prev-btn" class="btn btn-outline">&larr; Previous Step</button>
+          <button type="button" id="cooking-next-btn" class="btn btn-primary">Next Step &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Add to Meal Plan -->
+    <div id="plan-modal" class="modal-backdrop hidden">
+      <div class="modal-card modal-card-sm">
+        <div class="modal-header">
+          <h3 class="modal-title">📅 Schedule to Meal Plan</h3>
+          <button type="button" id="close-plan-modal" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="plan-modal-recipe-title" class="plan-modal-title">Recipe Title</p>
+          <div class="form-group">
+            <label for="plan-day-select">Day of Week:</label>
+            <select id="plan-day-select" class="form-input">
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+              <option value="Sunday">Sunday</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="plan-slot-select">Meal Slot:</label>
+            <select id="plan-slot-select" class="form-input">
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner" selected>Dinner</option>
+              <option value="snack">Snack</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="plan-servings-input">Servings:</label>
+            <input type="number" id="plan-servings-input" class="form-input" value="2" min="1" max="20" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="confirm-add-plan-btn" class="btn btn-primary">Save to Schedule</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Grocery Shopping List -->
+    <div id="shopping-modal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🛒 Weekly Grocery Shopping List</h3>
+          <button type="button" id="close-shopping-modal" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="shopping-options-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="shopping-subtract-pantry" checked />
+              <span>Deduct ingredients already in My Pantry</span>
+            </label>
+            <button type="button" id="copy-shopping-list-btn" class="btn btn-sm btn-outline">
+              📋 Copy to Clipboard
+            </button>
+          </div>
+          <div id="shopping-list-items" class="shopping-list-items"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <script src="/app.js?v=0.8.2"></script>
+  <script src="/app.js?v=1.0.0"></script>
 </body>
 </html>
