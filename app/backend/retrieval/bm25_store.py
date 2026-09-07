@@ -59,6 +59,15 @@ class BM25Store:
                 self.doc_freqs[term] = self.doc_freqs.get(term, 0) + 1
 
         self.avg_doc_len = total_length / self.total_docs if self.total_docs > 0 else 0.0
+        self._build_inverted_index()
+
+    def _build_inverted_index(self) -> None:
+        self.inverted_index: dict[str, list[tuple[int, int]]] = {}
+        for idx, tf in enumerate(self.term_freqs):
+            for term, count in tf.items():
+                if term not in self.inverted_index:
+                    self.inverted_index[term] = []
+                self.inverted_index[term].append((idx, count))
 
     def _idf(self, term: str) -> float:
         """Calculate Robertson-Spärck Jones IDF."""
@@ -66,13 +75,16 @@ class BM25Store:
         return math.log((self.total_docs - df + 0.5) / (df + 0.5) + 1.0)
 
     def search(self, query: str | list[str], top_k: int = 20) -> list[tuple[int, float, int]]:
-        """Search the corpus using BM25Okapi scoring.
+        """Search the corpus using BM25Okapi scoring with fast inverted posting list.
 
         Returns:
             List of (recipe_id, bm25_score, rank_1_indexed) tuples.
         """
         if self.is_empty:
             return []
+
+        if not hasattr(self, "inverted_index") or not self.inverted_index:
+            self._build_inverted_index()
 
         if isinstance(query, str):
             tokens = tokenize(query)
@@ -82,27 +94,27 @@ class BM25Store:
         if not tokens:
             return []
 
-        scores: list[float] = [0.0] * self.total_docs
+        scores: dict[int, float] = {}
 
         for term in tokens:
-            if term not in self.doc_freqs:
+            postings = self.inverted_index.get(term)
+            if not postings:
                 continue
 
             idf = self._idf(term)
-            for idx in range(self.total_docs):
-                tf = self.term_freqs[idx].get(term, 0)
-                if tf == 0:
-                    continue
-
+            for idx, tf in postings:
                 doc_len = self.doc_lengths[idx]
                 numerator = tf * (self.k1 + 1.0)
                 denominator = tf + self.k1 * (1.0 - self.b + self.b * (doc_len / self.avg_doc_len))
-                scores[idx] += idf * (numerator / denominator)
+                scores[idx] = scores.get(idx, 0.0) + idf * (numerator / denominator)
 
-        # Filter out zero scores and sort descending
+        if not scores:
+            return []
+
+        # Filter and sort descending
         scored_candidates = [
             (self.recipe_ids[idx], score)
-            for idx, score in enumerate(scores)
+            for idx, score in scores.items()
             if score > 0.0
         ]
         scored_candidates.sort(key=lambda x: -x[1])
@@ -127,7 +139,7 @@ class BM25Store:
             "total_docs": self.total_docs,
         }
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+            json.dump(data, f)
         logger.info("Saved BM25 index to %s", path)
 
     def load(self, path: Path) -> bool:
@@ -146,6 +158,7 @@ class BM25Store:
             self.doc_freqs = {str(k): int(v) for k, v in data["doc_freqs"].items()}
             self.term_freqs = [{str(k): int(v) for k, v in tf.items()} for tf in data["term_freqs"]]
             self.total_docs = int(data["total_docs"])
+            self._build_inverted_index()
             return True
         except Exception as e:
             logger.warning("Failed to load BM25 index from %s: %s", path, e)

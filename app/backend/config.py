@@ -115,7 +115,7 @@ def set_embedder_engine(engine: str) -> None:
 
 
 def get_dataset_download_limit() -> int:
-    return int(os.getenv("PANTRYSENSE_DATASET_LIMIT", "50000"))
+    return int(os.getenv("PANTRYSENSE_DATASET_LIMIT", "380000"))
 
 
 def get_startup_grace_period_seconds() -> float:

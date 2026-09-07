@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         engine: engine || "onnx",
-        dataset_limit: 50000,
+        dataset_limit: 380000,
       }),
     })
       .then((res) => res.json())

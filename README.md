@@ -1,8 +1,8 @@
 # PantrySense
 
-PantrySense is an offline-first, local AI/ML-oriented recipe discovery and recommendation application. In **v0.8.0**, PantrySense introduces **Dual-Engine High-Speed AI Acceleration (PyTorch CUDA & FastEmbed ONNX INT8)**, an interactive **Header Model Engine Selector Dropdown**, **Automatic Full-Scale 50,000 Dataset Onboarding (via Hugging Face Parquet Stream)**, and **Two-Stage Search with Learning-to-Rank (LTR)** combining **Hybrid Candidate Retrieval (BM25 + FAISS + RRF)** with a **Machine Learning Re-Ranker (LightGBM / LambdaMART)** based on 9-dimensional multi-modal features.
+PantrySense is an offline-first, local AI/ML-oriented recipe discovery and recommendation application. In **v0.8.1**, PantrySense features **Dual-Engine High-Speed AI Acceleration (PyTorch CUDA & FastEmbed ONNX INT8)**, an interactive **Header Model Engine Selector Dropdown**, **Full-Scale Complete Recipe Archive Ingestion (315,447 unique recipes from 380,000 records via Hugging Face Parquet Stream)**, **Inverted Index BM25 Lexical Retrieval**, **Git Cleanliness with Zero Binary Bloat**, and **Two-Stage Search with Learning-to-Rank (LTR)** combining **Hybrid Candidate Retrieval (BM25 + FAISS + RRF)** with a **Machine Learning Re-Ranker (LightGBM / LambdaMART)** based on 9-dimensional multi-modal features.
 
-Current version: **v0.8.0**
+Current version: **v0.8.1**
 
 ## Architecture
 
@@ -15,7 +15,7 @@ Current version: **v0.8.0**
                         ┌───────────────────┴───────────────────┐
                         ▼                                       ▼
              🚀 PyTorch CUDA Engine                 ⚡ FastEmbed ONNX INT8 Engine
-          (NVIDIA GPU ~775+ items/sec)                (Quantized CPU ~126 items/sec)
+          (NVIDIA GPU ~2,600+ items/sec)              (Quantized CPU ~126 items/sec)
                         │                                       │
                         └───────────────────┬───────────────────┘
                                             ▼
@@ -23,7 +23,7 @@ Current version: **v0.8.0**
                                             │
                                             ▼
                         TẦNG 1: HYBRID CANDIDATE RETRIEVAL
-                         (BM25 + FAISS + Reciprocal Rank Fusion)
+                         (Inverted BM25 + FAISS FlatIP + Reciprocal Rank Fusion)
                                             │
                                             ▼ (Top-20 Candidate Pool)
                         TẦNG 2: MULTI-MODAL FEATURE EXTRACTION
@@ -51,18 +51,18 @@ Heuristic sorting (e.g. only matching ingredients) misses practical cooking trad
 ## Implemented Features
 
 - **Dual-Engine High-Speed Acceleration**:
-  - 🚀 **PyTorch CUDA (NVIDIA GPU)**: Ultra-fast batch inference reaching ~775+ recipes/second on NVIDIA GPUs.
+  - 🚀 **PyTorch CUDA (NVIDIA GPU)**: Ultra-fast batch inference reaching ~2,600+ recipes/second on NVIDIA GPUs.
   - ⚡ **FastEmbed ONNX INT8 (CPU)**: Highly-optimized quantized ONNX runtime inference (~126 recipes/second) requiring no dedicated GPU and minimal CPU overhead.
   - **Auto-Detection**: Onboarding screen automatically identifies whether a compatible NVIDIA GPU is present and selects the optimal engine by default.
 
-- **Automatic Full-Scale 50,000 Dataset Onboarding**:
-  - **No Manual Buttons Needed**: If no dataset is detected, PantrySense automatically displays the visual loading screen and builds the complete 50,000 recipe archive with 8-step progress tracking.
-  - **Direct Search Access**: Once the dataset is ready, opening the application bypasses onboarding and goes straight to the recipe query interface.
-  - Seamless animated transition from loading stepper to search input.
+- **Complete Full-Scale Recipe Dataset Ingestion (315,447 Recipes)**:
+  - **Comprehensive Culinary Corpus**: Ingests all 380,000 dataset records (yielding 315,447 unique culinary dishes) directly from the Hugging Face / Food.com Parquet archive with zero loss or downsampling.
+  - **Inverted Index BM25**: Optimized inverted posting list lookup delivers sub-millisecond lexical scoring across 315,447 recipes.
+  - **Seamless Initial Setup**: Auto-detects dataset presence and visualizes the 8-step pipeline with real-time percentage progress.
 
 - **Header Model Engine Dropdown Selector**:
   - Interactive dropdown in the header allowing instantaneous switching between:
-    - 🚀 **PyTorch CUDA (all-MiniLM-L6-v2)**: Optimized for PCs with dedicated NVIDIA GPUs (~775+ items/s).
+    - 🚀 **PyTorch CUDA (all-MiniLM-L6-v2)**: Optimized for PCs with dedicated NVIDIA GPUs (~2,600+ items/s).
     - ⚡ **FastEmbed ONNX INT8 (all-MiniLM-L6-v2)**: Quantized SIMD CPU inference (~126 items/s).
   - Automatically detects GPU hardware on startup and sets the optimal model engine.
 
