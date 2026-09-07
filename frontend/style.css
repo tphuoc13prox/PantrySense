@@ -386,8 +386,14 @@ body {
   gap: 0.5rem;
 }
 
-.ingredient-input {
+.autocomplete-wrapper {
+  position: relative;
   flex: 1;
+  display: flex;
+}
+
+.ingredient-input {
+  width: 100%;
   font-size: 1rem;
   padding: 0.65rem 1rem;
   border: 1px solid var(--border);
@@ -399,6 +405,82 @@ body {
 .ingredient-input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+
+/* Autocomplete Dropdown */
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 100;
+  padding: 0.35rem 0;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.suggestion-item {
+  padding: 0.6rem 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  transition: background-color 0.12s ease, color 0.12s ease;
+  user-select: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.active {
+  background-color: #ecfdf5;
+  color: #065f46;
+}
+
+.suggestion-item.active .suggestion-match {
+  color: #047857;
+  text-decoration: underline;
+}
+
+.suggestion-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestion-text {
+  font-weight: 500;
+}
+
+.suggestion-match {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.suggestion-typo-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  white-space: nowrap;
+}
+
+.suggestion-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  white-space: nowrap;
 }
 
 /* Buttons */

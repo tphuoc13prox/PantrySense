@@ -9,10 +9,15 @@ DEFAULT_VECTOR_INDEX_PATH = BASE_DIR / "data" / "recipe_vectors.index"
 DEFAULT_VECTOR_IDS_PATH = BASE_DIR / "data" / "recipe_vector_ids.json"
 DEFAULT_BM25_INDEX_PATH = BASE_DIR / "data" / "recipe_bm25.json"
 DEFAULT_RANKER_MODEL_PATH = BASE_DIR / "data" / "ranker_model.joblib"
+DEFAULT_INGREDIENT_VOCAB_PATH = BASE_DIR / "data" / "ingredient_vocab.json"
 
 
 def get_database_path() -> Path:
     return Path(os.getenv("PANTRYSENSE_DB_PATH", DEFAULT_DB_PATH))
+
+
+def get_ingredient_vocab_path() -> Path:
+    return Path(os.getenv("PANTRYSENSE_INGREDIENT_VOCAB_PATH", DEFAULT_INGREDIENT_VOCAB_PATH))
 
 
 def get_match_threshold() -> float:

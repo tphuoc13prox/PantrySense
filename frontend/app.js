@@ -81,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // DOM Elements - Search View
   const ingredientInput = document.getElementById("ingredient-input");
+  const ingredientAutocompleteDropdown = document.getElementById("ingredient-autocomplete-dropdown");
   const addBtn = document.getElementById("add-btn");
   const ingredientChips = document.getElementById("ingredient-chips");
   const searchBtn = document.getElementById("search-btn");
@@ -307,8 +308,160 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function addIngredient() {
-    const rawValue = ingredientInput.value.trim();
+  // --- Controlled Ingredient Autocomplete & Spellchecker ---
+  let suggestionsList = [];
+  let selectedSuggestionIndex = -1;
+  let autocompleteDebounceTimer = null;
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function closeAutocomplete() {
+    if (ingredientAutocompleteDropdown) {
+      ingredientAutocompleteDropdown.innerHTML = "";
+      ingredientAutocompleteDropdown.classList.add("hidden");
+    }
+    suggestionsList = [];
+    selectedSuggestionIndex = -1;
+  }
+
+  function updateActiveSuggestion() {
+    if (!ingredientAutocompleteDropdown) return;
+    const items = ingredientAutocompleteDropdown.querySelectorAll(".suggestion-item");
+    items.forEach((el, idx) => {
+      if (idx === selectedSuggestionIndex) {
+        el.classList.add("active");
+        el.scrollIntoView({ block: "nearest" });
+      } else {
+        el.classList.remove("active");
+      }
+    });
+  }
+
+  function renderSuggestions(query, items) {
+    if (!ingredientAutocompleteDropdown) return;
+    if (!items || items.length === 0) {
+      closeAutocomplete();
+      return;
+    }
+
+    suggestionsList = items;
+    selectedSuggestionIndex = -1;
+    ingredientAutocompleteDropdown.innerHTML = "";
+
+    items.forEach((item, idx) => {
+      const div = document.createElement("div");
+      div.className = "suggestion-item";
+      div.setAttribute("role", "option");
+      div.setAttribute("data-index", idx);
+
+      const mainDiv = document.createElement("div");
+      mainDiv.className = "suggestion-main";
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "suggestion-text";
+
+      // Highlight matching substring if not a typo correction
+      const name = item.name;
+      const lowerName = name.toLowerCase();
+      const lowerQ = query.toLowerCase().trim();
+      const matchPos = lowerName.indexOf(lowerQ);
+
+      if (matchPos >= 0 && lowerQ.length > 0 && !item.is_correction) {
+        const before = name.substring(0, matchPos);
+        const match = name.substring(matchPos, matchPos + lowerQ.length);
+        const after = name.substring(matchPos + lowerQ.length);
+        nameSpan.innerHTML = `${escapeHtml(before)}<span class="suggestion-match">${escapeHtml(match)}</span>${escapeHtml(after)}`;
+      } else {
+        nameSpan.textContent = name;
+      }
+
+      mainDiv.appendChild(nameSpan);
+
+      if (item.is_correction) {
+        const typoBadge = document.createElement("span");
+        typoBadge.className = "suggestion-typo-badge";
+        typoBadge.innerHTML = "✨ Did you mean?";
+        mainDiv.appendChild(typoBadge);
+      }
+
+      div.appendChild(mainDiv);
+
+      const countVal = item.frequency || item.count || 0;
+      if (countVal > 0) {
+        const countSpan = document.createElement("span");
+        countSpan.className = "suggestion-count";
+        countSpan.textContent = `${countVal.toLocaleString()} recipes`;
+        div.appendChild(countSpan);
+      }
+
+      div.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // Prevent input blur from dropping click
+        addIngredient(item.name);
+      });
+
+      div.addEventListener("mouseenter", () => {
+        selectedSuggestionIndex = idx;
+        updateActiveSuggestion();
+      });
+
+      ingredientAutocompleteDropdown.appendChild(div);
+    });
+
+    ingredientAutocompleteDropdown.classList.remove("hidden");
+  }
+
+  function getActiveToken() {
+    if (!ingredientInput) return "";
+    const raw = ingredientInput.value || "";
+    const parts = raw.split(/[,;\n]+/);
+    return parts[parts.length - 1].trim();
+  }
+
+  async function fetchSuggestions(query) {
+    const trimmed = (query || "").trim();
+    if (!trimmed || trimmed.length < 1) {
+      closeAutocomplete();
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/ingredients/suggest?q=${encodeURIComponent(trimmed)}&limit=8`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const currentToken = getActiveToken();
+      // Only render if current active token still matches query
+      if (currentToken.toLowerCase() === trimmed.toLowerCase() || ingredientInput.value.trim().toLowerCase() === trimmed.toLowerCase()) {
+        renderSuggestions(trimmed, data.suggestions || []);
+      }
+    } catch (e) {
+      console.debug("Ingredient suggestion fetch error:", e);
+    }
+  }
+
+  function handleIngredientInput() {
+    if (autocompleteDebounceTimer) {
+      clearTimeout(autocompleteDebounceTimer);
+    }
+    const token = getActiveToken();
+    if (!token) {
+      closeAutocomplete();
+      return;
+    }
+    autocompleteDebounceTimer = setTimeout(() => {
+      fetchSuggestions(token);
+    }, 100);
+  }
+
+  function addIngredient(customValue = null) {
+    const rawValue = (customValue !== null ? customValue : ingredientInput.value).trim();
     if (!rawValue) return;
 
     // Support single ingredient or comma/semicolon/newline separated list
@@ -333,6 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     ingredientInput.value = "";
+    closeAutocomplete();
     ingredientInput.focus();
   }
 
@@ -345,6 +499,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ingredients = [];
     currentRecipes = [];
     renderChips();
+    closeAutocomplete();
     setStatus(statusMessage, "");
     resultsSection.classList.add("hidden");
     recipeList.innerHTML = "";
@@ -565,12 +720,56 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  addBtn.addEventListener("click", addIngredient);
+  addBtn.addEventListener("click", () => addIngredient());
+
+  ingredientInput.addEventListener("input", handleIngredientInput);
+  ingredientInput.addEventListener("focus", handleIngredientInput);
 
   ingredientInput.addEventListener("keydown", (e) => {
+    const isDropdownOpen = ingredientAutocompleteDropdown && !ingredientAutocompleteDropdown.classList.contains("hidden");
+
+    if (isDropdownOpen && suggestionsList.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        selectedSuggestionIndex = (selectedSuggestionIndex + 1) % suggestionsList.length;
+        updateActiveSuggestion();
+        return;
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        selectedSuggestionIndex = (selectedSuggestionIndex - 1 + suggestionsList.length) % suggestionsList.length;
+        updateActiveSuggestion();
+        return;
+      } else if (e.key === "Tab") {
+        e.preventDefault();
+        const targetIdx = selectedSuggestionIndex >= 0 ? selectedSuggestionIndex : 0;
+        if (suggestionsList[targetIdx]) {
+          addIngredient(suggestionsList[targetIdx].name);
+        }
+        return;
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeAutocomplete();
+        return;
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0 && suggestionsList[selectedSuggestionIndex]) {
+          addIngredient(suggestionsList[selectedSuggestionIndex].name);
+        } else {
+          addIngredient();
+        }
+        return;
+      }
+    }
+
     if (e.key === "Enter") {
       e.preventDefault();
       addIngredient();
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".autocomplete-wrapper")) {
+      closeAutocomplete();
     }
   });
 

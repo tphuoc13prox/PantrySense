@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.backend.api.ingredients import router as ingredients_router
 from app.backend.api.recipes import router as recipes_router
 from app.backend.config import (
     get_auto_build_index,
@@ -77,6 +78,10 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     monitor = get_heartbeat_monitor()
     await monitor.start()
 
+    # Pre-warm ingredient vocabulary in background
+    from app.backend.recipes.suggester import get_ingredient_suggester
+    threading.Thread(target=get_ingredient_suggester().ensure_loaded, daemon=True).start()
+
     # Auto-open external browser tab after startup
     if get_auto_open_browser():
         threading.Timer(0.3, _open_default_browser).start()
@@ -87,7 +92,8 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await monitor.stop()
 
 
-app = FastAPI(title="PantrySense API", version="0.8.1", lifespan=lifespan)
+app = FastAPI(title="PantrySense API", version="0.8.2", lifespan=lifespan)
+app.include_router(ingredients_router)
 app.include_router(recipes_router)
 app.include_router(system_router)
 
