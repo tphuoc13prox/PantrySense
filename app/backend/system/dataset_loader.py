@@ -1173,6 +1173,14 @@ class SetupManager:
 
             # Step 8: Final Verification & Ready
             self._update_step(8, 100.0, "ready", f"Step 8/8: Verified {total} recipes ready! Opening search...")
+
+            # Reload ingredient suggester vocabulary from the newly populated database
+            try:
+                from app.backend.recipes.suggester import get_ingredient_suggester
+                get_ingredient_suggester(db_path=db_path, force_reload=True)
+            except Exception as e:
+                logger.warning("Could not reload ingredient suggester after setup: %s", e)
+
             with self.lock:
                 self.is_running = False
                 self.progress = 100.0

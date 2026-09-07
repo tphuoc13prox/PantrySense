@@ -1,54 +1,37 @@
 # PantrySense
 
-PantrySense is an offline-first, local AI/ML-oriented recipe discovery and recommendation application. In **v0.8.1**, PantrySense features **Dual-Engine High-Speed AI Acceleration (PyTorch CUDA & FastEmbed ONNX INT8)**, an interactive **Header Model Engine Selector Dropdown**, **Full-Scale Complete Recipe Archive Ingestion (315,447 unique recipes from 380,000 records via Hugging Face Parquet Stream)**, **Inverted Index BM25 Lexical Retrieval**, **Git Cleanliness with Zero Binary Bloat**, and **Two-Stage Search with Learning-to-Rank (LTR)** combining **Hybrid Candidate Retrieval (BM25 + FAISS + RRF)** with a **Machine Learning Re-Ranker (LightGBM / LambdaMART)** based on 9-dimensional multi-modal features.
+PantrySense is an offline-first, local AI/ML-oriented recipe discovery and recommendation application. In **v0.8.2**, PantrySense features a **Controlled Ingredient Autocomplete & Fuzzy Spellchecker** (6,454-ingredient culinary vocabulary with prefix, substring, and typo correction), **Dual-Engine High-Speed AI Acceleration (PyTorch CUDA & FastEmbed ONNX INT8)**, an interactive **Header Model Engine Selector Dropdown**, **Full-Scale Complete Recipe Archive Ingestion (315,447 unique recipes from 380,000 records via Hugging Face Parquet Stream)**, **Inverted Index BM25 Lexical Retrieval**, **Git Cleanliness with Zero Binary Bloat**, and **Two-Stage Search with Learning-to-Rank (LTR)** combining **Hybrid Candidate Retrieval (BM25 + FAISS + RRF)** with a **Machine Learning Re-Ranker (LightGBM / LambdaMART)**.
 
-Current version: **v0.8.1**
+Current version: **v0.8.2**
 
 ## Architecture
 
 ```text
                                 Web Browser (localhost:8000)
                                             │
-                                            ▼ (Heartbeat Web Worker pulses every 2.5s)
-                                     FastAPI Backend
-                                            │
-                        ┌───────────────────┴───────────────────┐
-                        ▼                                       ▼
-             🚀 PyTorch CUDA Engine                 ⚡ FastEmbed ONNX INT8 Engine
-          (NVIDIA GPU ~2,600+ items/sec)              (Quantized CPU ~126 items/sec)
-                        │                                       │
-                        └───────────────────┬───────────────────┘
-                                            ▼
-                                   RecipeSearchService
-                                            │
-                                            ▼
-                        TẦNG 1: HYBRID CANDIDATE RETRIEVAL
-                         (Inverted BM25 + FAISS FlatIP + Reciprocal Rank Fusion)
-                                            │
-                                            ▼ (Top-20 Candidate Pool)
-                        TẦNG 2: MULTI-MODAL FEATURE EXTRACTION
-                         ├── 1. semantic_score (Dense Cosine Similarity)
-                         ├── 2. bm25_score (Sparse Lexical Match)
-                         ├── 3. rrf_score (Fused Retrieval Rank)
-                         ├── 4. coverage (Matched / Required Ratio)
-                         ├── 5. matched_count
-                         ├── 6. missing_count
-                         ├── 7. cooking_time (Minutes)
-                         ├── 8. difficulty_numeric (Easy=1, Med=2, Hard=3)
-                         └── 9. total_ingredients (Recipe Complexity)
-                                            │
-                                            ▼
-                        TẦNG 3: MACHINE LEARNING RE-RANKER
-                         (LightGBM LambdaMART / GBDT Ranker)
-                                            │
-                                            ▼
-                                  Final Ranked Recipes
+               ┌────────────────────────────┼────────────────────────────┐
+               ▼                            ▼                            ▼
+      🔤 Controlled Autocomplete   🔍 Two-Stage Search Engine   💓 Heartbeat Pulse (2s)
+      (Prefix / Substring / Typo)  (Hybrid + ML Re-Ranker)      (Auto-Shutdown Daemon)
+               │                            │                            │
+               ▼                            ▼                            ▼
+      GET /api/ingredients/suggest  POST /api/recipes/search    POST /api/system/heartbeat
+      (6,454 Vocab In-Memory DB)   (PyTorch CUDA / FastEmbed)   (Tab Tracking State)
 ```
 
-### Why Learning-to-Rank (LTR)?
-Heuristic sorting (e.g. only matching ingredients) misses practical cooking trade-offs. The **ML Ranker** learns optimal non-linear trade-offs between semantic intent, ingredient availability, cooking speed, and recipe simplicity to place the most satisfying, actionable meals at the very top.
-
 ## Implemented Features
+
+- **Controlled Ingredient Autocomplete & Fuzzy Spellchecker**:
+  - 🔤 **6,454-Ingredient Vocabulary**: In-memory frequency dictionary extracted directly from all 315,447 recipes in the dataset.
+  - ⚡ **3-Tier Matching Algorithm**:
+    - **Exact Prefix Match**: Prioritizes ingredients starting with the search string (e.g. `gar` -> `garlic`, `garlic powder`, `garam masala`).
+    - **Substring / Word Boundary**: Matches internal tokens across multi-word culinary terms (e.g. `cheese` -> `cheddar cheese`, `parmesan cheese`).
+    - **Fuzzy Typo Correction**: Automatic typo detection and suggestion via `difflib.SequenceMatcher` (e.g. `chikcen` -> `chicken`, `tomto` -> `tomato`, `spagetti` -> `spaghetti`).
+  - 🎯 **Interactive UI Experience**:
+    - Full keyboard navigation: `ArrowUp`, `ArrowDown`, `Enter`, `Tab` (instant completion), and `Escape`.
+    - Real-time matched substring highlights and recipe occurrence counts (`N recipes`).
+    - Visual `✨ Did you mean?` typo badges.
+    - Debounced client requests (120ms) and sub-millisecond backend lookup (< 1ms).
 
 - **Dual-Engine High-Speed Acceleration**:
   - 🚀 **PyTorch CUDA (NVIDIA GPU)**: Ultra-fast batch inference reaching ~2,600+ recipes/second on NVIDIA GPUs.

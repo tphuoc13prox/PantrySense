@@ -43,3 +43,16 @@ class RecipeDetail(BaseModel):
     difficulty: str | None = None
     servings: int | None = None
     category: str | None = None
+
+
+class IngredientSuggestion(BaseModel):
+    name: str
+    frequency: int = 0
+    match_type: str = "prefix"
+    is_correction: bool = False
+    confidence: float = 1.0
+
+
+class IngredientSuggestResponse(BaseModel):
+    query: str
+    suggestions: list[IngredientSuggestion]

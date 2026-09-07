@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PantrySense</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/style.css?v=0.8.2" />
 </head>
 <body>
   <div class="container">
@@ -84,14 +84,17 @@
     <main id="search-view" class="view">
       <section class="input-section">
         <form id="ingredient-form" class="ingredient-form" onsubmit="return false;">
-          <input
-            type="text"
-            id="ingredient-input"
-            class="ingredient-input"
-            placeholder="e.g. Noodles, Milk, Egg"
-            autocomplete="off"
-            aria-label="Enter ingredient"
-          />
+          <div class="autocomplete-wrapper">
+            <input
+              type="text"
+              id="ingredient-input"
+              class="ingredient-input"
+              placeholder="e.g. Noodles, Milk, Egg"
+              autocomplete="off"
+              aria-label="Enter ingredient"
+            />
+            <div id="ingredient-autocomplete-dropdown" class="autocomplete-dropdown hidden" role="listbox"></div>
+          </div>
           <button type="button" id="add-btn" class="btn btn-secondary">Add</button>
         </form>
 
@@ -149,6 +152,6 @@
     </main>
   </div>
 
-  <script src="/app.js"></script>
+  <script src="/app.js?v=0.8.2"></script>
 </body>
 </html>
