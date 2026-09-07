@@ -11,7 +11,10 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.backend.api.assistant import router as assistant_router
 from app.backend.api.ingredients import router as ingredients_router
+from app.backend.api.meal_planner import router as meal_planner_router
+from app.backend.api.pantry import router as pantry_router
 from app.backend.api.recipes import router as recipes_router
 from app.backend.config import (
     get_auto_build_index,
@@ -24,6 +27,7 @@ from app.backend.config import (
     get_vector_index_path,
 )
 from app.backend.database.init_db import initialize_database
+from app.backend.database.pantry_db import ensure_pantry_tables
 from app.backend.system.heartbeat import get_heartbeat_monitor
 from app.backend.system.routes import router as system_router
 
@@ -43,6 +47,7 @@ def _open_default_browser() -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     initialize_database()
+    ensure_pantry_tables()
 
     # Smart Auto-Build on first startup if indices or ML model are missing
     if get_auto_build_index():
@@ -92,9 +97,12 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await monitor.stop()
 
 
-app = FastAPI(title="PantrySense API", version="0.8.2", lifespan=lifespan)
+app = FastAPI(title="PantrySense API", version="1.0.0", lifespan=lifespan)
 app.include_router(ingredients_router)
 app.include_router(recipes_router)
+app.include_router(pantry_router)
+app.include_router(meal_planner_router)
+app.include_router(assistant_router)
 app.include_router(system_router)
 
 

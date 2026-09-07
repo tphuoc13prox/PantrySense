@@ -1,84 +1,72 @@
 # PantrySense
 
-PantrySense is an offline-first, local AI/ML-oriented recipe discovery and recommendation application. In **v0.8.2**, PantrySense features a **Controlled Ingredient Autocomplete & Fuzzy Spellchecker** (6,454-ingredient culinary vocabulary with prefix, substring, and typo correction), **Dual-Engine High-Speed AI Acceleration (PyTorch CUDA & FastEmbed ONNX INT8)**, an interactive **Header Model Engine Selector Dropdown**, **Full-Scale Complete Recipe Archive Ingestion (315,447 unique recipes from 380,000 records via Hugging Face Parquet Stream)**, **Inverted Index BM25 Lexical Retrieval**, **Git Cleanliness with Zero Binary Bloat**, and **Two-Stage Search with Learning-to-Rank (LTR)** combining **Hybrid Candidate Retrieval (BM25 + FAISS + RRF)** with a **Machine Learning Re-Ranker (LightGBM / LambdaMART)**.
+PantrySense is an offline-first, local AI/ML-oriented recipe discovery, pantry management, and culinary assistant application. In **v1.0.0**, PantrySense delivers a complete smart kitchen ecosystem featuring **Dietary & Allergen Filtering**, **Smart Ingredient Substitution**, **Macro & Calorie Nutrition Estimation**, **Virtual Pantry & Expiry Tracker**, **Weekly 7-Day Meal Planner**, **Pantry-Aware Grocery Shopping List Generator**, **Interactive Step-by-Step Cooking Assistant with Audio Timers**, **Controlled Ingredient Autocomplete & Fuzzy Spellchecker** (4,588-ingredient culinary vocabulary), and **Two-Stage Hybrid AI Retrieval + Learning-to-Rank (LTR)**.
 
-Current version: **v0.8.2**
+Current version: **v1.0.0**
 
 ## Architecture
 
 ```text
                                 Web Browser (localhost:8000)
                                             │
-               ┌────────────────────────────┼────────────────────────────┐
-               ▼                            ▼                            ▼
-      🔤 Controlled Autocomplete   🔍 Two-Stage Search Engine   💓 Heartbeat Pulse (2s)
-      (Prefix / Substring / Typo)  (Hybrid + ML Re-Ranker)      (Auto-Shutdown Daemon)
-               │                            │                            │
-               ▼                            ▼                            ▼
-      GET /api/ingredients/suggest  POST /api/recipes/search    POST /api/system/heartbeat
-      (6,454 Vocab In-Memory DB)   (PyTorch CUDA / FastEmbed)   (Tab Tracking State)
+           ┌────────────────┬───────────────┼───────────────┬────────────────┐
+           ▼                ▼               ▼               ▼                ▼
+     🔍 Search & Filter  🥑 My Pantry   📅 Meal Planner  ⭐ Favorites   👨‍🍳 Cooking Assistant
+   (Dietary/Allergens) (Expiry Alerts) (7-Day Calendar) (Bookmarks)    (Step Timers & Audio)
+           │                │               │               │                │
+           ▼                ▼               ▼               ▼                ▼
+  POST /api/recipes/search  /api/pantry   /api/meal-plan  /api/favorites /api/assistant/parse-steps
+  (Hybrid + ML Ranker)   (SQLite DB)   (Shopping List)  (SQLite DB)   (Countdown & Chimes)
 ```
 
-## Implemented Features
+## Implemented Features (v1.0.0)
 
-- **Controlled Ingredient Autocomplete & Fuzzy Spellchecker**:
-  - 🔤 **6,454-Ingredient Vocabulary**: In-memory frequency dictionary extracted directly from all 315,447 recipes in the dataset.
-  - ⚡ **3-Tier Matching Algorithm**:
-    - **Exact Prefix Match**: Prioritizes ingredients starting with the search string (e.g. `gar` -> `garlic`, `garlic powder`, `garam masala`).
-    - **Substring / Word Boundary**: Matches internal tokens across multi-word culinary terms (e.g. `cheese` -> `cheddar cheese`, `parmesan cheese`).
-    - **Fuzzy Typo Correction**: Automatic typo detection and suggestion via `difflib.SequenceMatcher` (e.g. `chikcen` -> `chicken`, `tomto` -> `tomato`, `spagetti` -> `spaghetti`).
-  - 🎯 **Interactive UI Experience**:
-    - Full keyboard navigation: `ArrowUp`, `ArrowDown`, `Enter`, `Tab` (instant completion), and `Escape`.
-    - Real-time matched substring highlights and recipe occurrence counts (`N recipes`).
-    - Visual `✨ Did you mean?` typo badges.
-    - Debounced client requests (120ms) and sub-millisecond backend lookup (< 1ms).
+### 1. 🔍 Dietary & Allergen Intelligence
+- **Dietary Filter Chips**: 1-click filtering for Vegetarian (`🌱`), Vegan (`🌿`), Gluten-Free (`🌾`), Dairy-Free (`🥛`), Nut-Free (`🥜`), and Keto / Low-Carb (`🥩`).
+- **Allergen Detection & Exclusion**: Multi-allergen exclusion engine detecting and filtering Peanuts, Tree Nuts, Dairy, Eggs, Gluten, Shellfish, Fish, and Soy.
+- **Cooking Time & Category Constraints**: Filter recipes by max cooking time (<15m, <30m, <45m, <60m) and meal category.
 
-- **Dual-Engine High-Speed Acceleration**:
-  - 🚀 **PyTorch CUDA (NVIDIA GPU)**: Ultra-fast batch inference reaching ~2,600+ recipes/second on NVIDIA GPUs.
-  - ⚡ **FastEmbed ONNX INT8 (CPU)**: Highly-optimized quantized ONNX runtime inference (~126 recipes/second) requiring no dedicated GPU and minimal CPU overhead.
-  - **Auto-Detection**: Onboarding screen automatically identifies whether a compatible NVIDIA GPU is present and selects the optimal engine by default.
+### 2. 💡 Smart Culinary Ingredient Substitutions
+- **50+ Knowledge Base Substitutions**: Curated culinary substitutions with exact conversion ratios and context notes (e.g. baking, sauces, high-heat cooking).
+- **Pantry-Aware Substitute Recommendations**: Analyzes missing ingredients in recipes and prioritizes substitutes that already exist in your pantry.
 
-- **Complete Full-Scale Recipe Dataset Ingestion (315,447 Recipes)**:
-  - **Comprehensive Culinary Corpus**: Ingests all 380,000 dataset records (yielding 315,447 unique culinary dishes) directly from the Hugging Face / Food.com Parquet archive with zero loss or downsampling.
-  - **Inverted Index BM25**: Optimized inverted posting list lookup delivers sub-millisecond lexical scoring across 315,447 recipes.
-  - **Seamless Initial Setup**: Auto-detects dataset presence and visualizes the 8-step pipeline with real-time percentage progress.
+### 3. 🔥 Nutrition & Macronutrient Estimation
+- **Per-Serving Calculations**: Real-time automated estimation of Calories, Protein (g), Carbohydrates (g), Fats (g), and Dietary Fiber (g).
+- **Per-Ingredient Breakdown**: Complete nutritional breakdown per ingredient based on standard culinary portion weights.
 
-- **Header Model Engine Dropdown Selector**:
-  - Interactive dropdown in the header allowing instantaneous switching between:
-    - 🚀 **PyTorch CUDA (all-MiniLM-L6-v2)**: Optimized for PCs with dedicated NVIDIA GPUs (~2,600+ items/s).
-    - ⚡ **FastEmbed ONNX INT8 (all-MiniLM-L6-v2)**: Quantized SIMD CPU inference (~126 items/s).
-  - Automatically detects GPU hardware on startup and sets the optimal model engine.
+### 4. 🥑 Virtual Pantry & Expiry Tracker (My Pantry)
+- **Inventory Management**: Track ingredient names, quantities, units, categories, and expiration dates.
+- **Dynamic Expiry Status Badges**:
+  - `Fresh` (Green): > 3 days remaining.
+  - `Expiring Soon` (Amber): 1 to 3 days remaining.
+  - `Expired` (Red): ≤ 0 days.
+- **1-Click Recipe Search**: "Find Recipes with My Pantry" instantly searches dishes using all in-stock pantry items.
 
-- **High-Performance Parquet Ingestion (`pyarrow`)**:
-  - Direct streaming from the 522k recipe Food.com / Hugging Face Parquet archive (`0000.parquet`).
-  - Sub-second parsing and high-throughput batch SQL ingestion.
+### 5. 📅 Weekly 7-Day Meal Planner & Shopping List
+- **7-Day Meal Grid**: Schedule recipes across Monday–Sunday for Breakfast, Lunch, Dinner, and Snack slots.
+- **Pantry-Deducted Grocery List**: Aggregates all missing ingredients needed for the entire week and automatically subtracts items already in your virtual pantry.
+- **1-Click Copy**: Copy formatted shopping checklist to clipboard.
 
-- **Enhanced Multi-Ingredient Search & Ranking**:
-  - Fixed recipe ranking so multi-ingredient searches (e.g., `Pork` + `Noodles`) strictly prioritize dishes containing all requested ingredients.
-  - Expanded built-in catalogs with savory pork dishes, noodle soups, braised pork, and diverse Asian/Western combinations.
+### 6. 👨‍🍳 Interactive Step-by-Step Cooking Assistant
+- **Instruction Step Viewer**: Step-by-step cooking modal with visual progress bar and large, readable instructions.
+- **Auto-Extracted Countdown Timers**: Automatically parses cooking durations (e.g. "simmer for 15 minutes", "bake 1 hour") into interactive timers with start/pause/reset controls.
+- **Web Audio API Chimes**: Plays audible completion chimes when timers reach zero.
 
-- **Learning-to-Rank (LTR) Machine Learning Model**:
-  - 9-dimensional query-candidate feature extraction.
-  - LightGBM LambdaMART / GBDT model training and real-time inference.
-  - Graceful heuristic fallback if model is absent.
+### 7. ⭐ Favorite Recipe Bookmarks
+- Bookmark favorite recipes with one click from search results or recipe detail views.
+- Persistent offline SQLite storage with instant access from the navigation bar.
 
-- **Hybrid Retrieval Layer**:
-  - BM25Okapi sparse lexical indexing and scoring.
-  - Sentence Transformers / FastEmbed dense vector embedding (`all-MiniLM-L6-v2` / `BAAI/bge-small-en-v1.5`).
-  - FAISS (`IndexFlatIP`) cosine similarity search.
-  - Reciprocal Rank Fusion (RRF) candidate fusion.
+### 8. 🔤 Controlled Ingredient Autocomplete & Fuzzy Spellchecker
+- **4,588-Ingredient Vocabulary**: Instant in-memory frequency dictionary (< 2ms load time).
+- **3-Tier Matching Algorithm**: Exact prefix matching, substring/token boundary matching, and fuzzy typo correction (`✨ Did you mean?`).
+- **Keyboard Navigation**: Full `ArrowUp`, `ArrowDown`, `Enter`, `Tab`, and `Escape` support.
 
-- **Auto-Open Browser & Tab-Lifecycle Auto-Shutdown**: Automatically opens default browser upon server launch and keeps server alive as long as any browser tab is open (using robust Web Worker heartbeat pulses). Shuts down cleanly only when all browser tabs are closed.
+### 9. 🚀 High-Speed AI Retrieval & ML Re-Ranker
+- **Dual-Engine Acceleration**: PyTorch CUDA (GPU) & FastEmbed ONNX INT8 (CPU) with instant header dropdown switching.
+- **Hybrid Retrieval**: Inverted-index BM25 lexical retrieval + FAISS dense semantic embeddings fused via Reciprocal Rank Fusion (RRF).
+- **Learning-to-Rank (LTR)**: LightGBM GBDT ranking model evaluating 9-dimensional relevance features.
 
-- **Multi-Mode Toggles**:
-  - Retrieval modes (`PANTRYSENSE_RETRIEVAL_MODE`): `hybrid`, `semantic`, `lexical`, `rule_based`.
-  - Ranking modes (`PANTRYSENSE_RANKING_MODE`): `ml`, `heuristic`.
-  - Embedder engine (`PANTRYSENSE_EMBEDDER_ENGINE`): `auto`, `cuda`, `onnx`, `cpu`.
-
-- Deterministic Ingredient Matching: matched ingredients, missing ingredients, matched count, required count, and coverage.
-- Single-page view switching between search results and recipe details (with back navigation).
-- Offline Scripts for Indexing, Model Training, and Benchmark Evaluations.
-- Full automated test suite (32/32 passing tests) covering all modules and regression safety.
+---
 
 ## Requirements
 
@@ -100,54 +88,10 @@ python -m uvicorn app.backend.main:app --host 127.0.0.1 --port 8000
 ```
 
 > **Behavior**:
-> 1. Server starts and verifies local indices and ML ranker model (auto-initializing if first run).
+> 1. Server starts and verifies local indices and ML ranker model.
 > 2. Automatically opens your default external browser at `http://localhost:8000`.
-> 3. If first run, the **Onboarding Setup Screen** displays hardware selection (GPU vs CPU FastEmbed) and dataset size choices.
-> 4. Automatically keeps the server alive via background Web Worker pulses; shuts down only after all PantrySense tabs are closed.
-
-## Offline Training & Evaluation Scripts
-
-### 1. Build Vector & Lexical Indices
-```powershell
-python scripts/build_vector_index.py
-```
-
-### 2. Train the Machine Learning Ranker
-```powershell
-python scripts/train_ranker.py
-```
-
-### 3. Evaluate Ranking Quality (NDCG@3, NDCG@5, MRR, Precision@1)
-```powershell
-python scripts/evaluate_ranking.py
-```
-
-### 4. Evaluate Retrieval Quality (4-Way Retrieval Benchmark)
-```powershell
-python scripts/evaluate_retrieval.py
-```
-
-## Configuration
-
-You can configure PantrySense using environment variables:
-
-| Variable | Default | Description |
-| :--- | :--- | :--- |
-| `PANTRYSENSE_EMBEDDER_ENGINE` | `auto` | Embedding engine: `auto`, `cuda`, `onnx`, `cpu`. |
-| `PANTRYSENSE_DATASET_DOWNLOAD_LIMIT` | `2000` | Dataset download ingestion limit (e.g. 500 or 2000). |
-| `PANTRYSENSE_RANKING_MODE` | `ml` | Ranking mode: `ml` or `heuristic`. |
-| `PANTRYSENSE_RETRIEVAL_MODE` | `hybrid` | Retrieval mode: `hybrid`, `semantic`, `lexical`, `rule_based`. |
-| `PANTRYSENSE_RANKER_MODEL_PATH` | `data/ranker_model.joblib` | Path to trained ML ranker artifact. |
-| `PANTRYSENSE_RRF_K` | `60` | Constant $k$ for Reciprocal Rank Fusion. |
-| `PANTRYSENSE_AUTO_OPEN_BROWSER` | `true` | Auto-open browser on startup (`true`/`false`). |
-| `PANTRYSENSE_AUTO_SHUTDOWN` | `true` | Auto-shutdown on tab close (`true`/`false`). |
-| `PANTRYSENSE_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model identifier. |
-| `PANTRYSENSE_SEMANTIC_TOP_K` | `20` | Maximum candidate pool size. |
-| `PANTRYSENSE_SEMANTIC_THRESHOLD` | `0.35` | Minimum cosine similarity threshold for dense candidates. |
-| `PANTRYSENSE_MINIMUM_COVERAGE` | `0.28` | Minimum ingredient coverage threshold for display. |
-| `PANTRYSENSE_DB_PATH` | `data/recipes.db` | SQLite database path. |
-| `PANTRYSENSE_VECTOR_INDEX_PATH` | `data/recipe_vectors.index` | FAISS index path. |
-| `PANTRYSENSE_BM25_INDEX_PATH` | `data/recipe_bm25.json` | BM25 index path. |
+> 3. If first run, the **Onboarding Setup Screen** automatically prepares vector indices and database.
+> 4. Server stays active as long as your browser tab is open and closes cleanly when all tabs are closed.
 
 ## Run Automated Tests
 
@@ -155,3 +99,4 @@ You can configure PantrySense using environment variables:
 python -m pytest
 ```
 
+All 46 unit and integration tests covering API routes, dietary tagging, substitutions, nutrition, pantry CRUD, meal planning, and hybrid ranking will execute and pass.
