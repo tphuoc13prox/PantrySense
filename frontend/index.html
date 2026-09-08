@@ -329,20 +329,28 @@
     </main>
 
     <!-- Modal: Interactive Step-by-Step Cooking Assistant -->
-    <div id="cooking-modal" class="modal-backdrop hidden">
-      <div class="modal-card">
+    <div id="cooking-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="cooking-modal-title">
+      <div class="modal-card modal-card-lg">
         <div class="modal-header">
-          <h3 class="modal-title">👨‍🍳 Cooking Assistant</h3>
-          <button type="button" id="close-cooking-modal" class="modal-close-btn">&times;</button>
+          <div class="modal-title-group">
+            <h3 id="cooking-modal-title" class="modal-title">👨‍🍳 Cooking Assistant</h3>
+            <span id="cooking-recipe-name" class="cooking-recipe-name">Recipe Title</span>
+          </div>
+          <button type="button" id="close-cooking-modal" class="modal-close-btn" aria-label="Close cooking mode">&times;</button>
         </div>
         <div class="cooking-modal-body">
           <div class="cooking-step-progress-bar">
             <div id="cooking-step-progress" class="cooking-step-progress-fill" style="width: 0%;"></div>
           </div>
+
+          <!-- Quick Step Selector Pills -->
+          <div id="cooking-step-pills" class="cooking-step-pills"></div>
+
           <div class="cooking-step-header">
             <span id="cooking-step-badge" class="step-indicator-badge">Step 1 of 5</span>
-            <span id="cooking-recipe-name" class="cooking-recipe-name">Recipe Title</span>
+            <span class="cooking-keyboard-hint">💡 Press &larr; / &rarr; to navigate steps</span>
           </div>
+
           <div id="cooking-step-instruction" class="cooking-step-text">
             Instruction text appears here...
           </div>
@@ -351,17 +359,23 @@
           <div id="cooking-timer-box" class="cooking-timer-box hidden">
             <div class="timer-display-row">
               <span class="timer-icon">⏳</span>
-              <span id="timer-countdown" class="timer-countdown">00:00</span>
-              <span id="timer-label" class="timer-label">Timer</span>
+              <div>
+                <div id="timer-countdown" class="timer-countdown">00:00</div>
+                <div id="timer-label" class="timer-label">Timer</div>
+              </div>
             </div>
             <div class="timer-controls">
               <button type="button" id="timer-start-btn" class="btn btn-sm btn-primary">Start Timer</button>
+              <button type="button" id="timer-add-min-btn" class="btn btn-sm btn-outline">+1 Min</button>
               <button type="button" id="timer-reset-btn" class="btn btn-sm btn-outline">Reset</button>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" id="cooking-prev-btn" class="btn btn-outline">&larr; Previous Step</button>
+          <div class="modal-footer-center">
+            <span id="cooking-footer-counter" class="footer-step-counter">1 / 5</span>
+          </div>
           <button type="button" id="cooking-next-btn" class="btn btn-primary">Next Step &rarr;</button>
         </div>
       </div>
