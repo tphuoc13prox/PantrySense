@@ -170,3 +170,33 @@ def test_api_endpoints():
 
     # Cleanup pantry item
     client.delete(f"/api/pantry/items/{item_id}")
+
+
+def test_clean_and_segment_instructions():
+    from app.backend.api.assistant import clean_and_segment_instructions, extract_timer_from_instruction
+
+    # Fragmented sentences with stray commas and quotes
+    fragmented = [
+        'Cook mushrooms in 2 tbsp butter.',
+        'Place chicken between sheets of wax paper; flatten to 1/8\\',
+        ',',
+        ',',
+        'baking dish, overlapping edges.',
+        'Bake for 1 hour 30 minutes.',
+        'Let cool 1/2 hour before serving.',
+    ]
+    cleaned = clean_and_segment_instructions(fragmented)
+    assert len(cleaned) == 4
+    assert 'flatten to 1/8" baking dish' in cleaned[1] or 'flatten to 1/8' in cleaned[1]
+    assert ',' not in cleaned
+
+    # Timer extraction tests
+    mins1, label1 = extract_timer_from_instruction("Simmer for 15 minutes")
+    assert mins1 == 15
+
+    mins2, label2 = extract_timer_from_instruction("Bake for 1 hour 30 minutes")
+    assert mins2 == 90
+
+    mins3, label3 = extract_timer_from_instruction("Chill for 1/2 hour")
+    assert mins3 == 30
+

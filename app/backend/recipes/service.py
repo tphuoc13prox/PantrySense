@@ -346,12 +346,14 @@ class RecipeSearchService:
         nutrition_model = _build_nutrition_model(raw_nut)
         raw_subs = substitution.suggest_recipe_substitutions(raw_ingredients)
         sub_models = _build_substitution_models(raw_subs)
+        from app.backend.api.assistant import clean_and_segment_instructions
+        clean_instructions = clean_and_segment_instructions(row["instructions"])
 
         return RecipeDetail(
             id=row["id"],
             title=row["title"],
             ingredients=[IngredientDetail(**ingredient) for ingredient in ingredient_details],
-            instructions=json.loads(row["instructions"] or "[]"),
+            instructions=clean_instructions,
             cooking_time=row["cooking_time"],
             difficulty=row["difficulty"],
             servings=row["servings"],

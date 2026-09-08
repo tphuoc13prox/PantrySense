@@ -161,13 +161,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const cookingModal = document.getElementById("cooking-modal");
   const closeCookingModal = document.getElementById("close-cooking-modal");
   const cookingStepProgress = document.getElementById("cooking-step-progress");
+  const cookingStepPills = document.getElementById("cooking-step-pills");
   const cookingStepBadge = document.getElementById("cooking-step-badge");
   const cookingRecipeName = document.getElementById("cooking-recipe-name");
   const cookingStepInstruction = document.getElementById("cooking-step-instruction");
+  const cookingFooterCounter = document.getElementById("cooking-footer-counter");
   const cookingTimerBox = document.getElementById("cooking-timer-box");
   const timerCountdown = document.getElementById("timer-countdown");
   const timerLabel = document.getElementById("timer-label");
   const timerStartBtn = document.getElementById("timer-start-btn");
+  const timerAddMinBtn = document.getElementById("timer-add-min-btn");
   const timerResetBtn = document.getElementById("timer-reset-btn");
   const cookingPrevBtn = document.getElementById("cooking-prev-btn");
   const cookingNextBtn = document.getElementById("cooking-next-btn");
@@ -881,8 +884,60 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------------------------
   // Step-by-Step Interactive Cooking Assistant
   // ---------------------------------------------------------------------------
+  function formatStepInstruction(rawText) {
+    if (!rawText) return "";
+    let formatted = escapeHtml(rawText);
+    // Highlight temperatures (e.g. 350°F, 400 degrees, 180°C, 375 F)
+    formatted = formatted.replace(
+      /(\b\d{2,3}\s*(?:°\s*[FC]|degrees\s*(?:F|C|fahrenheit|celsius)?|F\b|C\b))/gi,
+      '<strong class="highlight-temp">$1</strong>'
+    );
+    // Highlight times (e.g. 15 minutes, 1 hour, 30 mins)
+    formatted = formatted.replace(
+      /(\b\d+(?:\s*(?:-|–|to)\s*\d+)?\s*(?:minutes?|mins?|hours?|hrs?)\b)/gi,
+      '<strong class="highlight-time">$1</strong>'
+    );
+    return formatted;
+  }
+
+  function renderCookingPills() {
+    if (!cookingStepPills) return;
+    cookingStepPills.innerHTML = "";
+    const total = cookingSteps.length;
+    for (let i = 0; i < total; i++) {
+      const pill = document.createElement("button");
+      pill.type = "button";
+      let cls = "step-pill";
+      if (i === currentStepIndex) cls += " active";
+      else if (i < currentStepIndex) cls += " completed";
+      pill.className = cls;
+      pill.textContent = `${i + 1}`;
+      pill.title = `Jump to Step ${i + 1}`;
+      pill.addEventListener("click", () => {
+        currentStepIndex = i;
+        renderCookingStep();
+      });
+      cookingStepPills.appendChild(pill);
+    }
+  }
+
   async function startCookingMode() {
-    if (!activeRecipeDetail || !activeRecipeDetail.instructions || activeRecipeDetail.instructions.length === 0) {
+    if (!activeRecipeDetail) {
+      alert("Please select a recipe first.");
+      return;
+    }
+
+    let rawInstructions = activeRecipeDetail.instructions || [];
+    if (typeof rawInstructions === "string") {
+      try {
+        const parsed = JSON.parse(rawInstructions);
+        rawInstructions = Array.isArray(parsed) ? parsed : [rawInstructions];
+      } catch (e) {
+        rawInstructions = rawInstructions.split("\n").filter((l) => l.trim().length > 0);
+      }
+    }
+
+    if (!rawInstructions || rawInstructions.length === 0) {
       alert("No cooking instructions available for this recipe.");
       return;
     }
@@ -891,17 +946,32 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/api/assistant/parse-steps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ instructions: activeRecipeDetail.instructions }),
+        body: JSON.stringify({ instructions: rawInstructions }),
       });
-      if (!res.ok) throw new Error("Failed to parse steps");
-      cookingSteps = await res.json();
-      currentStepIndex = 0;
-      cookingRecipeName.textContent = activeRecipeDetail.title;
-      renderCookingStep();
-      cookingModal.classList.remove("hidden");
+      if (res.ok) {
+        cookingSteps = await res.json();
+      } else {
+        throw new Error("Server parse steps failed");
+      }
     } catch (e) {
-      console.error("Cooking mode error:", e);
+      console.warn("Falling back to local step parsing:", e);
+      cookingSteps = rawInstructions.map((inst, idx) => ({
+        step_number: idx + 1,
+        instruction: typeof inst === "string" ? inst.trim() : JSON.stringify(inst),
+        timer_minutes: null,
+        timer_description: null,
+      }));
     }
+
+    if (!cookingSteps || cookingSteps.length === 0) {
+      alert("No valid cooking steps could be parsed.");
+      return;
+    }
+
+    currentStepIndex = 0;
+    cookingRecipeName.textContent = activeRecipeDetail.title || "Recipe";
+    renderCookingStep();
+    cookingModal.classList.remove("hidden");
   }
 
   function renderCookingStep() {
@@ -912,12 +982,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     cookingStepProgress.style.width = `${percent}%`;
     cookingStepBadge.textContent = `Step ${currentStepIndex + 1} of ${total}`;
-    cookingStepInstruction.textContent = step.instruction;
+    if (cookingFooterCounter) {
+      cookingFooterCounter.textContent = `${currentStepIndex + 1} / ${total}`;
+    }
+
+    cookingStepInstruction.innerHTML = formatStepInstruction(step.instruction);
+    renderCookingPills();
 
     cookingPrevBtn.disabled = currentStepIndex === 0;
     cookingNextBtn.textContent = currentStepIndex === total - 1 ? "Finish Cooking 🎉" : "Next Step →";
 
-    // Setup timer if step has duration
+    // Clean previous step timer
     if (timerInterval) {
       clearInterval(timerInterval);
       timerInterval = null;
@@ -973,6 +1048,20 @@ document.addEventListener("DOMContentLoaded", () => {
     timerStartBtn.textContent = "Start Timer";
   }
 
+  function addMinuteToTimer() {
+    timerRemainingSeconds += 60;
+    timerTotalSeconds += 60;
+    updateTimerDisplay();
+  }
+
+  function closeCookingAssistantModal() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    cookingModal.classList.add("hidden");
+  }
+
   cookingPrevBtn.addEventListener("click", () => {
     if (currentStepIndex > 0) {
       currentStepIndex--;
@@ -985,14 +1074,39 @@ document.addEventListener("DOMContentLoaded", () => {
       currentStepIndex++;
       renderCookingStep();
     } else {
-      cookingModal.classList.add("hidden");
+      closeCookingAssistantModal();
       alert("🎉 Cooking complete! Enjoy your delicious meal!");
     }
   });
 
-  closeCookingModal.addEventListener("click", () => {
-    if (timerInterval) clearInterval(timerInterval);
-    cookingModal.classList.add("hidden");
+  closeCookingModal.addEventListener("click", closeCookingAssistantModal);
+  if (timerAddMinBtn) timerAddMinBtn.addEventListener("click", addMinuteToTimer);
+
+  cookingModal.addEventListener("click", (e) => {
+    if (e.target === cookingModal) {
+      closeCookingAssistantModal();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (cookingModal && !cookingModal.classList.contains("hidden")) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeCookingAssistantModal();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        if (currentStepIndex < cookingSteps.length - 1) {
+          currentStepIndex++;
+          renderCookingStep();
+        }
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (currentStepIndex > 0) {
+          currentStepIndex--;
+          renderCookingStep();
+        }
+      }
+    }
   });
 
   timerStartBtn.addEventListener("click", toggleCookingTimer);
