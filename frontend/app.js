@@ -1,4 +1,4 @@
-// PantrySense — Vanilla JavaScript Client v1.0.0
+// PantrySense — Vanilla JavaScript Client v1.0.1
 
 document.addEventListener("DOMContentLoaded", () => {
   // Tab Heartbeat Tracking
