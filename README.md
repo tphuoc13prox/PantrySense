@@ -1,8 +1,8 @@
 # PantrySense
 
-PantrySense is an offline-first, local AI/ML-oriented recipe discovery, pantry management, and culinary assistant application. In **v1.0.0**, PantrySense delivers a complete smart kitchen ecosystem featuring **Dietary & Allergen Filtering**, **Smart Ingredient Substitution**, **Macro & Calorie Nutrition Estimation**, **Virtual Pantry & Expiry Tracker**, **Weekly 7-Day Meal Planner**, **Pantry-Aware Grocery Shopping List Generator**, **Interactive Step-by-Step Cooking Assistant with Audio Timers**, **Controlled Ingredient Autocomplete & Fuzzy Spellchecker** (4,588-ingredient culinary vocabulary), and **Two-Stage Hybrid AI Retrieval + Learning-to-Rank (LTR)**.
+PantrySense is an offline-first, local AI/ML-oriented recipe discovery, pantry management, and culinary assistant application. In **v1.0.1**, PantrySense delivers a complete smart kitchen ecosystem featuring **Dietary & Allergen Filtering**, **Smart Ingredient Substitution**, **Macro & Calorie Nutrition Estimation**, **Virtual Pantry & Expiry Tracker**, **Weekly 7-Day Meal Planner**, **Pantry-Aware Grocery Shopping List Generator**, **Interactive Step-by-Step Cooking Assistant with Audio Timers & Step Navigator**, **Controlled Ingredient Autocomplete & Fuzzy Spellchecker** (4,588-ingredient culinary vocabulary), and **Two-Stage Hybrid AI Retrieval + Learning-to-Rank (LTR)**.
 
-Current version: **v1.0.0**
+Current version: **v1.0.1**
 
 ## Architecture
 
