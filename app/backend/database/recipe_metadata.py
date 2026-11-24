@@ -136,7 +136,7 @@ def ensure_metadata_tables(connection: sqlite3.Connection) -> None:
     connection.execute(CREATE_INFO_SQL)
 
 
-def _record(recipe_id: int, meta: RecipeMetadata) -> tuple[Any, ...]:
+def metadata_record(recipe_id: int, meta: RecipeMetadata) -> tuple[Any, ...]:
     return (
         (recipe_id,)
         + tuple(int(bool(meta.dietary_tags.get(flag, False))) for flag in DIETARY_FLAGS)
@@ -150,7 +150,7 @@ def _compute_batch(rows: list[tuple[int, str, int | None]]) -> list[tuple[Any, .
     out = []
     for recipe_id, ingredients_json, servings in rows:
         ingredients = json.loads(ingredients_json or "[]")
-        out.append(_record(recipe_id, compute_recipe_metadata(ingredients, servings)))
+        out.append(metadata_record(recipe_id, compute_recipe_metadata(ingredients, servings)))
     return out
 
 
@@ -248,9 +248,9 @@ def stored_fingerprint(connection: sqlite3.Connection) -> str | None:
     return row[0] if row else None
 
 
-def backfill_small_gaps(connection_path: Path | None = None) -> int:
+def backfill_small_gaps(database_path: Path | None = None) -> int:
     """Fill missing metadata when only a few rows lack it (seed data, tests)."""
-    with get_connection(connection_path) as conn:
+    with get_connection(database_path) as conn:
         ensure_metadata_tables(conn)
         missing = conn.execute(
             "SELECT COUNT(*) FROM recipes r LEFT JOIN recipe_metadata m ON m.recipe_id = r.id "
@@ -259,7 +259,7 @@ def backfill_small_gaps(connection_path: Path | None = None) -> int:
         stale = stored_fingerprint(conn) not in (None, metadata_fingerprint())
         total = conn.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
     if stale and total <= INLINE_BACKFILL_LIMIT:
-        return populate_recipe_metadata(connection_path, only_missing=False)
+        return populate_recipe_metadata(database_path, only_missing=False)
     if missing == 0:
         if stale:
             logger.warning(
@@ -268,7 +268,7 @@ def backfill_small_gaps(connection_path: Path | None = None) -> int:
             )
         return 0
     if missing <= INLINE_BACKFILL_LIMIT:
-        return populate_recipe_metadata(connection_path, only_missing=True)
+        return populate_recipe_metadata(database_path, only_missing=True)
     logger.warning(
         "%d recipes have no precomputed metadata. Run 'python scripts/migrate_recipe_metadata.py'; "
         "until then filtered searches compute it in memory on first use.",

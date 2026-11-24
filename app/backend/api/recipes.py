@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from app.backend.recipes.schemas import RecipeDetail, RecipeSearchRequest, RecipeSearchResponse
-from app.backend.recipes.service import RecipeSearchService
+from app.backend.recipes.service import create_search_service
 from app.backend.retrieval.semantic import SemanticIndexNotFoundError
 
 router = APIRouter(prefix="/api/recipes", tags=["recipes"])
@@ -11,13 +11,14 @@ router = APIRouter(prefix="/api/recipes", tags=["recipes"])
 
 @router.post("/search", response_model=RecipeSearchResponse)
 def search_recipes(request: RecipeSearchRequest) -> RecipeSearchResponse:
-    service = RecipeSearchService()
+    service = create_search_service()
     try:
         results = service.search(
             raw_ingredients=request.ingredients,
             filters=request.filters,
             max_cooking_time=request.max_cooking_time,
             category=request.category,
+            include_substitutions=request.include_substitutions,
         )
         return RecipeSearchResponse(recipes=results)
     except SemanticIndexNotFoundError as e:
@@ -29,7 +30,7 @@ def search_recipes(request: RecipeSearchRequest) -> RecipeSearchResponse:
 
 @router.get("/{recipe_id}", response_model=RecipeDetail)
 def get_recipe(recipe_id: int) -> RecipeDetail:
-    service = RecipeSearchService()
+    service = create_search_service()
     recipe = service.get_by_id(recipe_id)
     if recipe is None:
         raise HTTPException(status_code=404, detail="Recipe not found.")
