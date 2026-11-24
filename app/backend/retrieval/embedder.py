@@ -214,7 +214,7 @@ class IngredientEmbedder:
         """Describe the embedding setup so it can be stored next to an index."""
         return {
             "format_version": INDEX_METADATA_VERSION,
-            "model": self.model_name,
+            "model": str(Path(self.model_name).resolve()) if Path(self.model_name).exists() else self.model_name,
             "backend": self.backend,
             "dimension": self.dimension,
             "query_prefix": self.query_prefix,
