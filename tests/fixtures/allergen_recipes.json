@@ -1,0 +1,3383 @@
+{
+ "_meta": {
+  "description": "100 recipes from data/recipes.db (ingredient names as stored), hand-labelled.",
+  "sampling": "40 recipes targeted at tricky terms (one or two per term), 60 uniformly random; recipes with 3-14 ingredients; random.Random(20261124).",
+  "labelling": "Each of the 397 unique ingredient names was read and labelled by hand before the new rules were written. Recipe labels are the union over its ingredients. 'contains' = the usual US retail form contains the allergen; 'may_contain' = common formulations do, or cross-contact is common (oats -> gluten, chocolate chips -> dairy/soy). Coconut is not treated as a tree nut. Shellfish includes molluscs. Generic 'broth' counts as non-vegetarian.",
+  "allergens": [
+   "dairy",
+   "eggs",
+   "fish",
+   "gluten",
+   "peanuts",
+   "sesame",
+   "shellfish",
+   "soy",
+   "tree_nuts"
+  ],
+  "ingredient_labels": {
+   "1 low-fat milk": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "all-purpose flour": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "almond paste": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "amaretto liqueur": {
+    "contains": [],
+    "may_contain": [
+     "tree_nuts"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "american cheese": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "anchovy fillets": {
+    "contains": [
+     "fish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "bacon bits": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "basil pesto": {
+    "contains": [
+     "tree_nuts",
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "beef tenderloin": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "bocconcini": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "boneless beef chuck": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "boneless pork chops": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "boneless skinless chicken": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "broth": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "butter": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "buttermilk": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "caesar-flavor croutons": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [
+     "dairy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "cake flour": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "canola oil cooking": {
+    "contains": [],
+    "may_contain": [
+     "soy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "cashew pieces": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "cheddar cheese": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "chicken": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "chicken breast": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "chicken breasts": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "chicken broth": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "chicken drumsticks": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "chocolate chips": {
+    "contains": [],
+    "may_contain": [
+     "dairy",
+     "soy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "chocolate graham crackers": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [
+     "soy",
+     "dairy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "chocolate ice cream": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [
+     "eggs"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "chocolate-covered coffee beans": {
+    "contains": [],
+    "may_contain": [
+     "dairy",
+     "soy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "chocolate-covered peanuts": {
+    "contains": [
+     "peanuts",
+     "dairy"
+    ],
+    "may_contain": [
+     "soy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "chunk tuna": {
+    "contains": [
+     "fish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "cod": {
+    "contains": [
+     "fish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "cod fish fillet": {
+    "contains": [
+     "fish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "cool whip": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "cool whip free": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "cream cheese": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "creamy peanut butter": {
+    "contains": [
+     "peanuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "crunchy peanut butter": {
+    "contains": [
+     "peanuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "egg": {
+    "contains": [
+     "eggs"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "egg substitute": {
+    "contains": [
+     "eggs"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "eggs": {
+    "contains": [
+     "eggs"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "fat free sour": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "fat-free evaporated milk": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "fat-free ricotta cheese": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "feta": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "feta cheese": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "firm tofu": {
+    "contains": [
+     "soy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "fish sauce": {
+    "contains": [
+     "fish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "flour": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "ghee": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "gluten-free quotcannedquot cream": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "green curry paste": {
+    "contains": [],
+    "may_contain": [
+     "shellfish"
+    ],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "ground beef": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "ground pork": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "half-and-half": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "half-and-half cream": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "hard-boiled eggs": {
+    "contains": [
+     "eggs"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "hazelnut oil": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "hazelnuts": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "heavy cream": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "herb seasoned stuffing": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [
+     "dairy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "hoisin sauce": {
+    "contains": [
+     "soy",
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "honey": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "kittencals famous caesar": {
+    "contains": [
+     "fish",
+     "eggs",
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "kittencals garlic croutons": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [
+     "dairy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "large shrimp": {
+    "contains": [
+     "shellfish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "lean ground beef": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "light butter": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "light soy sauce": {
+    "contains": [
+     "soy",
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "low sodium beef": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "low sodium chicken": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "low sodium soy": {
+    "contains": [
+     "soy",
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "low-fat milk": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "margarine": {
+    "contains": [],
+    "may_contain": [
+     "dairy",
+     "soy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "marshmallow creme": {
+    "contains": [
+     "eggs"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "marzipan": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "mashed potatoes": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "mayonnaise": {
+    "contains": [
+     "eggs"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "medium shrimp": {
+    "contains": [
+     "shellfish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "milk": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "miniature marshmallows": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "miso": {
+    "contains": [
+     "soy"
+    ],
+    "may_contain": [
+     "gluten"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "mock nutella spread": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [
+     "dairy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "non-fat powdered milk": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "nonfat milk": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "oatmeal": {
+    "contains": [],
+    "may_contain": [
+     "gluten"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "old fashioned oats": {
+    "contains": [],
+    "may_contain": [
+     "gluten"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "old-fashioned oatmeal": {
+    "contains": [],
+    "may_contain": [
+     "gluten"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "olive oil flavored": {
+    "contains": [],
+    "may_contain": [
+     "soy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "panir": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "panko breadcrumbs": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "parmesan cheese": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "part-skim mozzarella cheese": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "pasta shells": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "peanut butter": {
+    "contains": [
+     "peanuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "peanuts": {
+    "contains": [
+     "peanuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "pecan halves": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "pecans": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "pesto sauce": {
+    "contains": [
+     "tree_nuts",
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "plain flour": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "plain yogurt": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "pork": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "powdered milk": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "quick-cooking oatmeal": {
+    "contains": [],
+    "may_contain": [
+     "gluten"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "quick-cooking oats": {
+    "contains": [],
+    "may_contain": [
+     "gluten"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "reduced-fat milk": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "reduced-fat sour cream": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "rotini pasta": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "self-raising flour": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "sesame seeds": {
+    "contains": [
+     "sesame"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "small shell pasta": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "smoked salmon": {
+    "contains": [
+     "fish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "sour cream": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "soy sauce": {
+    "contains": [
+     "soy",
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "soya sauce": {
+    "contains": [
+     "soy",
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "soymilk": {
+    "contains": [
+     "soy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "swiss cheese": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "tahini": {
+    "contains": [
+     "sesame"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "tamari": {
+    "contains": [
+     "soy"
+    ],
+    "may_contain": [
+     "gluten"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "tartar sauce": {
+    "contains": [
+     "eggs"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "thai fish sauce": {
+    "contains": [
+     "fish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "tuna in vegetable": {
+    "contains": [
+     "fish"
+    ],
+    "may_contain": [
+     "soy"
+    ],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "un-boiled chicken": {
+    "contains": [],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "unbleached flour": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "unsalted butter": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "unsalted margarine": {
+    "contains": [],
+    "may_contain": [
+     "dairy",
+     "soy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": true
+   },
+   "vegan margarine": {
+    "contains": [],
+    "may_contain": [
+     "soy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "walnut halves": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "walnuts": {
+    "contains": [
+     "tree_nuts"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "white chocolate chips": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [
+     "soy"
+    ],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "white flour": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "white miso": {
+    "contains": [
+     "soy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "whole wheat flour": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "whole wheat pasta": {
+    "contains": [
+     "gluten"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   },
+   "worcestershire sauce": {
+    "contains": [
+     "fish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
+   },
+   "yogurt": {
+    "contains": [
+     "dairy"
+    ],
+    "may_contain": [],
+    "non_vegetarian": false,
+    "non_vegan": false
+   }
+  }
+ },
+ "recipes": [
+  {
+   "id": 126319,
+   "title": "Thai Shrimp Kabobs",
+   "sample": "targeted:coconut milk",
+   "ingredients": [
+    "coconut milk",
+    "lime peel",
+    "lime juice",
+    "sugar",
+    "green curry paste",
+    "hoisin sauce",
+    "ginger",
+    "large shrimp",
+    "rice"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "shellfish",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 1932,
+   "title": "Broiled Chicken (Malay)",
+   "sample": "targeted:coconut milk",
+   "ingredients": [
+    "chicken",
+    "salt",
+    "coconut milk",
+    "bay leaves",
+    "sugar",
+    "ginger",
+    "garlic",
+    "onion",
+    "turmeric powder"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 46657,
+   "title": "Chocolate Biscotti - Gluten Free",
+   "sample": "targeted:gluten-free",
+   "ingredients": [
+    "potato flour",
+    "gluten-free cornflour",
+    "brown sugar",
+    "cocoa powder",
+    "xanthan gum",
+    "gluten free baking",
+    "hot water",
+    "eggs"
+   ],
+   "allergens_contains": [
+    "eggs"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 135114,
+   "title": "Oh-So-Simple Chicken Pot Pie",
+   "sample": "targeted:gluten-free",
+   "ingredients": [
+    "chicken breasts",
+    "un-boiled chicken",
+    "chicken broth",
+    "gluten-free quotcannedquot cream",
+    "plain flour",
+    "fresh ground black",
+    "buttermilk",
+    "mayonnaise",
+    "hard-boiled eggs",
+    "butter"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 286499,
+   "title": "Vegan Chocolate Chip Oatmeal Cookies",
+   "sample": "targeted:vegan",
+   "ingredients": [
+    "vegan margarine",
+    "brown sugar",
+    "white sugar",
+    "vanilla",
+    "whole wheat flour",
+    "water",
+    "baking soda",
+    "old fashioned oats",
+    "chocolate chips",
+    "salt"
+   ],
+   "allergens_contains": [
+    "gluten"
+   ],
+   "allergens_may_contain": [
+    "dairy",
+    "soy"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 300936,
+   "title": "Vegan Tiramisu",
+   "sample": "targeted:vegan",
+   "ingredients": [
+    "flour",
+    "baking powder",
+    "baking soda",
+    "vegan sugar",
+    "maple syrup",
+    "soymilk",
+    "powdered sugar",
+    "brewed coffee",
+    "marsala wine"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 74141,
+   "title": "Oven-barbecued Hot Dogs",
+   "sample": "targeted:worcestershire",
+   "ingredients": [
+    "all-purpose flour",
+    "water",
+    "chili sauce",
+    "onion",
+    "brown sugar",
+    "worcestershire sauce",
+    "paprika",
+    "chili powder",
+    "salt",
+    "pepper"
+   ],
+   "allergens_contains": [
+    "fish",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 213467,
+   "title": "Bodacious Hamburgers",
+   "sample": "targeted:worcestershire",
+   "ingredients": [
+    "garlic clove",
+    "onions",
+    "ketchup",
+    "worcestershire sauce",
+    "sugar",
+    "lean ground beef",
+    "salt",
+    "pepper",
+    "american cheese",
+    "lettuce leaves",
+    "tomatoes",
+    "sweet onions"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "fish"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 236720,
+   "title": "Tuscan Style White Bean Soup",
+   "sample": "targeted:pesto",
+   "ingredients": [
+    "low sodium chicken",
+    "kidney beans",
+    "zucchini",
+    "fresh spinach leaves",
+    "diced tomato",
+    "basil pesto",
+    "salt",
+    "black pepper"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 302470,
+   "title": "Fresh Leek and Spinach Pasta",
+   "sample": "targeted:pesto",
+   "ingredients": [
+    "olive oil",
+    "leek",
+    "bell pepper",
+    "cream cheese",
+    "sun-dried tomatoes",
+    "kalamata olives",
+    "grape tomatoes",
+    "spinach",
+    "feta cheese",
+    "whole wheat pasta",
+    "pesto sauce"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "gluten",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 98093,
+   "title": "Rujak Indonesian Fruit Salad &amp; Tangy Peanut Citrus Sauce",
+   "sample": "targeted:fish sauce",
+   "ingredients": [
+    "green chilies",
+    "brown sugar",
+    "fresh lemon",
+    "fish sauce",
+    "peanuts",
+    "grapefruit",
+    "oranges",
+    "pears",
+    "mango",
+    "tart apples",
+    "red grapes"
+   ],
+   "allergens_contains": [
+    "fish",
+    "peanuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 29800,
+   "title": "Green Mango & Tomato Salad",
+   "sample": "targeted:fish sauce",
+   "ingredients": [
+    "mangoes",
+    "tomatoes",
+    "onions",
+    "fish sauce",
+    "fresh cilantro",
+    "pepper"
+   ],
+   "allergens_contains": [
+    "fish"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 3349,
+   "title": "Yellow Rice",
+   "sample": "targeted:ghee",
+   "ingredients": [
+    "ghee",
+    "onion",
+    "turmeric",
+    "bay leaves",
+    "cloves",
+    "black peppercorns",
+    "cinnamon sticks",
+    "black cardamom pods",
+    "brown rice",
+    "water",
+    "green peas",
+    "salt"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 272803,
+   "title": "Paneer in Gushtaba Gravy",
+   "sample": "targeted:ghee",
+   "ingredients": [
+    "panir",
+    "buttermilk",
+    "cloves",
+    "cardamom",
+    "fennel seeds",
+    "ginger powder",
+    "garlic paste",
+    "ghee",
+    "salt",
+    "mint powder"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 248742,
+   "title": "Lip Zmakk'in Gypsy Gelato",
+   "sample": "targeted:marzipan",
+   "ingredients": [
+    "marzipan",
+    "fine sugar",
+    "eggs",
+    "vanilla essence",
+    "salt",
+    "half-and-half",
+    "heavy cream",
+    "amaretto liqueur",
+    "fresh strawberries",
+    "fresh raspberries",
+    "frozen raspberries"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 36873,
+   "title": "Dad's Pride Fruitcake",
+   "sample": "targeted:marzipan",
+   "ingredients": [
+    "marzipan",
+    "dried figs",
+    "dried pear half",
+    "golden raisin",
+    "currants",
+    "dates",
+    "dried prune",
+    "brandy",
+    "hazelnuts",
+    "walnuts",
+    "unsalted butter",
+    "sugar"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 46037,
+   "title": "Marzipan Cake",
+   "sample": "targeted:almond paste",
+   "ingredients": [
+    "almond paste",
+    "butter",
+    "sugar",
+    "eggs",
+    "flour",
+    "baking powder",
+    "water"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 191274,
+   "title": "Coconut Almond Scones",
+   "sample": "targeted:almond paste",
+   "ingredients": [
+    "unbleached flour",
+    "sugar",
+    "baking powder",
+    "baking soda",
+    "salt",
+    "lemon rind",
+    "unsalted butter",
+    "almond paste",
+    "sweetened flaked coconut",
+    "coconut milk",
+    "egg",
+    "water"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 160983,
+   "title": "Low-Fat Velvety Cauliflower Soup (Kosher-Dairy)",
+   "sample": "targeted:cream of tartar",
+   "ingredients": [
+    "cauliflower heads",
+    "celery leaves",
+    "onions",
+    "olive oil",
+    "butter",
+    "flour",
+    "cream of tartar",
+    "dried thyme",
+    "water",
+    "1 low-fat milk",
+    "salt",
+    "pepper"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 101088,
+   "title": "Frosted Orange Pie",
+   "sample": "targeted:cream of tartar",
+   "ingredients": [
+    "sugar",
+    "flour",
+    "salt",
+    "water",
+    "orange zest",
+    "lemon rind of",
+    "lemon juice",
+    "cream of tartar",
+    "flaked coconut"
+   ],
+   "allergens_contains": [
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 9624,
+   "title": "Stir Fried Oysters with Garlic",
+   "sample": "targeted:oyster sauce",
+   "ingredients": [
+    "cornstarch",
+    "oyster sauce",
+    "soy sauce",
+    "white wine",
+    "garlic",
+    "green onions",
+    "ginger"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 281912,
+   "title": "Super Easy Cashew Chicken - Springfield Style !!!",
+   "sample": "targeted:oyster sauce",
+   "ingredients": [
+    "chicken broth",
+    "oyster sauce",
+    "sugar",
+    "soy sauce",
+    "pepper",
+    "cornstarch",
+    "minute rice",
+    "cashew pieces"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "soy",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 295550,
+   "title": "Savory Garbanzo Bean &quot;meat&quot; Loaf (Chickpea)",
+   "sample": "targeted:tahini",
+   "ingredients": [
+    "chickpeas",
+    "garlic cloves",
+    "olive oil",
+    "tahini",
+    "onion",
+    "carrots",
+    "celery",
+    "eggs",
+    "feta",
+    "parmesan cheese",
+    "fresh parsley",
+    "fresh cilantro"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "sesame"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 200870,
+   "title": "Basil Hummus",
+   "sample": "targeted:tahini",
+   "ingredients": [
+    "canned chick-peas",
+    "tahini",
+    "garlic clove",
+    "basil",
+    "olive oil",
+    "water",
+    "coarse salt"
+   ],
+   "allergens_contains": [
+    "sesame"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 305008,
+   "title": "Caesar Oven &quot;fried&quot; Chicken",
+   "sample": "targeted:caesar",
+   "ingredients": [
+    "chicken drumsticks",
+    "buttermilk",
+    "caesar-flavor croutons",
+    "parmesan cheese",
+    "canola oil cooking"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "gluten"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 137974,
+   "title": "Kittencal's Caesar Tortellini Salad",
+   "sample": "targeted:caesar",
+   "ingredients": [
+    "romaine lettuce",
+    "kittencals famous caesar",
+    "parmesan cheese",
+    "cherry tomatoes",
+    "caesar-flavor croutons",
+    "kittencals garlic croutons",
+    "black pepper",
+    "salt"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "fish",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 265380,
+   "title": "No Ice Cream Nutella Cones",
+   "sample": "targeted:nutella",
+   "ingredients": [
+    "white chocolate chips",
+    "banana",
+    "mock nutella spread",
+    "strawberries",
+    "lemon juice",
+    "peanuts"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "peanuts",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 46871,
+   "title": "Chocolate Pumpkin Mini Cakes",
+   "sample": "targeted:egg substitute",
+   "ingredients": [
+    "sugar-free instant chocolate",
+    "pumpkin",
+    "water",
+    "egg substitute"
+   ],
+   "allergens_contains": [
+    "eggs"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 283826,
+   "title": "Diet Low Fat Strawberry Topped Cake",
+   "sample": "targeted:egg substitute",
+   "ingredients": [
+    "egg substitute",
+    "diet ginger ale",
+    "cool whip free",
+    "strawberries"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 142005,
+   "title": "Awesome Gluten Free Vegan Peanut Butter Cookies",
+   "sample": "targeted:peanut butter",
+   "ingredients": [
+    "teff flour",
+    "sea salt",
+    "maple syrup",
+    "canola oil",
+    "vanilla",
+    "peanut butter"
+   ],
+   "allergens_contains": [
+    "peanuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 93719,
+   "title": "Warm Peanut Vegetable Salad",
+   "sample": "targeted:peanut butter",
+   "ingredients": [
+    "broccoli floret",
+    "cauliflower floret",
+    "red onion",
+    "zucchini",
+    "carrot",
+    "crunchy peanut butter",
+    "light soy sauce"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "peanuts",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 233864,
+   "title": "Miso Salmon &amp; Spinach",
+   "sample": "targeted:miso",
+   "ingredients": [
+    "sake",
+    "white miso",
+    "mirin",
+    "light soy sauce",
+    "sesame seeds"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "sesame",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 267192,
+   "title": "Miso Marinated Skirt Steak",
+   "sample": "targeted:miso",
+   "ingredients": [
+    "sake",
+    "green onion",
+    "brown sugar",
+    "miso",
+    "fresh ground black",
+    "garlic cloves"
+   ],
+   "allergens_contains": [
+    "soy"
+   ],
+   "allergens_may_contain": [
+    "gluten"
+   ],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 204025,
+   "title": "Stuffed Mushrooms - Deep Fried",
+   "sample": "targeted:hoisin",
+   "ingredients": [
+    "mushrooms",
+    "pork",
+    "water chestnut",
+    "green onions",
+    "bell pepper",
+    "celery",
+    "cornstarch",
+    "gingerroot",
+    "sherry wine",
+    "soy sauce",
+    "hoisin sauce",
+    "all-purpose flour"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 148228,
+   "title": "Asian Inspired Barbecue Beef Sandwiches",
+   "sample": "targeted:hoisin",
+   "ingredients": [
+    "low sodium beef",
+    "low sodium soy",
+    "water",
+    "rice vinegar",
+    "dark brown sugar",
+    "molasses",
+    "five-spice powder",
+    "crushed red pepper",
+    "black pepper",
+    "onion",
+    "hoisin sauce",
+    "fresh cilantro"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 108605,
+   "title": "Asparagus Pasta Salad With Parmesan Dressing",
+   "sample": "targeted:anchovy",
+   "ingredients": [
+    "small shell pasta",
+    "asparagus",
+    "red bell pepper",
+    "fresh mushrooms",
+    "parsley",
+    "fresh garlic cloves",
+    "anchovy fillets",
+    "dijon mustard",
+    "worcestershire sauce",
+    "lemon juice",
+    "white wine vinegar",
+    "olive oil"
+   ],
+   "allergens_contains": [
+    "fish",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 258630,
+   "title": "Chicken Paillard",
+   "sample": "targeted:anchovy",
+   "ingredients": [
+    "boneless skinless chicken",
+    "all-purpose flour",
+    "eggs",
+    "milk",
+    "panko breadcrumbs",
+    "extra virgin olive",
+    "anchovy fillets",
+    "garlic cloves",
+    "parmesan cheese",
+    "grape tomatoes",
+    "baby arugula",
+    "bocconcini"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "fish",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 252924,
+   "title": "Pretty in Pink Strawberry Streusel Bars",
+   "sample": "targeted:oat",
+   "ingredients": [
+    "quick-cooking oats",
+    "unsalted butter",
+    "cream cheese",
+    "eggs"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs"
+   ],
+   "allergens_may_contain": [
+    "gluten"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 110174,
+   "title": "Airport Cookies",
+   "sample": "targeted:oat",
+   "ingredients": [
+    "margarine",
+    "dark brown sugar",
+    "white sugar",
+    "eggs",
+    "vanilla extract",
+    "flour",
+    "baking soda",
+    "salt",
+    "quick-cooking oatmeal",
+    "old-fashioned oatmeal",
+    "chocolate chips"
+   ],
+   "allergens_contains": [
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [
+    "dairy",
+    "soy"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 85554,
+   "title": "Butternut Pear Soup",
+   "sample": "targeted:butternut",
+   "ingredients": [
+    "onion",
+    "butter",
+    "light brown sugar",
+    "pureed squash butternut",
+    "chicken broth",
+    "vegetable broth",
+    "curry powder",
+    "low-fat milk",
+    "nonfat milk",
+    "cinnamon",
+    "ginger",
+    "nutmeg"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 15134,
+   "title": "Scalloped Tomatoes",
+   "sample": "random",
+   "ingredients": [
+    "tomatoes",
+    "celery",
+    "onion",
+    "flour",
+    "sugar",
+    "dried marjoram",
+    "salt",
+    "pepper",
+    "water",
+    "butter",
+    "margarine",
+    "parmesan cheese"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "gluten"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 156083,
+   "title": "Thai Green Curry Shrimp",
+   "sample": "random",
+   "ingredients": [
+    "eggplants",
+    "red bell pepper",
+    "garlic",
+    "green curry paste",
+    "lemon juice",
+    "unsweetened coconut milk",
+    "chicken broth",
+    "medium shrimp",
+    "basil",
+    "salt",
+    "cornstarch",
+    "water"
+   ],
+   "allergens_contains": [
+    "shellfish"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 284793,
+   "title": "Balsamic and Sugar Roasted Carrots",
+   "sample": "random",
+   "ingredients": [
+    "carrots",
+    "olive oil",
+    "light brown sugar"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 257196,
+   "title": "Persian Spinach Salad",
+   "sample": "random",
+   "ingredients": [
+    "fresh spinach",
+    "unsalted butter",
+    "onion",
+    "ground cinnamon",
+    "garlic cloves",
+    "yogurt",
+    "extra virgin olive",
+    "lemon juice",
+    "of fresh mint",
+    "dill",
+    "walnuts"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 221211,
+   "title": "Lemony Vinaigrette",
+   "sample": "random",
+   "ingredients": [
+    "flax seed oil",
+    "water",
+    "fresh lemon juice",
+    "honey",
+    "dijon mustard",
+    "garlic clove",
+    "tamari",
+    "black pepper"
+   ],
+   "allergens_contains": [
+    "soy"
+   ],
+   "allergens_may_contain": [
+    "gluten"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 263958,
+   "title": "Chicken-Vegetable Manicotti With Spinach Sauce",
+   "sample": "random",
+   "ingredients": [
+    "olive oil flavored",
+    "onion",
+    "garlic cloves",
+    "zucchini",
+    "dried basil leaves",
+    "dried oregano leaves",
+    "fat-free ricotta cheese",
+    "salt",
+    "pepper",
+    "margarine",
+    "all-purpose flour",
+    "1 low-fat milk"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "gluten"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 221983,
+   "title": "Palm Beach Poinciana Cake",
+   "sample": "random",
+   "ingredients": [
+    "butter",
+    "sugar",
+    "eggs",
+    "lemon juice",
+    "lemon rind",
+    "salt",
+    "cake flour",
+    "citron",
+    "raisins",
+    "boiling water",
+    "fresh lemon juice",
+    "lemon zest"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 283927,
+   "title": "Funnel Cake Thank You Emeril",
+   "sample": "random",
+   "ingredients": [
+    "eggs",
+    "milk",
+    "vanilla",
+    "flour",
+    "brown sugar",
+    "salt",
+    "baking powder"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 235507,
+   "title": "Easy Fruit Dip",
+   "sample": "random",
+   "ingredients": [
+    "cream cheese",
+    "eggs",
+    "sugar",
+    "vanilla",
+    "fresh pineapple",
+    "strawberry",
+    "kiwi",
+    "watermelon",
+    "banana"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 115130,
+   "title": "Asian-Chili Pork Tenderloin",
+   "sample": "random",
+   "ingredients": [
+    "soy sauce",
+    "green onion",
+    "fresh ginger",
+    "sesame seeds",
+    "honey"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "sesame",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 173930,
+   "title": "Easy-Peasy Shepherd's Pie",
+   "sample": "random",
+   "ingredients": [
+    "potatoes",
+    "lean ground beef",
+    "butter"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 105527,
+   "title": "Matzo, Walnut and Mushroom Stuffing",
+   "sample": "random",
+   "ingredients": [
+    "walnuts",
+    "unsalted margarine",
+    "onions",
+    "carrot",
+    "celery",
+    "garlic cloves",
+    "fresh thyme leaves",
+    "dried thyme leaves",
+    "salt",
+    "fresh ground pepper",
+    "mushrooms",
+    "fresh parsley"
+   ],
+   "allergens_contains": [
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [
+    "dairy",
+    "soy"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 99027,
+   "title": "Butter Sponge Cake",
+   "sample": "random",
+   "ingredients": [
+    "eggs",
+    "granulated sugar",
+    "unsalted butter",
+    "vanilla extract",
+    "fresh lemon rind",
+    "all-purpose flour",
+    "cornstarch",
+    "ground mace"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 67957,
+   "title": "Spiced Iced Tea",
+   "sample": "random",
+   "ingredients": [
+    "water",
+    "cinnamon sticks",
+    "whole cloves",
+    "sugar",
+    "lemon slice"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 109617,
+   "title": "Sicilian Pasta Salad",
+   "sample": "random",
+   "ingredients": [
+    "salt",
+    "pasta shells",
+    "rotini pasta",
+    "fresh green beans",
+    "sun-dried tomato packed",
+    "red wine vinegar",
+    "fresh oregano",
+    "dried oregano",
+    "part-skim mozzarella cheese"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 270752,
+   "title": "Lemony Waldorf Fish Fillets for Microwave",
+   "sample": "random",
+   "ingredients": [
+    "apple",
+    "celery",
+    "butter",
+    "margarine",
+    "herb seasoned stuffing",
+    "mayonnaise",
+    "walnuts",
+    "lemon juice",
+    "cod"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "fish",
+    "gluten",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 218622,
+   "title": "Cream of Chocolate Eggnog",
+   "sample": "random",
+   "ingredients": [
+    "hot water",
+    "eggs",
+    "vanilla",
+    "salt",
+    "heavy cream",
+    "brandy"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 106182,
+   "title": "Chocolate Covered Peanut Clusters",
+   "sample": "random",
+   "ingredients": [
+    "creamy peanut butter",
+    "miniature marshmallows",
+    "chocolate-covered peanuts",
+    "powdered sugar"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "peanuts"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 41999,
+   "title": "Chesapeake Crab Quiche",
+   "sample": "random",
+   "ingredients": [
+    "mayonnaise",
+    "eggs",
+    "red onion",
+    "flour",
+    "swiss cheese",
+    "fresh thyme leave"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 229280,
+   "title": "Greek Taboule Salad",
+   "sample": "random",
+   "ingredients": [
+    "olive oil",
+    "feta cheese",
+    "tomatoes",
+    "fresh basil",
+    "lemon juice",
+    "romaine lettuce leaf",
+    "lemon wedge"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 91530,
+   "title": "Beef Tenderloin With Garlic-Horseradish Crust",
+   "sample": "random",
+   "ingredients": [
+    "garlic",
+    "salt",
+    "dried basil",
+    "dried thyme",
+    "pepper",
+    "beef tenderloin"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 237415,
+   "title": "Sensibly Delicious Fudge",
+   "sample": "random",
+   "ingredients": [
+    "splenda sugar blend",
+    "fat-free evaporated milk",
+    "butter",
+    "margarine",
+    "salt",
+    "miniature marshmallows",
+    "pecans",
+    "walnuts",
+    "vanilla extract"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 213961,
+   "title": "Pedestrian Salad Nicoise",
+   "sample": "random",
+   "ingredients": [
+    "basmati rice",
+    "water",
+    "chunk tuna",
+    "hard-boiled eggs",
+    "cucumber",
+    "fresh tomato",
+    "frozen corn",
+    "red bell pepper",
+    "kalamata olives",
+    "black olives",
+    "red wine vinegar",
+    "olive oil"
+   ],
+   "allergens_contains": [
+    "eggs",
+    "fish"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 268912,
+   "title": "Khao Tom  (Thai Rice Soup)",
+   "sample": "random",
+   "ingredients": [
+    "shallots",
+    "celery",
+    "lemongrass",
+    "cooked rice",
+    "ground pork",
+    "thai fish sauce",
+    "lime juice",
+    "fresh cilantro",
+    "firm tofu",
+    "scallion"
+   ],
+   "allergens_contains": [
+    "fish",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 60157,
+   "title": "Rumrunner's Pecan Pie",
+   "sample": "random",
+   "ingredients": [
+    "eggs",
+    "all-purpose flour",
+    "dark corn syrup",
+    "sugar",
+    "rum",
+    "butter",
+    "vanilla",
+    "pecans"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 254133,
+   "title": "Weight Watchers Sour Cream Sugar Cookies",
+   "sample": "random",
+   "ingredients": [
+    "flour",
+    "baking powder",
+    "salt",
+    "ground nutmeg",
+    "sugar",
+    "light butter",
+    "vanilla extract",
+    "reduced-fat sour cream",
+    "confectioners sugar",
+    "water",
+    "lemon zest"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 17840,
+   "title": "Cod Chowder for Two",
+   "sample": "random",
+   "ingredients": [
+    "butter",
+    "margarine",
+    "onion",
+    "celery",
+    "carrot",
+    "mushrooms",
+    "potato",
+    "water",
+    "milk",
+    "corn kernel",
+    "salt",
+    "fresh ground black"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 266092,
+   "title": "Celery Muffins",
+   "sample": "random",
+   "ingredients": [
+    "egg",
+    "onion",
+    "celery",
+    "fat free sour",
+    "reduced-fat milk",
+    "all-purpose flour",
+    "baking powder",
+    "salt"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 227957,
+   "title": "The Incredible Mocha Frappe",
+   "sample": "random",
+   "ingredients": [
+    "milk",
+    "granulated sugar",
+    "instant coffee"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 313964,
+   "title": "Mango-Chipotle Pot Roast - Crock Pot",
+   "sample": "random",
+   "ingredients": [
+    "boneless beef chuck",
+    "red bell peppers",
+    "onion",
+    "chipotle salsa"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 53232,
+   "title": "The Loaves & the Fishes Oatmeal Bread & Fried Dough",
+   "sample": "random",
+   "ingredients": [
+    "boiling water",
+    "oatmeal",
+    "salt",
+    "shortening",
+    "molasses",
+    "active dry yeast",
+    "water",
+    "all-purpose flour",
+    "butter",
+    "flour",
+    "powdered sugar"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 18743,
+   "title": "Cucumber Salad Persian Style",
+   "sample": "random",
+   "ingredients": [
+    "cucumbers",
+    "plain yogurt",
+    "spring onions",
+    "raisins",
+    "walnuts",
+    "dried mint"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 270685,
+   "title": "Fluffy Butter Dinner Rolls",
+   "sample": "random",
+   "ingredients": [
+    "fast rise yeast",
+    "warm water",
+    "sugar",
+    "eggs",
+    "butter",
+    "powdered milk",
+    "salt"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 118003,
+   "title": "Parmesan Boneless Pork With Saut&eacute;ed Peppers and Onions",
+   "sample": "random",
+   "ingredients": [
+    "olive oil",
+    "red onion",
+    "green pepper",
+    "feta cheese",
+    "sour cream",
+    "boneless pork chops",
+    "parmesan cheese",
+    "eggs",
+    "chili powder",
+    "dried thyme",
+    "paprika",
+    "butter"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 306704,
+   "title": "Salmon and Brie Pie",
+   "sample": "random",
+   "ingredients": [
+    "butter",
+    "onion",
+    "flour",
+    "milk",
+    "lemon juice",
+    "smoked salmon",
+    "green onions",
+    "dill leaves",
+    "fresh ground black"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "fish",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 200044,
+   "title": "Flourless Walnut Cakes",
+   "sample": "random",
+   "ingredients": [
+    "walnuts",
+    "confectioners sugar",
+    "butter",
+    "salt"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 272487,
+   "title": "Hazelnut Orange Brownies",
+   "sample": "random",
+   "ingredients": [
+    "eggs",
+    "hazelnut oil",
+    "orange zest of",
+    "half-and-half cream"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 91243,
+   "title": "Cheesy Beef  'n Biscuit Casserole",
+   "sample": "random",
+   "ingredients": [
+    "ground beef",
+    "onion",
+    "green pepper",
+    "tomato sauce",
+    "chili powder",
+    "cheddar cheese",
+    "sour cream",
+    "egg"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 78468,
+   "title": "Frozen Green Girl Scout Cocktail (With Creme De Menthe)",
+   "sample": "random",
+   "ingredients": [
+    "green creme de",
+    "chocolate ice cream",
+    "milk"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [
+    "eggs"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 257752,
+   "title": "Minestrone With Chicken and Sausage",
+   "sample": "random",
+   "ingredients": [
+    "olive oil",
+    "onion",
+    "garlic cloves",
+    "kosher salt",
+    "pepper",
+    "chicken breast",
+    "carrots",
+    "celery ribs",
+    "cannellini beans",
+    "sun-dried tomatoes",
+    "bay leaf",
+    "dried thyme"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 177898,
+   "title": "Classic Shrimp Scampi",
+   "sample": "random",
+   "ingredients": [
+    "butter",
+    "extra virgin olive",
+    "garlic cloves",
+    "dry white wine",
+    "broth",
+    "kosher salt",
+    "crushed red pepper",
+    "fresh ground black",
+    "large shrimp",
+    "fresh parsley"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "shellfish"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 19358,
+   "title": "Anything Goes Red Salad Dressing",
+   "sample": "random",
+   "ingredients": [
+    "dry mustard",
+    "sugar",
+    "celery seed",
+    "salt",
+    "vinegar",
+    "garlic powder",
+    "ketchup",
+    "paprika",
+    "bacon bits"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 144258,
+   "title": "Chocolate-Peanut Butter Whoopie Puffs",
+   "sample": "random",
+   "ingredients": [
+    "sugar",
+    "butter",
+    "egg",
+    "vanilla extract",
+    "flour",
+    "baking soda",
+    "baking powder",
+    "milk",
+    "powdered sugar",
+    "creamy peanut butter",
+    "marshmallow creme"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten",
+    "peanuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 222027,
+   "title": "Mint Surprise Cookies",
+   "sample": "random",
+   "ingredients": [
+    "flour",
+    "baking soda",
+    "salt",
+    "butter",
+    "sugar",
+    "brown sugar",
+    "eggs",
+    "water",
+    "vanilla",
+    "walnut halves"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 211931,
+   "title": "Frog Hair Pie",
+   "sample": "random",
+   "ingredients": [
+    "rhubarb",
+    "sugar",
+    "water",
+    "cornstarch",
+    "flour",
+    "baking powder",
+    "cinnamon",
+    "butter",
+    "egg",
+    "milk"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 194341,
+   "title": "Bourbon Old-Fashioned",
+   "sample": "random",
+   "ingredients": [
+    "water",
+    "sugar",
+    "maraschino cherry"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 275738,
+   "title": "Mashed Potato Chocolate Cake",
+   "sample": "random",
+   "ingredients": [
+    "mashed potatoes",
+    "water",
+    "all-purpose flour",
+    "instant coffee granules",
+    "baking soda",
+    "salt",
+    "unsalted butter",
+    "granulated sugar",
+    "vanilla",
+    "eggs"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 179065,
+   "title": "Brandy Alexander Cheesecake",
+   "sample": "random",
+   "ingredients": [
+    "chocolate graham crackers",
+    "sugar",
+    "unsalted butter",
+    "cream cheese",
+    "cornstarch",
+    "eggs",
+    "brandy",
+    "creme de cacao",
+    "heavy cream",
+    "chocolate-covered coffee beans"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 48974,
+   "title": "Fresh Cod Cakes",
+   "sample": "random",
+   "ingredients": [
+    "celery rib",
+    "scallions",
+    "flat leaf parsley",
+    "cod fish fillet",
+    "egg",
+    "salt",
+    "black pepper",
+    "tartar sauce",
+    "lemon wedge"
+   ],
+   "allergens_contains": [
+    "eggs",
+    "fish"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 4830,
+   "title": "Pipin' Hot Bakery Whole Wheat Tortillas",
+   "sample": "random",
+   "ingredients": [
+    "white flour",
+    "whole wheat flour",
+    "salt",
+    "baking powder",
+    "canola oil",
+    "water"
+   ],
+   "allergens_contains": [
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 49146,
+   "title": "Orange,Tangerine Mint Julep",
+   "sample": "random",
+   "ingredients": [
+    "tangerine juice",
+    "limes juice of",
+    "fine sugar",
+    "fresh mint leaves",
+    "of fresh mint",
+    "vodka",
+    "bourbon"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 76299,
+   "title": "Sonoma Chicken Salad",
+   "sample": "random",
+   "ingredients": [
+    "chicken",
+    "celery",
+    "red seedless grapes",
+    "pecan halves",
+    "mayonnaise",
+    "honey",
+    "apple cider vinegar",
+    "poppy seed",
+    "salt",
+    "white pepper"
+   ],
+   "allergens_contains": [
+    "eggs",
+    "tree_nuts"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 301581,
+   "title": "Spiced Apple Pudding",
+   "sample": "random",
+   "ingredients": [
+    "apples",
+    "butter",
+    "brown sugar",
+    "cinnamon",
+    "instant vanilla pudding",
+    "cool whip"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 150952,
+   "title": "Tuna Kitty Treats",
+   "sample": "random",
+   "ingredients": [
+    "whole wheat flour",
+    "non-fat powdered milk",
+    "tuna in vegetable",
+    "egg",
+    "water"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "fish",
+    "gluten"
+   ],
+   "allergens_may_contain": [
+    "soy"
+   ],
+   "vegetarian": false,
+   "vegan": false
+  },
+  {
+   "id": 131536,
+   "title": "Traditional Cupcakes With Passionfruit Icing",
+   "sample": "random",
+   "ingredients": [
+    "butter",
+    "caster sugar",
+    "vanilla essence",
+    "eggs",
+    "sour cream",
+    "self-raising flour",
+    "passion fruit pulp",
+    "icing sugar"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "gluten"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 239744,
+   "title": "Gluten-Free Rice and Soy Waffles",
+   "sample": "random",
+   "ingredients": [
+    "potato starch",
+    "salt",
+    "baking powder",
+    "sugar",
+    "eggs",
+    "milk",
+    "soymilk"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 305065,
+   "title": "Tilapia in Cream Sauce",
+   "sample": "random",
+   "ingredients": [
+    "parmesan cheese",
+    "ground coriander",
+    "dry tarragon",
+    "lemon juice",
+    "green onion",
+    "tabasco sauce"
+   ],
+   "allergens_contains": [
+    "dairy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 282791,
+   "title": "Dave's Immune Soup",
+   "sample": "random",
+   "ingredients": [
+    "shiitake mushroom",
+    "dried lentils",
+    "cabbage",
+    "onion",
+    "garlic",
+    "carrots",
+    "olive oil",
+    "water",
+    "sea salt",
+    "soya sauce"
+   ],
+   "allergens_contains": [
+    "gluten",
+    "soy"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  },
+  {
+   "id": 41870,
+   "title": "French Toast Bundt",
+   "sample": "random",
+   "ingredients": [
+    "eggs",
+    "butter",
+    "nutmeg",
+    "ginger",
+    "sugar",
+    "cinnamon",
+    "vanilla extract",
+    "maple syrup",
+    "powdered sugar"
+   ],
+   "allergens_contains": [
+    "dairy",
+    "eggs"
+   ],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": false
+  },
+  {
+   "id": 112103,
+   "title": "Oregano &amp; Lemon Pork Kebabs",
+   "sample": "random",
+   "ingredients": [
+    "lemon juice",
+    "dried oregano",
+    "rosemary sprig",
+    "garlic clove",
+    "fresh ground black",
+    "zucchini",
+    "grape tomatoes",
+    "onion",
+    "white mushrooms"
+   ],
+   "allergens_contains": [],
+   "allergens_may_contain": [],
+   "vegetarian": true,
+   "vegan": true
+  }
+ ]
+}
