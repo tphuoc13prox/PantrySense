@@ -8,6 +8,7 @@
     "min_query_size": 2,
     "max_duplicate_group": 5,
     "distractor_min_df": 100,
+    "pool": "eval",
     "n_excluded_recipe_ids": 0,
     "tier_fractions": {
       "standard": [
@@ -27,7 +28,8 @@
   "corpus": {
     "n_recipes": 315447,
     "fingerprint_sha256": "3e50c9b35e354ef102c2a0bd59af6b96e3d8311317997d601bacbb3b68d5e0d1",
-    "n_eligible": 273506,
+    "n_in_pool": 63295,
+    "n_eligible": 52527,
     "n_with_duplicates": 29254
   },
   "staples": [
@@ -93,8 +95,8 @@
       "sparse": 333,
       "standard": 334
     },
-    "mean_query_size": 3.783,
-    "queries_with_duplicates": 51,
+    "mean_query_size": 3.705,
+    "queries_with_duplicates": 6,
     "noisy_without_distractor": 0
   },
   "excluded_sets": []

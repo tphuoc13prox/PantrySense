@@ -5,9 +5,9 @@ my pantry"), and the source recipe (plus its near-duplicates) is the only
 labelled relevant answer. Generation is fully determined by the corpus and the
 parameters below, so the committed JSONL can be regenerated bit-for-bit.
 
-The same building blocks are meant to be reused for other offline work, e.g.
-generating a disjoint *training* query set for the LTR ranker by passing the
-eval set's recipe ids as ``exclude_recipe_ids``.
+Source recipes come from a fixed partition of the corpus (see ``split.py``):
+eval queries only use recipes in the eval buckets, so training data for the
+LTR ranker can be drawn from the remaining buckets without leakage.
 """
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from app.backend.evaluation.split import is_eval_recipe
 from app.backend.recipes.matching import normalize_ingredient, normalize_ingredients
 
 TIERS = ("standard", "sparse", "noisy")
@@ -70,6 +71,8 @@ class QuerySetConfig:
     min_query_size: int = 2
     max_duplicate_group: int = 5
     distractor_min_df: int = 100
+    # "eval": buckets 0-1 only (default), "train": buckets 2-9, "all": no split.
+    pool: str = "eval"
     exclude_recipe_ids: frozenset[int] = field(default_factory=frozenset)
 
 
@@ -142,10 +145,21 @@ def build_query_set(
         # query string the pipeline sees is exactly what we stored.
         return [i for i in r.ingredients if i not in staple_set and normalize_ingredient(i) == i]
 
+    if config.pool not in ("eval", "train", "all"):
+        raise ValueError(f"unknown pool {config.pool!r}")
+
+    def in_pool(recipe_id: int) -> bool:
+        if config.pool == "all":
+            return True
+        return is_eval_recipe(recipe_id) == (config.pool == "eval")
+
+    # A recipe is eligible only if its whole duplicate group lies in the pool,
+    # so no near-duplicate of an eval target ends up on the training side.
     eligible = [
         r
         for r in sorted(recipes, key=lambda x: x.recipe_id)
-        if r.recipe_id not in config.exclude_recipe_ids
+        if all(in_pool(rid) for rid in groups[r.recipe_id])
+        and r.recipe_id not in config.exclude_recipe_ids
         and len(pool_for(r)) >= config.min_pool_size
         and len(groups[r.recipe_id]) <= config.max_duplicate_group
     ]
@@ -216,6 +230,7 @@ def build_query_set(
         "corpus": {
             "n_recipes": n_docs,
             "fingerprint_sha256": corpus_fingerprint(recipes),
+            "n_in_pool": sum(1 for r in recipes if in_pool(r.recipe_id)),
             "n_eligible": len(eligible),
             "n_with_duplicates": sum(1 for g in groups.values() if len(g) > 1),
         },

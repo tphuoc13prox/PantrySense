@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from app.backend.evaluation.split import is_eval_recipe, split_bucket
 from app.backend.evaluation.query_set import (
     QuerySetConfig,
     build_query_set,
@@ -37,7 +38,7 @@ def _corpus():
 
 
 def _config(**kw) -> QuerySetConfig:
-    params = dict(n_queries=4, seed=1, staple_df_threshold=0.20, min_pool_size=3, distractor_min_df=1)
+    params = dict(n_queries=4, seed=1, pool="all", staple_df_threshold=0.20, min_pool_size=3, distractor_min_df=1)
     params.update(kw)
     return QuerySetConfig(**params)
 
@@ -104,3 +105,23 @@ def test_write_and_load_roundtrip(tmp_path: Path) -> None:
     meta_path = write_query_set(out, queries, meta)
     assert meta_path.exists()
     assert [q.to_json() for q in load_query_set(out)] == [q.to_json() for q in queries]
+
+
+def test_split_bucket_is_stable_and_roughly_20_percent_eval() -> None:
+    # Pinned values: the convention is shared with the LTR training pipeline.
+    assert [split_bucket(i) for i in (1, 2, 3, 286, 315732)] == [1, 2, 3, 4, 9]
+    share = sum(is_eval_recipe(i) for i in range(1, 20001)) / 20000
+    assert 0.18 < share < 0.22
+
+
+def test_eval_pool_only_samples_eval_buckets() -> None:
+    corpus = _corpus()
+    corpus += [
+        to_corpus_recipe(1000 + i, f"Dish number {chr(97 + i % 26)}{i}", [f"a{i}", f"b{i}", f"c{i}", "salt"])
+        for i in range(200)
+    ]
+    queries, meta = build_query_set(corpus, _config(n_queries=10, pool="eval"))
+    for q in queries:
+        assert all(is_eval_recipe(rid) for rid in q.relevant_ids)
+    train, _ = build_query_set(corpus, _config(n_queries=10, pool="train"))
+    assert not any(is_eval_recipe(rid) for q in train for rid in q.relevant_ids)

@@ -55,6 +55,8 @@ def main(argv: list[str] | None = None) -> int:
                    help="minimum non-staple ingredients a recipe needs to be sampled")
     p.add_argument("--max-dup-group", type=int, default=defaults.max_duplicate_group,
                    help="skip recipes with more near-duplicates than this")
+    p.add_argument("--pool", choices=("eval", "train", "all"), default=defaults.pool,
+                   help="which split buckets source recipes come from (eval = buckets 0-1)")
     p.add_argument("--exclude", type=Path, action="append", default=[],
                    help="existing query JSONL whose recipes (and duplicates) must not be reused")
     args = p.parse_args(argv)
@@ -79,6 +81,7 @@ def main(argv: list[str] | None = None) -> int:
         staple_df_threshold=args.staple_df,
         min_pool_size=args.min_pool,
         max_duplicate_group=args.max_dup_group,
+        pool=args.pool,
         exclude_recipe_ids=frozenset(exclude),
     )
     queries, metadata = build_query_set(corpus, config)
