@@ -11,7 +11,7 @@ from app.backend.config import (
     get_vector_index_path,
 )
 from app.backend.recipes.matching import normalize_ingredients
-from app.backend.retrieval.embedder import IngredientEmbedder
+from app.backend.retrieval.embedder import EmbeddingIndexMismatchError, IngredientEmbedder
 from app.backend.retrieval.vector_store import FaissVectorStore
 
 logger = logging.getLogger(__name__)
@@ -75,6 +75,12 @@ class SemanticRetriever:
 
         if self.ids_path.exists():
             success = self.vector_store.load(self.index_path, self.ids_path)
+            if success:
+                try:
+                    self.embedder.verify_index(self.index_path)
+                except EmbeddingIndexMismatchError as exc:
+                    logger.error("%s", exc)
+                    success = False
             self._loaded = success
             return success
 

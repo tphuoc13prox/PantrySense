@@ -23,7 +23,7 @@ from app.backend.config import (
 from app.backend.database.connection import get_connection
 from app.backend.database.init_db import initialize_database
 from app.backend.retrieval.bm25_store import BM25Store
-from app.backend.retrieval.embedder import IngredientEmbedder
+from app.backend.retrieval.embedder import IngredientEmbedder, write_index_metadata
 from app.backend.retrieval.semantic import build_recipe_representation
 from app.backend.retrieval.vector_store import FaissVectorStore
 
@@ -1156,6 +1156,7 @@ class SetupManager:
             vector_store = FaissVectorStore(dimension=embedder.dimension)
             vector_store.add(embeddings, recipe_ids)
             vector_store.save(get_vector_index_path(), get_vector_ids_path())
+            write_index_metadata(get_vector_index_path(), embedder, count=len(recipe_ids))
             time.sleep(0.3)
 
             # Step 6: BM25 Sparse Lexical Index
