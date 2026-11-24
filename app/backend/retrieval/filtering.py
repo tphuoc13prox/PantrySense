@@ -74,6 +74,8 @@ class AllowedIds:
 
     def mask_for(self, order_ids: np.ndarray) -> np.ndarray:
         """Boolean mask over ``order_ids`` marking the allowed entries."""
+        if self._sorted_ids.shape[0] == 0:
+            return np.zeros(order_ids.shape[0], dtype=bool)
         key = id(order_ids)
         cached = self._cache.get(key)
         if cached is None or cached[0] is not order_ids:
@@ -93,8 +95,6 @@ class AllowedIds:
         if order_ids.shape == universe.shape and np.array_equal(order_ids, universe):
             return order_ids, None, None
         positions = np.searchsorted(universe, order_ids)
-        np.clip(positions, 0, max(universe.shape[0] - 1, 0), out=positions)
-        if universe.shape[0] == 0:
-            return order_ids, positions, np.zeros(order_ids.shape[0], dtype=bool)
+        np.clip(positions, 0, universe.shape[0] - 1, out=positions)
         valid = universe[positions] == order_ids
         return order_ids, positions, None if valid.all() else valid
