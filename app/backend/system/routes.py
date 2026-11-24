@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from app.backend.system.dataset_loader import get_setup_manager
+from app.backend.system.setup_pipeline import get_setup_manager
 from app.backend.system.heartbeat import get_heartbeat_monitor
 
 router = APIRouter(prefix="/api/system", tags=["system"])

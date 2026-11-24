@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import sys
@@ -17,7 +18,7 @@ from app.backend.config import (
 )
 from app.backend.database.connection import get_connection
 from app.backend.database.init_db import initialize_database
-from app.backend.retrieval.bm25_store import BM25Store
+from app.backend.retrieval.bm25_store import BM25Store, convert_bm25_index
 from app.backend.retrieval.embedder import IngredientEmbedder
 from app.backend.retrieval.semantic import build_recipe_representation
 from app.backend.retrieval.vector_store import FaissVectorStore
@@ -31,7 +32,14 @@ def build_indices(
     index_path: Path | None = None,
     ids_path: Path | None = None,
     bm25_path: Path | None = None,
+    legacy_json: bool = True,
 ) -> int:
+    """Embed every recipe and build the FAISS and BM25 indices.
+
+    BM25 is written as ``.npz`` next to the configured path. When that path
+    is a ``.json`` file the legacy JSON is written as well (``legacy_json``),
+    since existence checks elsewhere still look for it.
+    """
     target_db = db_path or get_database_path()
     target_index = index_path or get_vector_index_path()
     target_ids = ids_path or get_vector_ids_path()
@@ -78,7 +86,9 @@ def build_indices(
     logger.info("Building BM25 lexical index...")
     bm25_store = BM25Store()
     bm25_store.add_corpus(recipe_ids, recipe_texts)
-    bm25_store.save(target_bm25)
+    bm25_store.save(target_bm25.with_suffix(".npz"))
+    if target_bm25.suffix.lower() != ".npz" and legacy_json:
+        bm25_store.save(target_bm25)
 
     logger.info("=" * 65)
     logger.info("Hybrid Indices Build Summary:")
@@ -92,5 +102,29 @@ def build_indices(
     return len(recipe_ids)
 
 
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Build the FAISS and BM25 retrieval indices.")
+    parser.add_argument(
+        "--convert-bm25",
+        nargs="+",
+        metavar=("SOURCE", "TARGET"),
+        help="Only convert a BM25 index between formats (default target: SOURCE with .npz suffix)",
+    )
+    parser.add_argument("--no-legacy-json", action="store_true", help="Skip writing the JSON BM25 file")
+    args = parser.parse_args()
+
+    if args.convert_bm25:
+        source = Path(args.convert_bm25[0])
+        target = Path(args.convert_bm25[1]) if len(args.convert_bm25) > 1 else source.with_suffix(".npz")
+        start = time.perf_counter()
+        store = convert_bm25_index(source, target)
+        logger.info(
+            "Converted %s -> %s (%d docs, %d terms) in %.1fs",
+            source, target, store.total_docs, store.vocabulary_size, time.perf_counter() - start,
+        )
+        return
+    build_indices(legacy_json=not args.no_legacy_json)
+
+
 if __name__ == "__main__":
-    build_indices()
+    main()
