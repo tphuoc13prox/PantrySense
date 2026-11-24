@@ -39,6 +39,7 @@ data/*.tmp
 data/*.index
 data/*.json
 data/*.joblib
+data/*.npz
 data/*.bin
 !data/.gitkeep
 

@@ -1,0 +1,117 @@
+{
+  "machine": {
+    "python": "3.13.12",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "logical_cpus": 22,
+    "ram_gb": 63.5,
+    "faiss": "1.14.3",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "embedder_engine": "cuda"
+  },
+  "command": "search",
+  "search": {
+    "queries": 200,
+    "seed": 42,
+    "ranker_threads": 1,
+    "modes": {
+      "lexical": {
+        "cold_first_query_s": 5.33,
+        "rss_after_load_mb": 614.4,
+        "rss_delta_mb": 168.8,
+        "none": {
+          "n": 200,
+          "p50_ms": 15.5,
+          "p95_ms": 23.1,
+          "mean_ms": 16.1,
+          "max_ms": 42.5,
+          "mean_results": 14.98,
+          "zero_result_rate": 0.005
+        },
+        "vegan": {
+          "n": 200,
+          "p50_ms": 19.6,
+          "p95_ms": 34.7,
+          "mean_ms": 22.0,
+          "max_ms": 64.4,
+          "mean_results": 11.0,
+          "zero_result_rate": 0.075
+        },
+        "gluten_free": {
+          "n": 200,
+          "p50_ms": 19.6,
+          "p95_ms": 36.1,
+          "mean_ms": 21.5,
+          "max_ms": 51.0,
+          "mean_results": 14.49,
+          "zero_result_rate": 0.01
+        }
+      },
+      "semantic": {
+        "cold_first_query_s": 49.1,
+        "rss_after_load_mb": 1699.1,
+        "rss_delta_mb": 1044.9,
+        "none": {
+          "n": 200,
+          "p50_ms": 171.3,
+          "p95_ms": 394.1,
+          "mean_ms": 205.5,
+          "max_ms": 659.8,
+          "mean_results": 13.77,
+          "zero_result_rate": 0.005
+        },
+        "vegan": {
+          "n": 200,
+          "p50_ms": 42.9,
+          "p95_ms": 79.4,
+          "mean_ms": 48.7,
+          "max_ms": 109.0,
+          "mean_results": 10.01,
+          "zero_result_rate": 0.085
+        },
+        "gluten_free": {
+          "n": 200,
+          "p50_ms": 65.1,
+          "p95_ms": 83.7,
+          "mean_ms": 67.7,
+          "max_ms": 159.2,
+          "mean_results": 13.51,
+          "zero_result_rate": 0.01
+        }
+      },
+      "hybrid": {
+        "cold_first_query_s": 0.07,
+        "rss_after_load_mb": 1750.6,
+        "rss_delta_mb": 2.9,
+        "none": {
+          "n": 200,
+          "p50_ms": 70.4,
+          "p95_ms": 108.3,
+          "mean_ms": 75.7,
+          "max_ms": 149.7,
+          "mean_results": 14.82,
+          "zero_result_rate": 0.005
+        },
+        "vegan": {
+          "n": 200,
+          "p50_ms": 55.0,
+          "p95_ms": 76.1,
+          "mean_ms": 57.1,
+          "max_ms": 95.6,
+          "mean_results": 10.96,
+          "zero_result_rate": 0.05
+        },
+        "gluten_free": {
+          "n": 200,
+          "p50_ms": 85.1,
+          "p95_ms": 102.8,
+          "mean_ms": 86.7,
+          "max_ms": 162.3,
+          "mean_results": 14.44,
+          "zero_result_rate": 0.01
+        }
+      }
+    },
+    "rss_final_mb": 1767.9
+  }
+}

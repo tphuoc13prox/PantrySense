@@ -196,13 +196,21 @@ def run_load(args: argparse.Namespace) -> list[dict[str, Any]]:
 # Search phase
 # ---------------------------------------------------------------------------
 
-def _make_service(mode: str) -> Any:
+def _make_service(mode: str, ranker_threads: int | None = None) -> Any:
     from app.backend.recipes import service as service_module
 
     factory = getattr(service_module, "create_search_service", None)
     if factory is not None:
-        return factory(retrieval_mode=mode)
-    return service_module.RecipeSearchService(retrieval_mode=mode)
+        service = factory(retrieval_mode=mode)
+    else:
+        service = service_module.RecipeSearchService(retrieval_mode=mode)
+    if ranker_threads:
+        # Experiment only: cap LightGBM's OpenMP threads for the tiny
+        # per-query prediction. The ranker module itself is unchanged.
+        ml = service.ml_ranker
+        if ml.load_model() and hasattr(ml._model, "set_params"):
+            ml._model.set_params(n_jobs=ranker_threads)
+    return service
 
 
 def _time_mode(service: Any, queries: list[list[str]], filters: Any, warmup: int) -> dict[str, Any]:
@@ -237,13 +245,14 @@ def run_search(args: argparse.Namespace) -> dict[str, Any]:
             if name:
                 filter_sets[name] = DietaryFilters(**{name: True})
 
-    report: dict[str, Any] = {"queries": len(queries), "seed": args.seed, "modes": {}}
+    report: dict[str, Any] = {"queries": len(queries), "seed": args.seed, "ranker_threads": args.ranker_threads,
+                              "modes": {}}
     for mode in args.modes.split(","):
         mode = mode.strip()
         rss_before = _rss_mb()
         start = time.perf_counter()
         try:
-            service = _make_service(mode)
+            service = _make_service(mode, args.ranker_threads)
             # The first query pays for lazy index loading.
             service.search(queries[0])
         except Exception as exc:
@@ -344,7 +353,40 @@ def run_ann(args: argparse.Namespace) -> dict[str, Any]:
         row["build_s"] = round(build, 1)
         rows.append(row)
 
-    return {"vectors": n, "dim": dim, "queries": len(qvecs), "k": k, "threads": args.threads, "rows": rows}
+    # Filtered search: exact vs HNSW with the same IDSelector, vegan only.
+    filtered_rows: list[dict[str, Any]] = []
+    try:
+        from app.backend.config import get_vector_ids_path
+        from app.backend.database.recipe_metadata import MetadataIndex
+        from app.backend.recipes.schemas import DietaryFilters
+
+        ids_doc = json.loads(Path(get_vector_ids_path()).read_text(encoding="utf-8"))
+        order = np.asarray(ids_doc["recipe_ids"], dtype=np.int64)
+        allowed = MetadataIndex().allowed(DietaryFilters(vegan=True))
+        mask = allowed.mask_for(order)
+        sel = faiss.IDSelectorBitmap(np.packbits(mask, bitorder="little"))
+        exact_f = [flat.search(qvecs[i : i + 1], k, params=faiss.SearchParameters(sel=sel))[1][0]
+                   for i in range(len(qvecs))]
+        hnsw.hnsw.efSearch = 128
+        for ef in (128, 256, 512):
+            lat = []
+            rec = []
+            for i in range(len(qvecs)):
+                params = faiss.SearchParametersHNSW(sel=sel, efSearch=ef)
+                start = time.perf_counter()
+                _, idx = hnsw.search(qvecs[i : i + 1], k, params=params)
+                lat.append((time.perf_counter() - start) * 1000.0)
+                rec.append(len(set(idx[0].tolist()) & set(exact_f[i].tolist())) / k)
+            row = {"index": "HNSW32 + vegan selector", "efSearch": ef, "allowed_fraction": round(float(mask.mean()), 3),
+                   f"recall@{k}": round(statistics.fmean(rec), 4),
+                   "p50_ms": round(_percentile(lat, 50), 3), "p95_ms": round(_percentile(lat, 95), 3)}
+            print(row, flush=True)
+            filtered_rows.append(row)
+    except Exception as exc:  # metadata table missing, etc.
+        print(f"filtered ANN comparison skipped: {exc!r}")
+
+    return {"vectors": n, "dim": dim, "queries": len(qvecs), "k": k, "threads": args.threads,
+            "rows": rows, "filtered_rows": filtered_rows}
 
 
 def main() -> None:
@@ -366,6 +408,8 @@ def main() -> None:
     parser.add_argument("--k", type=int, default=40)
     parser.add_argument("--nlist", type=int, default=1024)
     parser.add_argument("--threads", type=int, default=os.cpu_count() or 1)
+    parser.add_argument("--ranker-threads", type=int, default=None,
+                        help="Experiment: set LightGBM n_jobs on the loaded ranker before timing")
     parser.add_argument("--out", help="Write the JSON report here")
     args = parser.parse_args()
 
