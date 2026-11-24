@@ -51,3 +51,6 @@ data/*.bin
 # OS files
 .DS_Store
 Thumbs.db
+
+# Fine-tuned embedding models
+data/models/
