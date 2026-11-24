@@ -35,6 +35,8 @@ known-first-party = ["app", "scripts"]
 [tool.mypy]
 python_version = "3.11"
 files = ["app"]
+explicit_package_bases = true
+mypy_path = "."
 ignore_missing_imports = true
 warn_unused_ignores = true
 warn_redundant_casts = true
