@@ -53,8 +53,10 @@ def _apply_path_overrides(args: argparse.Namespace) -> None:
 
 
 def _rss_mb() -> float:
-    import psutil
-
+    try:
+        import psutil
+    except ImportError:
+        return float("nan")
     return psutil.Process().memory_info().rss / (1024 * 1024)
 
 
@@ -240,9 +242,14 @@ def run_search(args: argparse.Namespace) -> dict[str, Any]:
         mode = mode.strip()
         rss_before = _rss_mb()
         start = time.perf_counter()
-        service = _make_service(mode)
-        # The first query pays for lazy index loading.
-        service.search(queries[0])
+        try:
+            service = _make_service(mode)
+            # The first query pays for lazy index loading.
+            service.search(queries[0])
+        except Exception as exc:
+            report["modes"][mode] = {"error": f"{type(exc).__name__}: {exc}"}
+            print(f"[{mode:8s}] failed: {exc!r}", flush=True)
+            continue
         cold = time.perf_counter() - start
         mode_report: dict[str, Any] = {
             "cold_first_query_s": round(cold, 2),

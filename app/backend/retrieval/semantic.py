@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
+import threading
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from app.backend.config import (
     get_semantic_threshold,
@@ -11,22 +12,27 @@ from app.backend.config import (
     get_vector_index_path,
 )
 from app.backend.recipes.matching import normalize_ingredients
+from app.backend.retrieval.candidates import CandidateMatch
 from app.backend.retrieval.embedder import IngredientEmbedder
 from app.backend.retrieval.vector_store import FaissVectorStore
 
+if TYPE_CHECKING:
+    from app.backend.retrieval.filtering import AllowedIds
+
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "CandidateMatch",
+    "SemanticIndexNotFoundError",
+    "SemanticRetriever",
+    "build_query_representation",
+    "build_recipe_representation",
+]
 
 
 class SemanticIndexNotFoundError(RuntimeError):
     """Raised when the FAISS semantic vector index is missing."""
     pass
-
-
-@dataclass(frozen=True)
-class CandidateMatch:
-    recipe_id: int
-    semantic_score: float
-    retrieval_rank: int
 
 
 def build_query_representation(ingredients: list[str]) -> str:
@@ -58,6 +64,7 @@ class SemanticRetriever:
         self._index_path = index_path
         self._ids_path = ids_path
         self._loaded = False
+        self._load_lock = threading.Lock()
 
     @property
     def index_path(self) -> Path:
@@ -73,10 +80,13 @@ class SemanticRetriever:
         if self._loaded and not self.vector_store.is_empty:
             return True
 
-        if self.ids_path.exists():
-            success = self.vector_store.load(self.index_path, self.ids_path)
-            self._loaded = success
-            return success
+        with self._load_lock:
+            if self._loaded and not self.vector_store.is_empty:
+                return True
+            if self.ids_path.exists():
+                success = self.vector_store.load(self.index_path, self.ids_path)
+                self._loaded = success
+                return success
 
         return False
 
@@ -89,9 +99,15 @@ class SemanticRetriever:
         ingredients: list[str],
         top_k: int | None = None,
         min_threshold: float | None = None,
+        allowed: "AllowedIds | None" = None,
     ) -> list[CandidateMatch]:
-        """Retrieve candidate recipe IDs matching user ingredients semantically."""
+        """Retrieve candidate recipe IDs matching user ingredients semantically.
+
+        ``allowed`` limits the search to recipes that passed metadata filters.
+        """
         if not ingredients:
+            return []
+        if allowed is not None and allowed.is_empty:
             return []
 
         if not self.is_ready():
@@ -112,6 +128,7 @@ class SemanticRetriever:
             query_vector,
             top_k=k,
             min_threshold=threshold,
+            allowed=allowed,
         )
 
         return [
