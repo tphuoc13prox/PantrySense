@@ -31,6 +31,7 @@ class MLRecipeRanker:
         self.model_path = model_path or get_ranker_model_path()
         self._model: Any | None = None
         self._feature_idx: list[int] | None = None
+        self._predict_kwargs: dict[str, Any] = {}
         self._loaded = False
 
     def load_model(self) -> bool:
@@ -53,6 +54,11 @@ class MLRecipeRanker:
             else:
                 self._model = obj
                 self._feature_idx = None
+            # LightGBM otherwise starts an OpenMP pool on every core for a
+            # ~20-row predict, and the spinning threads slow down the next
+            # query's FAISS/BM25/embedding work.
+            is_lgbm = type(self._model).__module__.startswith("lightgbm")
+            self._predict_kwargs = {"num_threads": 1} if is_lgbm else {}
             self._loaded = True
             logger.info("Loaded ML Ranker model from %s", self.model_path)
             return True
@@ -82,7 +88,7 @@ class MLRecipeRanker:
             )
         else:
             matrix = build_feature_matrix(recipes, details_map)[:, self._feature_idx]
-        return np.asarray(self._model.predict(matrix), dtype=np.float64)
+        return np.asarray(self._model.predict(matrix, **self._predict_kwargs), dtype=np.float64)
 
     def rank(
         self,

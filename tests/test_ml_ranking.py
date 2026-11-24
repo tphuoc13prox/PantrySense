@@ -203,6 +203,13 @@ def test_train_and_rank_with_ml_model(tmp_path: Path) -> None:
     relevant_id = next(r.id for r, lb in zip(test_group.recipes, test_group.labels) if lb == 2)
     assert relevant_id in [r.id for r in ranked[:3]]
 
+    # LightGBM predict must stay single-threaded at serving time.
+    calls = []
+    real_predict = ranker._model.predict
+    ranker._model.predict = lambda X, **kw: calls.append(kw) or real_predict(X, **kw)
+    ranker.rank(test_group.recipes, details_map={}, minimum_coverage=0.0)
+    assert calls == [{"num_threads": 1}]
+
 
 def test_query_generation_uses_training_pool_only() -> None:
     rng = random.Random(1)
