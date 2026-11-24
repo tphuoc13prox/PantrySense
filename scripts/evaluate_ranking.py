@@ -25,11 +25,12 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.backend.config import BASE_DIR, get_ranker_model_path
+from app.backend.ranking.features import LTR_FEATURE_NAMES, build_feature_matrix
 from app.backend.ranking.metrics import ndcg_at_k, summarize
 from app.backend.ranking.ml_ranker import MLRecipeRanker
 from scripts.build_ltr_dataset import QueryGroup, dataset_path, load_groups
 
-DEFAULT_DATASETS = [dataset_path(BASE_DIR / "data", "heldout", k) for k in (100, 20)]
+DEFAULT_DATASETS = [dataset_path(BASE_DIR / "data", "heldout", k, tag) for tag in ("", "pantry") for k in (100, 20)]
 DEFAULT_REPORT = BASE_DIR / "data" / "ltr_eval_report.json"
 SEED = 42
 
@@ -61,15 +62,27 @@ def evaluate_dataset(path: Path, rankers: dict[str, MLRecipeRanker], tiers: dict
     methods = ["rrf", "heuristic", *rankers]
     per_method: dict[str, list[list[int]]] = {m: [] for m in methods}
     reachable: list[bool] = []
+    source_qcov: list[float] = []
+    qcov_col = LTR_FEATURE_NAMES.index("query_coverage")
     for g in groups:
         reachable.append(any(lb > 0 and r.coverage >= g.threshold for r, lb in zip(g.recipes, g.labels)))
+        p = g.passing()
+        if 2 in p.labels:
+            source_qcov.append(float(build_feature_matrix(p.recipes, p.details_map)[p.labels.index(2), qcov_col]))
         for m in methods:
             if m in ("rrf", "heuristic"):
                 per_method[m].append(ranked_labels(g, m, rankers["lambdamart"]))
             else:
                 per_method[m].append(ranked_labels(g, "ml", rankers[m]))
 
-    out: dict = {"file": path.name, "n_queries": len(groups), "reachable_rate": float(np.mean(reachable))}
+    out: dict = {
+        "file": path.name,
+        "n_queries": len(groups),
+        "reachable_rate": float(np.mean(reachable)),
+        # how often the source recipe looks like it uses the whole (estimated) query
+        "source_query_coverage_mean": float(np.mean(source_qcov)) if source_qcov else None,
+        "source_query_coverage_eq_1": float(np.mean([v >= 0.999 for v in source_qcov])) if source_qcov else None,
+    }
     out["end_to_end"] = {m: summarize(v) for m, v in per_method.items()}
     out["conditional"] = {m: summarize([x for x, ok in zip(v, reachable) if ok]) for m, v in per_method.items()}
 
@@ -114,10 +127,9 @@ def main() -> None:
         if not r.is_ready:
             raise SystemExit(f"cannot load {name} from {r.model_path}")
 
-    queries_path = BASE_DIR / "data" / "ltr_queries.json"
     tiers = {}
-    if queries_path.exists():
-        tiers = {q["qid"]: q["tier"] for q in json.loads(queries_path.read_text(encoding="utf-8"))}
+    for queries_path in sorted((BASE_DIR / "data").glob("ltr_queries*.json")):
+        tiers.update({q["qid"]: q["tier"] for q in json.loads(queries_path.read_text(encoding="utf-8"))})
 
     datasets = args.dataset or [p for p in DEFAULT_DATASETS if p.exists()]
     if not datasets:
@@ -128,7 +140,8 @@ def main() -> None:
         res = evaluate_dataset(path, rankers, tiers)
         report["datasets"].append(res)
         print(f"\n=== {res['file']}: {res['n_queries']} queries, relevant recipe reaches the ranker in "
-              f"{res['reachable_rate']:.1%} ===")
+              f"{res['reachable_rate']:.1%}; source has query_coverage=1 in "
+              f"{(res['source_query_coverage_eq_1'] or 0):.1%} ===")
         print_table("Conditional (relevant recipe among ranker inputs)", res["conditional"])
         print_table("End to end (all queries)", res["end_to_end"])
         for m, d in res["ndcg10_diff_vs_heuristic"].items():

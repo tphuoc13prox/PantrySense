@@ -221,6 +221,19 @@ def test_query_generation_uses_training_pool_only() -> None:
     again, _ = generate_queries(corpus, n_train=20, n_heldout=5, seed=3)
     assert [q.ingredients for q in again] == [q.ingredients for q in queries]
 
+    used = frozenset(i for q in queries for i in q.relevant_ids)
+    pantry, _ = generate_queries(
+        corpus, n_train=20, n_heldout=5, seed=4, tiers=("pantry",), exclude_ids=used, qid_prefix="p", extra_min_df=1,
+    )
+    source = {rid: set(ings) for rid, _, ings in corpus}
+    for q in pantry:
+        assert q.tier == "pantry" and q.qid[1] == "p"
+        assert q.recipe_id not in used
+        assert 2 <= len(q.extras) <= 4
+        assert set(q.extras) <= set(q.ingredients)
+        assert not set(q.extras) & source[q.recipe_id]
+        assert not set(q.ingredients) <= source[q.recipe_id]
+
 
 def test_system_setup_status_api(client: TestClient) -> None:
     res = client.get("/api/system/setup-status")

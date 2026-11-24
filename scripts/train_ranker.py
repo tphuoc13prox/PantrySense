@@ -59,6 +59,8 @@ GRID: dict[str, list[Any]] = {
     "learning_rate": [0.03, 0.1],
     "min_child_samples": [20, 100],
 }
+# Best cell of GRID on ltr_train_k100 (5-fold CV nDCG@10 0.852); used with --no-grid.
+BEST_KNOWN: dict[str, list[Any]] = {"num_leaves": [15], "learning_rate": [0.03], "min_child_samples": [20]}
 EARLY_STOPPING_ROUNDS = 50
 
 
@@ -257,22 +259,26 @@ def train_from_groups(
 
 def train_ranker(
     output_path: Path | None = None,
-    dataset: Path | None = None,
+    dataset: Path | Sequence[Path] | None = None,
     report_path: Path | None = None,
     n_folds: int = 5,
     grid: dict[str, list[Any]] | None = None,
     ablation: bool = True,
 ) -> Path:
     target = output_path or get_ranker_model_path()
-    dataset = dataset or DEFAULT_DATASET
-    if not dataset.exists():
-        raise FileNotFoundError(f"{dataset} not found; run scripts/build_ltr_dataset.py first")
-    groups = load_groups(dataset)
-    meta_path = dataset.with_suffix(".meta.json")
-    ds_meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
+    paths = [dataset] if isinstance(dataset, Path) else list(dataset or [DEFAULT_DATASET])
+    groups: list[QueryGroup] = []
+    ds_info = []
+    for path in paths:
+        if not path.exists():
+            raise FileNotFoundError(f"{path} not found; run scripts/build_ltr_dataset.py first")
+        groups.extend(load_groups(path))
+        meta_path = path.with_suffix(".meta.json")
+        ds_meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
+        ds_info.append({"file": path.name, "tiers": ds_meta.get("tiers"), "top_k": ds_meta.get("top_k"),
+                        "retrieval": ds_meta.get("retrieval")})
     report = train_from_groups(
-        groups, target, n_folds=n_folds, grid=grid, ablation=ablation,
-        extra_meta={"dataset": {"file": dataset.name, "retrieval": ds_meta.get("retrieval"), "top_k": ds_meta.get("top_k")}},
+        groups, target, n_folds=n_folds, grid=grid, ablation=ablation, extra_meta={"dataset": ds_info},
     )
     report_path = report_path or DEFAULT_REPORT
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -283,14 +289,14 @@ def train_ranker(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)
+    parser.add_argument("--dataset", type=Path, nargs="+", default=[DEFAULT_DATASET])
     parser.add_argument("--output", type=Path, default=None, help="defaults to PANTRYSENSE_RANKER_MODEL_PATH")
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--folds", type=int, default=5)
-    parser.add_argument("--no-grid", action="store_true", help="skip the grid, use num_leaves=31, lr=0.05")
+    parser.add_argument("--no-grid", action="store_true", help="skip the grid, use BEST_KNOWN params")
     parser.add_argument("--no-ablation", action="store_true")
     args = parser.parse_args()
-    grid = {"num_leaves": [31], "learning_rate": [0.05], "min_child_samples": [20]} if args.no_grid else None
+    grid = BEST_KNOWN if args.no_grid else None
     train_ranker(args.output, args.dataset, args.report, args.folds, grid, not args.no_ablation)
 
 

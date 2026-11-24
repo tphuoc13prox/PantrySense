@@ -32,9 +32,9 @@ import sqlite3
 import sys
 import time
 from collections import Counter, defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -57,7 +57,12 @@ TIER_FRACTIONS: dict[str, tuple[float, float]] = {
     "standard": (0.55, 0.70),
     "sparse": (0.40, 0.55),
     "noisy": (0.40, 0.70),
+    "pantry": (0.40, 0.60),
 }
+# The "pantry" tier is not a subset of the source recipe: it adds 2-4 extra
+# ingredients taken from other recipes that share an ingredient with the
+# query, so the extras tend to show up among the candidates.
+PANTRY_EXTRAS = (2, 4)
 STAPLE_DF_THRESHOLD = 0.09
 MIN_POOL_SIZE = 3
 MIN_QUERY_SIZE = 2
@@ -91,6 +96,7 @@ class LTRQuery:
     ingredients: list[str]
     distractor: str | None
     fraction: float
+    extras: list[str] = field(default_factory=list)
 
 
 def load_corpus(db_path: Path) -> list[tuple[int, str, tuple[str, ...]]]:
@@ -105,6 +111,10 @@ def generate_queries(
     n_train: int,
     n_heldout: int,
     seed: int,
+    tiers: Sequence[str] = TIERS,
+    exclude_ids: frozenset[int] = frozenset(),
+    qid_prefix: str = "",
+    extra_min_df: int = DISTRACTOR_MIN_DF,
 ) -> tuple[list[LTRQuery], dict[str, Any]]:
     n_docs = len(corpus)
     df: Counter[str] = Counter()
@@ -154,8 +164,35 @@ def generate_queries(
         split = "heldout" if b in HELDOUT_BUCKETS else "train"
         eligible[split].append((rid, title, ings, group))
 
+    inverted: dict[str, list[int]] = defaultdict(list)
+    if "pantry" in tiers:
+        for pos, (_, _, ings) in enumerate(corpus):
+            for ing in ings:
+                inverted[ing].append(pos)
+
+    def token_set(values: Sequence[str]) -> set[str]:
+        return set().union(*(set(_TOKEN_RE.findall(v)) for v in values)) if values else set()
+
+    def pick_extras(chosen: list[str], ings: tuple[str, ...], n: int) -> list[str]:
+        src_tokens = token_set(ings)
+        extras: list[str] = []
+        for _ in range(300):
+            if len(extras) >= n:
+                break
+            other = corpus[rng.choice(inverted[rng.choice(chosen)])][2]
+            if not other:
+                continue
+            cand = rng.choice(other)
+            if (
+                cand not in ings and cand not in extras and cand not in staples
+                and df[cand] >= extra_min_df and normalize_ingredient(cand) == cand
+                and not (set(_TOKEN_RE.findall(cand)) & src_tokens)
+            ):
+                extras.append(cand)
+        return extras
+
     rng = random.Random(seed)
-    used: set[int] = set()
+    used: set[int] = set(exclude_ids)
     queries: list[LTRQuery] = []
     for split, target in (("train", n_train), ("heldout", n_heldout)):
         pool_items = eligible[split]
@@ -169,7 +206,7 @@ def generate_queries(
             if group & used:
                 continue
             used |= group
-            tier = TIERS[made % len(TIERS)]
+            tier = tiers[made % len(tiers)]
             pool = pool_for(ings)
             lo, hi = TIER_FRACTIONS[tier]
             frac = rng.uniform(lo, hi)
@@ -185,11 +222,15 @@ def generate_queries(
                         break
                 if distractor is not None:
                     chosen.append(distractor)
+            extras: list[str] = []
+            if tier == "pantry":
+                extras = pick_extras(chosen, ings, rng.randint(*PANTRY_EXTRAS))
+                chosen.extend(extras)
             rng.shuffle(chosen)
             made += 1
             queries.append(
                 LTRQuery(
-                    qid=f"{split[0]}{made:05d}",
+                    qid=f"{split[0]}{qid_prefix}{made:05d}",
                     split=split,
                     tier=tier,
                     recipe_id=rid,
@@ -198,6 +239,7 @@ def generate_queries(
                     ingredients=chosen,
                     distractor=distractor,
                     fraction=round(frac, 4),
+                    extras=extras,
                 )
             )
         if made < target:
@@ -315,8 +357,8 @@ def run_retrieval(queries: list[LTRQuery], top_k: int) -> tuple[dict[str, list],
     return cols, summary
 
 
-def dataset_path(out_dir: Path, split: str, top_k: int) -> Path:
-    return out_dir / f"ltr_{split}_k{top_k}.parquet"
+def dataset_path(out_dir: Path, split: str, top_k: int, tag: str = "") -> Path:
+    return out_dir / f"ltr_{split}{'_' + tag if tag else ''}_k{top_k}.parquet"
 
 
 @dataclass
@@ -387,6 +429,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--splits", nargs="+", default=["train", "heldout"], choices=["train", "heldout"])
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
+    parser.add_argument("--tiers", nargs="+", default=list(TIERS), choices=sorted(TIER_FRACTIONS))
+    parser.add_argument("--tag", default="", help="suffix for output files and qids, e.g. 'pantry'")
+    parser.add_argument("--exclude-queries", type=Path, nargs="*", default=[],
+                        help="query files whose source recipes (and duplicates) must not be reused")
     args = parser.parse_args()
 
     import pyarrow as pa
@@ -395,11 +441,19 @@ def main() -> None:
     db_path = get_database_path()
     logger.info("Loading corpus from %s", db_path)
     corpus = load_corpus(db_path)
-    queries, gen_meta = generate_queries(corpus, args.n_train, args.n_heldout, args.seed)
+    exclude: set[int] = set()
+    for path in args.exclude_queries:
+        for q in json.loads(path.read_text(encoding="utf-8")):
+            exclude.update(q["relevant_ids"])
+    queries, gen_meta = generate_queries(
+        corpus, args.n_train, args.n_heldout, args.seed,
+        tiers=tuple(args.tiers), exclude_ids=frozenset(exclude), qid_prefix=args.tag[:1],
+    )
+    gen_meta["n_excluded_recipe_ids"] = len(exclude)
     del corpus
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    queries_path = args.out_dir / "ltr_queries.json"
+    queries_path = args.out_dir / f"ltr_queries{'_' + args.tag if args.tag else ''}.json"
     with open(queries_path, "w", encoding="utf-8") as f:
         json.dump([asdict(q) for q in queries], f, ensure_ascii=False)
 
@@ -407,7 +461,7 @@ def main() -> None:
         split_queries = [q for q in queries if q.split == split]
         logger.info("Running hybrid retrieval for %d %s queries (top_k=%d)", len(split_queries), split, args.top_k)
         cols, summary = run_retrieval(split_queries, args.top_k)
-        out = dataset_path(args.out_dir, split, args.top_k)
+        out = dataset_path(args.out_dir, split, args.top_k, args.tag)
         pq.write_table(pa.table(dict(cols)), out)
         tier_of = {q.qid: q.tier for q in split_queries}
         meta = {
