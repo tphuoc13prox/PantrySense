@@ -48,6 +48,26 @@ data/*.bin
 *.joblib
 *.index
 
+# Editor settings
+.cursor/
+*.log
+
+# Models and training artifacts
+data/models/
+data/*.pkl
+data/*.npy
+data/*.npz
+data/*.csv
+data/*.jsonl
+
+# Build and packaging
+dist/
+build/
+*.egg-info/
+.env
+.env.*
+!.env.example
+
 # OS files
 .DS_Store
 Thumbs.db
