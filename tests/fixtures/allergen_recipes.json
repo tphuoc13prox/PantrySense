@@ -1107,8 +1107,19 @@
     "may_contain": [],
     "non_vegetarian": false,
     "non_vegan": false
+   },
+   "oyster sauce": {
+    "contains": [
+     "shellfish"
+    ],
+    "may_contain": [],
+    "non_vegetarian": true,
+    "non_vegan": true
    }
-  }
+  },
+  "corrections": [
+   "'oyster sauce' was left unlabelled in the first pass; relabelled as shellfish / non-vegetarian after review. All metrics in docs/nutrition_dietary.md use the corrected labels."
+  ]
  },
  "recipes": [
   {
@@ -1606,11 +1617,12 @@
    ],
    "allergens_contains": [
     "gluten",
+    "shellfish",
     "soy"
    ],
    "allergens_may_contain": [],
-   "vegetarian": true,
-   "vegan": true
+   "vegetarian": false,
+   "vegan": false
   },
   {
    "id": 281912,
@@ -1628,6 +1640,7 @@
    ],
    "allergens_contains": [
     "gluten",
+    "shellfish",
     "soy",
     "tree_nuts"
    ],
