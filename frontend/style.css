@@ -1,4 +1,4 @@
-/* PantrySense — Clean, Local-first CSS v1.0.1 */
+/* PantrySense styles */
 
 :root {
   --bg-color: #f8fafc;
@@ -207,6 +207,7 @@ body {
 }
 
 .progress-bar-fill {
+  width: 0;
   background: linear-gradient(90deg, #059669, #10b981);
   height: 100%;
   border-radius: 9999px;
@@ -1211,6 +1212,7 @@ body {
 }
 
 .cooking-step-progress-fill {
+  width: 0;
   background-color: var(--primary);
   height: 100%;
   transition: width 0.3s ease;

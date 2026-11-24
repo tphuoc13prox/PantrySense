@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'" />
   <title>PantrySense</title>
   <link rel="stylesheet" href="/style.css?v=1.0.1" />
 </head>
@@ -30,7 +31,7 @@
       </div>
     </header>
 
-    <!-- Main Navigation Tabs -->
+    <!-- Tabs -->
     <nav class="app-nav-tabs">
       <button type="button" class="nav-tab active" data-target="search-view">
         <span class="nav-icon">🔍</span> Search Recipes
@@ -46,7 +47,7 @@
       </button>
     </nav>
 
-    <!-- First-Time / Automatic Onboarding Setup View -->
+    <!-- First-run setup, shown until the indexes are built -->
     <main id="setup-view" class="view hidden">
       <section class="setup-card">
         <div class="setup-icon">🍳</div>
@@ -56,14 +57,14 @@
         </p>
 
         <div class="progress-container">
-          <div id="setup-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+          <div id="setup-progress-bar" class="progress-bar-fill"></div>
         </div>
         <div class="progress-info">
           <span id="setup-status-text">Initializing dataset download...</span>
           <span id="setup-progress-percent">0%</span>
         </div>
 
-        <!-- 8-Step Visual Stepper -->
+        <!-- Setup steps -->
         <div class="setup-stepper-grid">
           <div class="stepper-item" id="step-item-1"><span class="step-num">1</span><span class="step-label">Init SQLite Schema</span></div>
           <div class="stepper-item" id="step-item-2"><span class="step-num">2</span><span class="step-label">Download Parquet Archive</span></div>
@@ -77,10 +78,10 @@
       </section>
     </main>
 
-    <!-- 1. Search Recipes View -->
+    <!-- Search -->
     <main id="search-view" class="tab-view view">
       <section class="input-section">
-        <form id="ingredient-form" class="ingredient-form" onsubmit="return false;">
+        <form id="ingredient-form" class="ingredient-form">
           <div class="autocomplete-wrapper">
             <input
               type="text"
@@ -107,7 +108,7 @@
           </div>
         </div>
 
-        <!-- Dietary & Filter Controls -->
+        <!-- Filters -->
         <div class="filters-panel">
           <div class="filters-header">
             <span class="filter-title">Dietary Preferences & Time:</span>
@@ -173,17 +174,17 @@
         </div>
       </section>
 
-      <!-- Status / Loader Area -->
+      <!-- Status -->
       <div id="status-message" class="status-message hidden" role="status"></div>
 
-      <!-- Results Section -->
+      <!-- Results -->
       <section id="results-section" class="results-section hidden">
         <h2 class="section-title">Matching Recipes</h2>
         <div id="recipe-list" class="recipe-list"></div>
       </section>
     </main>
 
-    <!-- 2. My Pantry View -->
+    <!-- Pantry -->
     <main id="pantry-view" class="tab-view view hidden">
       <section class="pantry-card">
         <div class="pantry-header-row">
@@ -196,11 +197,11 @@
           </button>
         </div>
 
-        <!-- Expiry Warning Banner -->
+        <!-- Expiry banner -->
         <div id="pantry-alert-banner" class="pantry-alert-banner hidden"></div>
 
-        <!-- Add Pantry Item Form -->
-        <form id="pantry-add-form" class="pantry-add-form" onsubmit="return false;">
+        <!-- Add item -->
+        <form id="pantry-add-form" class="pantry-add-form">
           <div class="pantry-form-grid">
             <input type="text" id="pantry-item-name" class="form-input" placeholder="Ingredient name (e.g. Milk)" required />
             <input type="number" id="pantry-item-qty" class="form-input" placeholder="Qty" value="1" min="0.1" step="0.1" />
@@ -218,7 +219,7 @@
           </div>
         </form>
 
-        <!-- Pantry Inventory Table/List -->
+        <!-- Items -->
         <div class="pantry-inventory-container">
           <div id="pantry-items-list" class="pantry-items-list">
             <div class="empty-state">Loading your pantry...</div>
@@ -227,7 +228,7 @@
       </section>
     </main>
 
-    <!-- 3. Meal Planner View -->
+    <!-- Meal planner -->
     <main id="planner-view" class="tab-view view hidden">
       <section class="planner-card">
         <div class="planner-header-row">
@@ -245,12 +246,12 @@
           </div>
         </div>
 
-        <!-- 7-Day Grid -->
+        <!-- Week grid -->
         <div id="meal-plan-grid" class="meal-plan-grid"></div>
       </section>
     </main>
 
-    <!-- 4. Favorites View -->
+    <!-- Favorites -->
     <main id="favorites-view" class="tab-view view hidden">
       <section class="favorites-card">
         <div class="favorites-header-row">
@@ -265,7 +266,7 @@
       </section>
     </main>
 
-    <!-- Recipe Detail View -->
+    <!-- Recipe detail -->
     <main id="detail-view" class="view hidden">
       <div class="detail-top-nav">
         <button type="button" id="back-btn" class="btn btn-outline back-btn">
@@ -298,7 +299,7 @@
 
         <div id="detail-dietary-tags" class="detail-dietary-tags"></div>
 
-        <!-- Nutrition Overview Card -->
+        <!-- Nutrition -->
         <div id="detail-nutrition-card" class="nutrition-card">
           <h3 class="card-subtitle">Estimated Nutrition (per serving)</h3>
           <div class="nutrition-macros-grid">
@@ -310,7 +311,7 @@
           </div>
         </div>
 
-        <!-- Smart Substitutions Card -->
+        <!-- Substitutions -->
         <div id="detail-substitutions-card" class="substitutions-card hidden">
           <h3 class="card-subtitle">💡 Smart Ingredient Substitutions</h3>
           <div id="substitutions-list" class="substitutions-list"></div>
@@ -328,7 +329,7 @@
       </article>
     </main>
 
-    <!-- Modal: Interactive Step-by-Step Cooking Assistant -->
+    <!-- Modal: cooking mode -->
     <div id="cooking-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="cooking-modal-title">
       <div class="modal-card modal-card-lg">
         <div class="modal-header">
@@ -340,10 +341,10 @@
         </div>
         <div class="cooking-modal-body">
           <div class="cooking-step-progress-bar">
-            <div id="cooking-step-progress" class="cooking-step-progress-fill" style="width: 0%;"></div>
+            <div id="cooking-step-progress" class="cooking-step-progress-fill"></div>
           </div>
 
-          <!-- Quick Step Selector Pills -->
+          <!-- Step pills -->
           <div id="cooking-step-pills" class="cooking-step-pills"></div>
 
           <div class="cooking-step-header">
@@ -355,7 +356,7 @@
             Instruction text appears here...
           </div>
 
-          <!-- Built-in Timer UI -->
+          <!-- Step timer -->
           <div id="cooking-timer-box" class="cooking-timer-box hidden">
             <div class="timer-display-row">
               <span class="timer-icon">⏳</span>
@@ -381,7 +382,7 @@
       </div>
     </div>
 
-    <!-- Modal: Add to Meal Plan -->
+    <!-- Modal: add to meal plan -->
     <div id="plan-modal" class="modal-backdrop hidden">
       <div class="modal-card modal-card-sm">
         <div class="modal-header">
@@ -422,7 +423,7 @@
       </div>
     </div>
 
-    <!-- Modal: Grocery Shopping List -->
+    <!-- Modal: shopping list -->
     <div id="shopping-modal" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="modal-header">
@@ -446,6 +447,6 @@
 
   </div>
 
-  <script src="/app.js?v=1.0.1"></script>
+  <script type="module" src="/js/main.js?v=1.0.1"></script>
 </body>
 </html>
