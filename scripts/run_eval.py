@@ -87,6 +87,9 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
                    help="also run rule_based mode (full DB scan) on the first N queries; 0 = skip")
     p.add_argument("--allow-ml-fallback", action="store_true",
                    help="do not abort if the LightGBM model cannot be loaded")
+    p.add_argument("--note", action="append", default=[], help="free-text note stored in the results")
+    p.add_argument("--render-only", type=Path, default=None,
+                   help="re-render the markdown for an existing results JSON (adding any --note) and exit")
     p.add_argument("--dump-candidates", type=Path, default=None,
                    help="write layer (a) hybrid candidate lists (JSONL) here, e.g. for LTR training")
     return p.parse_args(argv)
@@ -155,6 +158,16 @@ def query_metrics(ranked: list[int], target: int) -> dict[str, float]:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    if args.render_only is not None:
+        res = json.loads(args.render_only.read_text(encoding="utf-8"))
+        res["notes"] = res.get("notes", []) + args.note
+        with open(args.render_only, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(res, f, indent=2)
+            f.write("\n")
+        md_path = args.render_only.with_suffix(".md")
+        md_path.write_text(render_markdown(res), encoding="utf-8", newline="\n")
+        logger.info("Re-rendered %s", md_path)
+        return 0
     configure_env(args)
 
     # App modules read configuration at import time, so import after configure_env.
@@ -454,6 +467,7 @@ def main(argv: list[str] | None = None) -> int:
         "paired_comparisons": comparisons,
         "latency_components_ms": components,
         "rule_based": rule_based,
+        "notes": list(args.note),
     }
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -496,6 +510,7 @@ def render_markdown(res: dict) -> str:
         f"- {env['platform']}, Python {env['python']}; single process, sequential queries, {s['warmup_queries']} warm-up queries",
         f"- Metrics: mean with 95% percentile-bootstrap CI over queries ({s['bootstrap_resamples']} resamples). "
         "One relevant recipe per query (near-duplicates collapsed), so Recall@k == Hit@k.",
+        *[f"- Note: {n}" for n in res.get("notes", [])],
         "",
     ]
     for layer, title in (("a", "Layer (a): retriever candidates (before coverage filter / re-ranking)"),
