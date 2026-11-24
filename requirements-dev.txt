@@ -1,0 +1,7 @@
+# Development and CI tooling. Install with: pip install -r requirements-dev.txt
+-r requirements.txt
+
+pytest==8.3.5   # (env)
+httpx==0.28.1   # (env) required by fastapi.testclient
+ruff==0.17.6
+mypy==2.4.1

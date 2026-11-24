@@ -1,14 +1,20 @@
-fastapi==0.116.1
-uvicorn[standard]==0.35.0
-pytest==8.3.5
-httpx==0.28.1
-sentence-transformers>=3.0.0
-faiss-cpu>=1.8.0
-numpy>=1.26.0
-rank-bm25>=0.2.2
-lightgbm>=4.0.0
-fastembed>=0.4.0
-onnxruntime>=1.18.0
-scikit-learn>=1.4.0
-joblib>=1.3.0
-pyarrow>=15.0.0
+# Runtime dependencies. Versions marked (env) match the environment the
+# test suite was last run against (Python 3.11); the rest are current releases.
+# Development tools live in requirements-dev.txt.
+
+# Web API
+fastapi==0.116.1          # (env)
+uvicorn[standard]==0.35.0 # (env)
+
+# Retrieval and ranking
+numpy==2.4.6              # (env)
+faiss-cpu==1.15.0         # (env)
+sentence-transformers==6.0.0  # (env), pulls in torch
+fastembed==0.9.1
+onnxruntime==1.32.0
+lightgbm==4.7.0
+scikit-learn==1.9.0       # (env)
+joblib==1.5.3             # (env)
+
+# Dataset ingestion
+pyarrow==26.0.1
