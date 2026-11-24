@@ -244,7 +244,7 @@ def cmd_train(args: argparse.Namespace) -> None:
 
     def embed(texts: list[str]) -> torch.Tensor:
         features = model.tokenize(texts)
-        features = {k: v.to(device) for k, v in features.items()}
+        features = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in features.items()}
         return F.normalize(model(features)["sentence_embedding"], dim=-1)
 
     model.train()
