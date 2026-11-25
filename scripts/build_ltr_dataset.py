@@ -262,7 +262,7 @@ class RecordingRanker(MLRecipeRanker):
         super().__init__(model_path=Path("__unused__"))
         self.last: tuple[list[RecipeSummary], dict[int, dict[str, Any]], float] | None = None
 
-    def rank(self, recipes, details_map=None, minimum_coverage=0.34, force_heuristic=False):  # type: ignore[override]
+    def rank(self, recipes, details_map=None, minimum_coverage=0.34, force_heuristic=False):
         self.last = (list(recipes), dict(details_map or {}), float(minimum_coverage))
         return []
 
@@ -281,13 +281,15 @@ def run_retrieval(queries: list[LTRQuery], top_k: int) -> tuple[dict[str, list],
     )
 
     cols: dict[str, list] = defaultdict(list)
-    stats = Counter()
-    tier_stats: dict[str, Counter] = defaultdict(Counter)
+    stats: Counter[str] = Counter()
+    tier_stats: dict[str, Counter[str]] = defaultdict(Counter)
     orig_ranks: list[int] = []
     t0 = time.time()
     for n, q in enumerate(queries, start=1):
         recorder.last = None
         service.search(q.ingredients)
+        recipes: list[RecipeSummary]
+        details: dict[int, dict[str, Any]]
         recipes, details, threshold = recorder.last if recorder.last else ([], {}, 0.0)
         relevant = set(q.relevant_ids)
         labels = [2 if r.id == q.recipe_id else (1 if r.id in relevant else 0) for r in recipes]
