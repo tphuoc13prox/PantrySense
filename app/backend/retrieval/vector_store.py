@@ -3,21 +3,32 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 import numpy as np
+
+if TYPE_CHECKING:
+    from app.backend.retrieval.filtering import AllowedIds
 
 logger = logging.getLogger(__name__)
 
 
 class FaissVectorStore:
-    """Vector store using FAISS IndexFlatIP (Cosine Similarity) with NumPy fallback."""
+    """Inner-product vector store over FAISS (any index type) with a NumPy fallback.
 
-    def __init__(self, dimension: int = 384) -> None:
+    New stores start as ``IndexFlatIP`` (exact search). ``load`` accepts any
+    FAISS index file, so an HNSW or IVF index built offline can be dropped in;
+    ``ef_search`` and ``nprobe`` tune those at query time.
+    """
+
+    def __init__(self, dimension: int = 384, ef_search: int | None = None, nprobe: int | None = None) -> None:
         self.dimension = dimension
         self.recipe_ids: list[int] = []
+        self.ef_search = ef_search
+        self.nprobe = nprobe
         self._index: Any = None
         self._vectors: np.ndarray | None = None  # For NumPy fallback if needed
         self._use_faiss = True
+        self._ids_array: np.ndarray | None = None
         self._init_index()
 
     def _init_index(self) -> None:
@@ -38,6 +49,32 @@ class FaissVectorStore:
     @property
     def total_vectors(self) -> int:
         return len(self.recipe_ids)
+
+    @property
+    def recipe_id_array(self) -> np.ndarray:
+        if self._ids_array is None or self._ids_array.shape[0] != len(self.recipe_ids):
+            self._ids_array = np.asarray(self.recipe_ids, dtype=np.int64)
+        return self._ids_array
+
+    @property
+    def index_type(self) -> str:
+        return type(self._index).__name__ if self._use_faiss and self._index is not None else "numpy"
+
+    def _search_params(self, selector: Any) -> Any:
+        import faiss
+
+        index = self._index
+        if isinstance(index, faiss.IndexHNSW):
+            params = faiss.SearchParametersHNSW()
+            params.efSearch = int(self.ef_search or index.hnsw.efSearch)
+        elif isinstance(index, faiss.IndexIVF):
+            params = faiss.SearchParametersIVF()
+            params.nprobe = int(self.nprobe or index.nprobe)
+        else:
+            params = faiss.SearchParameters()
+        if selector is not None:
+            params.sel = selector
+        return params
 
     def add(self, embeddings: np.ndarray, recipe_ids: list[int]) -> None:
         """Add normalized embeddings and their corresponding recipe IDs."""
@@ -63,20 +100,34 @@ class FaissVectorStore:
                 self._vectors = np.vstack([self._vectors, normalized])
 
         self.recipe_ids.extend(recipe_ids)
+        self._ids_array = None
 
     def search(
         self,
         query_vector: np.ndarray,
         top_k: int = 20,
         min_threshold: float = 0.0,
+        allowed: "AllowedIds | None" = None,
     ) -> list[tuple[int, float, int]]:
         """Search top-K nearest recipes given a query vector.
+
+        ``allowed`` restricts the search to those recipe ids inside FAISS (via
+        an ``IDSelectorBitmap``), so a selective filter still gets K results
+        from the allowed set rather than whatever survives from the global K.
 
         Returns:
             List of (recipe_id, similarity_score, rank_1_indexed) tuples.
         """
         if self.is_empty:
             return []
+
+        mask: np.ndarray | None = None
+        if allowed is not None:
+            mask = allowed.mask_for(self.recipe_id_array)
+            n_allowed = int(mask.sum())
+            if n_allowed == 0:
+                return []
+            top_k = min(top_k, n_allowed)
 
         # Prepare query vector
         query = query_vector.reshape(1, -1).astype(np.float32)
@@ -88,7 +139,16 @@ class FaissVectorStore:
         results: list[tuple[int, float, int]] = []
 
         if self._use_faiss and self._index is not None:
-            scores, indices = self._index.search(query, top_k)
+            if mask is None and not (self.ef_search or self.nprobe):
+                scores, indices = self._index.search(query, top_k)
+            else:
+                import faiss
+
+                selector = None
+                if mask is not None:
+                    bitmap = np.packbits(mask, bitorder="little")
+                    selector = faiss.IDSelectorBitmap(bitmap)
+                scores, indices = self._index.search(query, top_k, params=self._search_params(selector))
             for rank, (score, idx) in enumerate(zip(scores[0], indices[0]), start=1):
                 if idx < 0 or idx >= len(self.recipe_ids):
                     continue
@@ -100,7 +160,9 @@ class FaissVectorStore:
                 return []
             # NumPy dot product for Cosine Similarity
             scores = np.dot(self._vectors, query.T).flatten()
-            ranked_indices = np.argsort(-scores)[:top_k]
+            if mask is not None:
+                scores = np.where(mask, scores, -np.inf)
+            ranked_indices = np.argsort(-scores, kind="stable")[:top_k]
             for rank, idx in enumerate(ranked_indices, start=1):
                 score_val = float(scores[idx])
                 if score_val >= min_threshold:
@@ -142,6 +204,7 @@ class FaissVectorStore:
             data = json.load(f)
             self.recipe_ids = [int(i) for i in data.get("recipe_ids", [])]
             self.dimension = int(data.get("dimension", self.dimension))
+        self._ids_array = None
 
         if index_path.exists():
             try:

@@ -1,0 +1,119 @@
+{
+  "machine": {
+    "python": "3.13.12",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "logical_cpus": 22,
+    "ram_gb": 63.5,
+    "faiss": "1.14.3",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "embedder_engine": "cuda"
+  },
+  "command": "ann",
+  "ann": {
+    "vectors": 315447,
+    "dim": 384,
+    "queries": 500,
+    "k": 40,
+    "threads": 22,
+    "rows": [
+      {
+        "index": "Flat (exact)",
+        "recall@40": 1.0,
+        "p50_ms": 30.024,
+        "p95_ms": 47.866,
+        "build_s": 0.0
+      },
+      {
+        "index": "HNSW32",
+        "efSearch": 32,
+        "recall@40": 0.8427,
+        "p50_ms": 0.413,
+        "p95_ms": 1.352,
+        "build_s": 28.5
+      },
+      {
+        "index": "HNSW32",
+        "efSearch": 64,
+        "recall@40": 0.9212,
+        "p50_ms": 0.607,
+        "p95_ms": 0.892,
+        "build_s": 28.5
+      },
+      {
+        "index": "HNSW32",
+        "efSearch": 128,
+        "recall@40": 0.965,
+        "p50_ms": 0.951,
+        "p95_ms": 1.329,
+        "build_s": 28.5
+      },
+      {
+        "index": "HNSW32",
+        "efSearch": 256,
+        "recall@40": 0.9859,
+        "p50_ms": 1.762,
+        "p95_ms": 5.194,
+        "build_s": 28.5
+      },
+      {
+        "index": "IVF1024,Flat",
+        "nprobe": 8,
+        "recall@40": 0.707,
+        "p50_ms": 0.609,
+        "p95_ms": 0.928,
+        "build_s": 4.6
+      },
+      {
+        "index": "IVF1024,Flat",
+        "nprobe": 16,
+        "recall@40": 0.8057,
+        "p50_ms": 1.019,
+        "p95_ms": 2.72,
+        "build_s": 4.6
+      },
+      {
+        "index": "IVF1024,Flat",
+        "nprobe": 32,
+        "recall@40": 0.8795,
+        "p50_ms": 1.952,
+        "p95_ms": 4.253,
+        "build_s": 4.6
+      },
+      {
+        "index": "IVF1024,Flat",
+        "nprobe": 64,
+        "recall@40": 0.9351,
+        "p50_ms": 3.992,
+        "p95_ms": 17.433,
+        "build_s": 4.6
+      }
+    ],
+    "filtered_rows": [
+      {
+        "index": "HNSW32 + vegan selector",
+        "efSearch": 128,
+        "allowed_fraction": 0.209,
+        "recall@40": 0.737,
+        "p50_ms": 3.868,
+        "p95_ms": 5.66
+      },
+      {
+        "index": "HNSW32 + vegan selector",
+        "efSearch": 256,
+        "allowed_fraction": 0.209,
+        "recall@40": 0.8223,
+        "p50_ms": 7.043,
+        "p95_ms": 12.739
+      },
+      {
+        "index": "HNSW32 + vegan selector",
+        "efSearch": 512,
+        "allowed_fraction": 0.209,
+        "recall@40": 0.8909,
+        "p50_ms": 13.731,
+        "p95_ms": 23.299
+      }
+    ]
+  }
+}

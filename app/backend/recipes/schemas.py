@@ -21,6 +21,9 @@ class RecipeSearchRequest(BaseModel):
     filters: DietaryFilters | None = None
     max_cooking_time: int | None = None
     category: str | None = None
+    # Substitutions for missing ingredients cost a lookup per result; the
+    # detail endpoint always includes them, search only when asked.
+    include_substitutions: bool = False
 
 
 class NutritionPerServing(BaseModel):

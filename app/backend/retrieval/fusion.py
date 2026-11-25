@@ -1,15 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from app.backend.retrieval.candidates import CandidateMatch
 
-
-@dataclass(frozen=True)
-class CandidateMatch:
-    recipe_id: int
-    semantic_score: float | None = None
-    bm25_score: float | None = None
-    rrf_score: float | None = None
-    retrieval_rank: int = 1
+__all__ = ["CandidateMatch", "reciprocal_rank_fusion"]
 
 
 def reciprocal_rank_fusion(

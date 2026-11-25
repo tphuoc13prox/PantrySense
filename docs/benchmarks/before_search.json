@@ -1,0 +1,87 @@
+{
+  "machine": {
+    "python": "3.13.12",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "logical_cpus": 22,
+    "ram_gb": 63.5,
+    "faiss": "1.14.3",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "embedder_engine": "cuda"
+  },
+  "command": "search",
+  "search": {
+    "queries": 200,
+    "seed": 42,
+    "modes": {
+      "lexical": {
+        "cold_first_query_s": 13.89,
+        "rss_after_load_mb": 1047.7,
+        "rss_delta_mb": 602.1,
+        "none": {
+          "n": 200,
+          "p50_ms": 303.5,
+          "p95_ms": 584.7,
+          "mean_ms": 327.4,
+          "max_ms": 838.7,
+          "mean_results": 14.96,
+          "zero_result_rate": 0.005
+        },
+        "vegan": {
+          "n": 200,
+          "p50_ms": 349.4,
+          "p95_ms": 710.7,
+          "mean_ms": 385.3,
+          "max_ms": 1333.1,
+          "mean_results": 3.34,
+          "zero_result_rate": 0.425
+        },
+        "gluten_free": {
+          "n": 200,
+          "p50_ms": 407.8,
+          "p95_ms": 755.2,
+          "mean_ms": 427.6,
+          "max_ms": 1055.4,
+          "mean_results": 10.81,
+          "zero_result_rate": 0.075
+        }
+      },
+      "semantic": {
+        "error": "AttributeError: 'CandidateMatch' object has no attribute 'bm25_score'"
+      },
+      "hybrid": {
+        "cold_first_query_s": 4.01,
+        "rss_after_load_mb": 3120.9,
+        "rss_delta_mb": 993.7,
+        "none": {
+          "n": 200,
+          "p50_ms": 331.9,
+          "p95_ms": 684.1,
+          "mean_ms": 365.1,
+          "max_ms": 1062.0,
+          "mean_results": 14.82,
+          "zero_result_rate": 0.005
+        },
+        "vegan": {
+          "n": 200,
+          "p50_ms": 384.5,
+          "p95_ms": 718.9,
+          "mean_ms": 418.9,
+          "max_ms": 1163.2,
+          "mean_results": 3.75,
+          "zero_result_rate": 0.355
+        },
+        "gluten_free": {
+          "n": 200,
+          "p50_ms": 361.7,
+          "p95_ms": 623.6,
+          "mean_ms": 390.6,
+          "max_ms": 1653.1,
+          "mean_results": 11.02,
+          "zero_result_rate": 0.06
+        }
+      }
+    },
+    "rss_final_mb": 3159.6
+  }
+}

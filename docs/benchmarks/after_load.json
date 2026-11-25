@@ -1,0 +1,44 @@
+{
+  "machine": {
+    "python": "3.13.12",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "logical_cpus": 22,
+    "ram_gb": 63.5,
+    "faiss": "1.14.3",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "embedder_engine": "cuda"
+  },
+  "command": "load",
+  "load": [
+    {
+      "component": "bm25",
+      "ok": true,
+      "seconds": 1.901,
+      "rss_delta_mb": 92.9,
+      "docs": 315447,
+      "path": "data/recipe_bm25.npz"
+    },
+    {
+      "component": "faiss",
+      "ok": true,
+      "seconds": 2.884,
+      "rss_delta_mb": 499.9,
+      "vectors": 315447,
+      "index_type": "IndexFlatIP"
+    },
+    {
+      "component": "embedder",
+      "ok": true,
+      "seconds": 45.616,
+      "rss_delta_mb": 1069.2,
+      "engine": "cuda"
+    },
+    {
+      "component": "ranker",
+      "ok": true,
+      "seconds": 3.18,
+      "rss_delta_mb": 97.4
+    }
+  ]
+}
