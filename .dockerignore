@@ -1,0 +1,33 @@
+# Dataset, indices and models are mounted as a volume, never copied in.
+data/
+.git/
+.github/
+.cursor/
+.vscode/
+.idea/
+
+# Python and tooling caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+.coverage
+htmlcov/
+
+# Not needed at runtime
+tests/
+docs/
+*.md
+Dockerfile
+.dockerignore
+requirements-dev.txt
+pyproject.toml
+Makefile
+tasks.py
+*.log
+.env
+.env.*
