@@ -17,6 +17,13 @@ Runs:
   **LTR v2 was trained on hybrid candidates from MiniLM and has not been retrained
   for e5**, so with e5 its `semantic_score` and dense-rank features come from a
   different distribution than in training.
+- `e5ft_ltrv3`: `queries_v1_topk20_v1_1_e5ft_ltrv3`. LTR v3 bundle (sha256
+  `e2ea4bd076f4`), retrained on hybrid e5-ft candidates with the same protocol
+  (buckets 2-8, four query tiers, `top_k=100`; see docs/ltr.md). Run once, after
+  v3 had been chosen on the bucket-9 held-out set; it was not used to pick
+  anything. Same DB copy, BM25 and e5 index as `e5ft_ltrv2`. Its query file hash
+  is `0b9aabd48bb2`, the same as the baseline, now that `.gitattributes` keeps
+  `eval/*.jsonl` LF.
 
 All new runs used the same DB copy (with `recipe_metadata`) and the same BM25
 content (main JSON converted to `.npz`), and ran one at a time on an otherwise
@@ -46,6 +53,7 @@ baseline (`0b9aabd48bb2`) only because of CRLF line endings in this checkout
 | Hybrid e5-small-ft + old LightGBM | e5ft | 0.724 [0.696, 0.753] | 0.523 [0.497, 0.551] | 0.571 [0.546, 0.598] | 0.430 [0.400, 0.462] | 68.8 | 83.6 |
 | Hybrid MiniLM + LTR v2 | minilm_ltrv2 | 0.651 [0.622, 0.681] | 0.590 [0.562, 0.621] | 0.606 [0.577, 0.635] | 0.553 [0.521, 0.585] | 45.4 | 70.5 |
 | Hybrid e5-small-ft + LTR v2 (not retrained for e5) | e5ft_ltrv2 | 0.755 [0.728, 0.782] | 0.648 [0.621, 0.677] | 0.675 [0.649, 0.702] | 0.589 [0.559, 0.620] | 58.0 | 73.6 |
+| Hybrid e5-small-ft + LTR v3 (retrained on e5, new app default) | e5ft_ltrv3 | 0.756 [0.730, 0.783] | 0.644 [0.616, 0.672] | 0.671 [0.645, 0.698] | 0.585 [0.554, 0.617] | 62.3 | 77.2 |
 
 ## Layer (a): retriever candidates
 
@@ -76,6 +84,9 @@ baseline (`0b9aabd48bb2`) only because of CRLF line endings in this checkout
 | (b) e5-ft + LTR v2 vs app default on main | +0.156 [+0.133, +0.180] | +0.318 [+0.294, +0.342] | +0.280 [+0.259, +0.301] | +0.368 [+0.339, +0.399] |
 | (b) LTR v2: e5-ft vs MiniLM retrieval | +0.104 [+0.084, +0.126] | +0.058 [+0.043, +0.074] | +0.069 [+0.054, +0.086] | +0.036 [+0.019, +0.052] |
 | (b) e5-ft + LTR v2 vs BM25 | +0.100 [+0.081, +0.120] | +0.167 [+0.148, +0.186] | +0.151 [+0.134, +0.168] | +0.196 [+0.171, +0.222] |
+| (b) e5-ft: LTR v3 vs RRF order | +0.027 [+0.016, +0.039] | +0.089 [+0.074, +0.105] | +0.074 [+0.062, +0.088] | +0.110 [+0.089, +0.132] |
+| (b) e5-ft: LTR v3 vs LTR v2 | +0.001 [-0.002, +0.004] | -0.005 [-0.014, +0.004] | -0.004 [-0.011, +0.003] | -0.004 [-0.018, +0.010] |
+| (b) e5-ft + LTR v3 vs app default on main | +0.157 [+0.133, +0.181] | +0.313 [+0.289, +0.337] | +0.276 [+0.255, +0.297] | +0.364 [+0.333, +0.395] |
 
 ## Reading
 
@@ -99,3 +110,17 @@ baseline (`0b9aabd48bb2`) only because of CRLF line endings in this checkout
     the synthetic protocol favours.
   - LTR v2 with e5 is a mismatched pairing. Retraining it on e5 candidates is the
     obvious next step and may add more.
+- Retraining on e5 (LTR v3) did not add anything measurable:
+  - On the official pool v3 and v2 tie: -0.005 MRR@10 [-0.014, +0.004].
+  - On the bucket-9 held-out sets the differences were also within noise (-0.001
+    to +0.013 nDCG@10, every CI containing 0).
+  - v2 gets most of its gain from features that do not depend on the dense model
+    (`query_coverage` 0.54, `bm25_rel` 0.17, `matched_count` 0.13). So the shift
+    in the dense features cost it little. v3 leans more on the dense gap
+    (`dense_gap` 0.24) but ends up at the same quality.
+  - v3 stays the default because it was chosen before this run on the held-out
+    sets, where it was level or slightly ahead. It also records the embedding
+    model it was trained with, so a mismatch gets logged.
+  - Picking v2 now, from this run, would mean tuning on the eval pool.
+  - The p50 latency difference (62 vs 58 ms) was not investigated. v3 has fewer
+    trees than v2 (124 vs 210), so the model itself is an unlikely cause.
