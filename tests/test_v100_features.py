@@ -134,7 +134,9 @@ def test_favorites_and_meal_plans(temp_db: Path):
     assert isinstance(shop, list)
 
 
-def test_api_endpoints():
+def test_api_endpoints(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Point the app at the temp DB so the pantry writes below never touch data/recipes.db.
+    monkeypatch.setenv("PANTRYSENSE_DB_PATH", str(temp_db))
     client = TestClient(app)
 
     # Health
