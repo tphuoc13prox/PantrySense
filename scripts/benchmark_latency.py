@@ -136,6 +136,7 @@ def sample_queries(n: int, seed: int, min_size: int = 2, max_size: int = 5) -> l
 def _load_component(name: str, queue: Any) -> None:
     try:
         from app.backend.config import (
+            display_path,
             get_bm25_index_path,
             get_ranker_model_path,
             get_vector_ids_path,
@@ -151,7 +152,7 @@ def _load_component(name: str, queue: Any) -> None:
             store = BM25Store()
             ok = store.load(get_bm25_index_path())
             extra["docs"] = store.total_docs
-            extra["path"] = str(get_bm25_index_path())
+            extra["path"] = display_path(get_bm25_index_path())
         elif name == "faiss":
             from app.backend.retrieval.vector_store import FaissVectorStore
 
