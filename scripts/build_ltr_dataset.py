@@ -267,6 +267,22 @@ class RecordingRanker(MLRecipeRanker):
         return []
 
 
+def retrieval_config() -> dict[str, str]:
+    """Which embedding model and index files produced the candidates."""
+    from app.backend.config import (
+        get_bm25_index_path,
+        get_embedding_model_name,
+        get_vector_index_path,
+    )
+
+    return {
+        "embedding_model": get_embedding_model_name(),
+        "vector_index": get_vector_index_path().name,
+        "bm25_index": get_bm25_index_path().name,
+        "db": get_database_path().name,
+    }
+
+
 def run_retrieval(queries: list[LTRQuery], top_k: int) -> tuple[dict[str, list], dict[str, Any]]:
     os.environ["PANTRYSENSE_SEMANTIC_TOP_K"] = str(top_k)
     from app.backend.recipes.service import RecipeSearchService
@@ -483,6 +499,7 @@ def main() -> None:
             "rows": "every candidate the ranker receives; passes_threshold marks those above the coverage threshold",
             "generation": gen_meta,
             "retrieval": summary,
+            "retrieval_config": retrieval_config(),
         }
         meta_path = out.with_suffix(".meta.json")
         with open(meta_path, "w", encoding="utf-8") as f:

@@ -128,16 +128,16 @@ def main() -> None:
         if not r.is_ready:
             raise SystemExit(f"cannot load {name} from {r.model_path}")
 
-    tiers = {}
-    for queries_path in sorted((BASE_DIR / "data").glob("ltr_queries*.json")):
-        tiers.update({q["qid"]: q["tier"] for q in json.loads(queries_path.read_text(encoding="utf-8"))})
-
     datasets = args.dataset or [p for p in DEFAULT_DATASETS if p.exists()]
     if not datasets:
         raise SystemExit("no held-out dataset found; run scripts/build_ltr_dataset.py first")
 
     report = {"model": str(model_path), "datasets": []}
     for path in datasets:
+        # Query files sit next to the datasets they were built with.
+        tiers = {}
+        for queries_path in sorted(path.parent.glob("ltr_queries*.json")):
+            tiers.update({q["qid"]: q["tier"] for q in json.loads(queries_path.read_text(encoding="utf-8"))})
         res = evaluate_dataset(path, rankers, tiers)
         report["datasets"].append(res)
         print(f"\n=== {res['file']}: {res['n_queries']} queries, relevant recipe reaches the ranker in "

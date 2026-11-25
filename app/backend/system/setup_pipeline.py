@@ -75,7 +75,8 @@ class SetupManager:
         has_indices = get_vector_ids_path().exists() and bm25_index_exists(get_bm25_index_path())
         has_model = get_ranker_model_path().exists()
 
-        is_ready = has_dataset and has_indices and has_model and not running
+        # The LTR model is optional: without it results keep the RRF order.
+        is_ready = has_dataset and has_indices and not running
 
         cuda_available = False
         try:
@@ -301,10 +302,13 @@ class SetupManager:
                 bm25_store.save(bm25_path)
             time.sleep(0.3)
 
-            # Step 7: Train ML Learning-to-Rank Model
-            self._update_step(7, 90.0, "step7", f"Step 7/8: Training LightGBM / GBDT Machine Learning Ranker on {total} recipes...")
-            from scripts.train_ranker import train_ranker
-            train_ranker()
+            # Step 7: the LTR ranker is not trained here (its dataset needs ~10k
+            # hybrid searches); without a bundle, results keep the RRF order.
+            if get_ranker_model_path().exists():
+                step7 = "Step 7/8: Using the existing learning-to-rank model."
+            else:
+                step7 = "Step 7/8: No learning-to-rank model; results use hybrid RRF order (see docs/ltr.md)."
+            self._update_step(7, 90.0, "step7", step7)
             time.sleep(0.4)
 
             # Step 8: Final Verification & Ready

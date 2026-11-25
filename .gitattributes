@@ -1,0 +1,3 @@
+# Query sets are hashed by scripts/run_eval.py; keep LF on every platform so
+# the recorded sha256 does not depend on core.autocrlf.
+eval/**/*.jsonl text eol=lf

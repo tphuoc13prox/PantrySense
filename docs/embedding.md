@@ -137,11 +137,13 @@ model. It is the most accurate in both settings. A query costs about 40 ms on CP
 which is small next to the rest of the request. If CPU latency matters more,
 fine-tuned MiniLM keeps most of the gain at about half the train and index cost.
 
-To switch, rebuild the index with the same model so the metadata matches:
+The app uses it by default once the model folder, its index, the index metadata and
+the id file are in `data/`, and falls back to MiniLM otherwise (see "Default
+configuration" in docs/ltr.md). To build the index with the same model so the
+metadata matches:
 
 ```
-python scripts/finetune_embedder.py --db <recipes.db> build-index --model data/models/e5-small-pantry
-PANTRYSENSE_EMBEDDING_MODEL=<abs path>/data/models/e5-small-pantry
+python scripts/finetune_embedder.py --db data/recipes.db build-index --model data/models/e5-small-pantry --index data/recipe_vectors_e5ft.index --ids data/recipe_vector_ids_e5ft.json
 ```
 
 ## Limitations

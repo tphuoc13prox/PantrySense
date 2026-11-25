@@ -9,6 +9,52 @@ Code: `app/backend/ranking/` (features, model loading, metrics),
 `scripts/build_ltr_dataset.py`, `scripts/train_ranker.py`,
 `scripts/evaluate_ranking.py`.
 
+## Default configuration
+
+The app picks the best measured setup when its files are present and falls
+back to something that runs on a fresh clone otherwise. Startup logs which one
+is in use.
+
+| Part | Used when present | Fallback |
+|---|---|---|
+| Dense model | `data/models/e5-small-pantry` (fine-tuned e5-small-v2) with `data/recipe_vectors_e5ft.index`, its `.meta.json` and `data/recipe_vector_ids_e5ft.json` | `all-MiniLM-L6-v2` with `data/recipe_vectors.index` |
+| Ranker | LTR bundle at `data/ranker_model.joblib` | hybrid RRF order |
+
+- `PANTRYSENSE_EMBEDDING_MODEL`, `PANTRYSENSE_VECTOR_INDEX_PATH`,
+  `PANTRYSENSE_VECTOR_IDS_PATH` and `PANTRYSENSE_RANKER_MODEL_PATH` override the
+  defaults. If only the model is set, the index paths follow it: the e5 paths
+  for the fine-tuned folder, the MiniLM paths for anything else.
+- Without a bundle the ranker keeps the retriever's order rather than the
+  coverage heuristic, because the heuristic loses to RRF on the official eval
+  (MRR@10 0.418 vs 0.555 with e5). Old bare LightGBM files (not a
+  `pantrysense-ltr` bundle) are ignored for the same reason (0.523 vs 0.555).
+  `PANTRYSENSE_RANKING_MODE=heuristic` still selects the heuristic.
+- A bundle records the embedding model its training candidates came from.
+  Loading it with a different model logs a warning, because the dense-score
+  features then come from another distribution.
+- Startup and the setup pipeline no longer train the ranker. Its dataset takes
+  about 10k hybrid searches, so the ranker is built offline (below).
+
+To get the best configuration, all files are gitignored:
+
+1. Fine-tuned model: train it with `scripts/finetune_embedder.py train --base
+   intfloat/e5-small-v2 ...` (docs/embedding.md, about 9 min on an RTX 4050), or
+   copy an existing `e5-small-pantry` folder into `data/models/`.
+2. Index: `python scripts/finetune_embedder.py --db data/recipes.db build-index
+   --model data/models/e5-small-pantry --index data/recipe_vectors_e5ft.index
+   --ids data/recipe_vector_ids_e5ft.json` (35 min on CPU for 315k recipes). A
+   copied index also works: the metadata check accepts a model folder with the
+   same name in another location.
+3. Ranker: build the dataset with the e5 setup active, then train:
+
+       python scripts/build_ltr_dataset.py --out-dir data/e5 --top-k 100
+       python scripts/build_ltr_dataset.py --out-dir data/e5 --top-k 100 --tiers pantry --tag pantry --n-train 1333 --n-heldout 600 --seed 11 --exclude-queries data/e5/ltr_queries.json
+       python scripts/train_ranker.py --dataset data/e5/ltr_train_k100.parquet data/e5/ltr_train_pantry_k100.parquet --output data/ranker_model.joblib
+
+   The two dataset builds take about 15 min on CPU, and training takes 3 min.
+   Add `--top-k 20 --splits heldout` runs for the held-out sets used by
+   `scripts/evaluate_ranking.py`.
+
 ## Data
 
 - Source recipes come only from the training pool:
@@ -97,10 +143,16 @@ with `deterministic=True`.
    `min_child_samples` {20, 100}. The best setting was 15 leaves, lr 0.03 and
    min_child 20, refit on all queries for 202 trees (the mean of the best
    iterations).
-2. **v2 (shipped)** adds the 1333 pantry training queries and keeps the v1
+2. **v2** adds the 1333 pantry training queries and keeps the v1
    parameters without a new grid (`--no-grid`). It has 3903 usable queries,
    150k rows and 210 trees. Only 649 pantry queries are usable because retrieval
    misses half of them, so pantry makes up 17% of the effective training set.
+3. **v3 (shipped)** uses the same queries and protocol as v2, with candidates
+   from hybrid retrieval on the fine-tuned e5 index. Training ran the full grid
+   again. All 12 settings fall within 0.785-0.793 CV nDCG@10; the best is 15
+   leaves, lr 0.1 and min_child 100, at 124 trees. It has 4254 usable queries
+   and 179k rows (about 710 of the queries are pantry). See "v3: retrained on fine-tuned
+   e5 candidates" below.
 
 Commands:
 
@@ -112,9 +164,10 @@ pool on every core, and those threads slowed the next query's retrieval (hybrid
 p50 242 ms vs 70 ms, measured with the search latency benchmark).
 
 The model file is a dict bundle (`format: pantrysense-ltr`) holding the
-estimator and its feature names. `MLRecipeRanker` still accepts a bare legacy
-9-feature estimator, and falls back to the coverage heuristic when the file is
-missing or unusable.
+estimator, its feature names and (from v3) the embedding model of the training
+candidates. When the file is missing or unusable, including old bare 9-feature
+estimators, `MLRecipeRanker` keeps the retriever's order (see "Default
+configuration").
 
 ## Results
 
@@ -238,6 +291,75 @@ Findings:
   ingredient match drops to 0.787, the legacy 9 features alone reach 0.799, and
   removing list-relative gives 0.839.
 
+## v3: retrained on fine-tuned e5 candidates
+
+With e5-ft as the default dense model, the datasets were rebuilt from scratch
+in `data/e5/`. They use the same queries (same seeds and tiers), but the
+candidates come from hybrid e5-ft retrieval. Recall is much higher than with
+MiniLM:
+
+| Source recipe reaches the ranker | MiniLM | e5-ft |
+|---|---|---|
+| subset tiers, held-out k100 | 79.3% | 88.1% |
+| subset tiers, held-out k20 | 66.5% | 76.1% |
+| pantry, held-out k100 | 49.2% | 54.3% |
+| pantry, held-out k20 | 32.5% | 38.7% |
+
+With e5 the source recipe's median RRF rank is 1 in the subset tiers (7 with
+MiniLM) and 8 in pantry.
+
+**Held-out (bucket 9) on e5-ft candidates**, conditional nDCG@10. v2 is the
+MiniLM-trained model used unchanged.
+
+| Held-out set | queries | RRF | Heuristic | v2 | v3 |
+|---|---|---|---|---|---|
+| subset tiers k100 | 882 | 0.704 | 0.448 | 0.806 | 0.805 |
+| subset tiers k20 | 761 | 0.807 | 0.664 | 0.892 | 0.897 |
+| pantry k100 | 326 | 0.550 | 0.400 | 0.708 | 0.720 |
+| pantry k20 | 232 | 0.736 | 0.674 | 0.858 | 0.872 |
+
+Paired bootstrap 95% CI:
+
+| Held-out set | nDCG@10 v3 - v2 | MRR@10 v3 - v2 | nDCG@10 v3 - RRF |
+|---|---|---|---|
+| subset tiers k100 | -0.001 [-0.011, +0.008] | -0.001 [-0.012, +0.010] | +0.101 [+0.087, +0.116] |
+| subset tiers k20 | +0.005 [-0.002, +0.013] | +0.005 [-0.004, +0.015] | +0.090 [+0.075, +0.104] |
+| pantry k100 | +0.012 [-0.006, +0.030] | +0.016 [-0.004, +0.037] | +0.169 [+0.135, +0.201] |
+| pantry k20 | +0.013 [-0.005, +0.033] | +0.019 [-0.005, +0.045] | +0.136 [+0.102, +0.170] |
+
+**Official eval** (1000 queries, buckets 0-1, `scripts/run_eval.py`, run once
+for the final model, `eval/results/queries_v1_topk20_v1_1_e5ft_ltrv3`), final
+output MRR@10:
+
+| Config | MRR@10 | Hit@1 | Recall@10 |
+|---|---|---|---|
+| hybrid e5-ft, RRF order (fallback without a bundle) | 0.555 | 0.475 | 0.729 |
+| hybrid e5-ft + v2 | 0.648 | 0.589 | 0.755 |
+| hybrid e5-ft + v3 (default) | 0.644 | 0.585 | 0.756 |
+
+v3 minus v2 is -0.005 MRR@10 [-0.014, +0.004]. v3 minus RRF is +0.089
+[+0.074, +0.105].
+
+Findings:
+
+- Retraining on e5 candidates did not measurably change quality. Every v3 - v2
+  interval contains 0, on the held-out sets and on the official pool. Point
+  estimates are slightly positive on three of four held-out sets and slightly
+  negative on the official pool.
+- v2 transfers well because most of its gain comes from features that do not
+  depend on the dense model. v3 uses the dense signal more (`dense_gap` 0.24 of
+  gain, `query_coverage` 0.39) and reaches the same quality.
+- v3 is the default. It was chosen on the held-out sets before the official
+  run, where it was level or ahead. Its bundle also records the embedding model,
+  so pairing it with another one gets logged. Switching to v2 because of the
+  official run would be tuning on the eval pool.
+- The learned ranker is still clearly worth having over RRF order: +0.09 to
+  +0.17 nDCG@10 held-out, and +0.089 MRR@10 on the official pool.
+- CV (out of fold, 4254 queries): nDCG@10 0.793 against 0.672 for RRF and 0.422
+  for the heuristic. Ablation: removing ingredient match costs the most (0.751),
+  and the legacy 9 features alone reach 0.757. The other groups are within
+  0.007.
+
 ## Limitations
 
 - **The labels are synthetic.** In the subset tiers the source recipe uses the
@@ -253,8 +375,9 @@ Findings:
   query size is underestimated. Passing the raw query in needs a one-line change
   in `RecipeSearchService._process_candidates` (`service.py`), followed by a
   retrain because the features would change. Not done yet.
-- **Retrieval is the bottleneck for realistic lists.** Only 49% (k100) and 33%
-  (k20) of pantry sources reach the ranker. Improving recall, through a larger
+- **Retrieval is the bottleneck for realistic lists.** Even with e5-ft only 54%
+  (k100) and 39% (k20) of pantry sources reach the ranker (49% and 33% with
+  MiniLM). Improving recall, through a larger
   `top_k`, a better embedding or prefiltering, matters more than further ranker
   work.
 - Most groups add almost nothing on top of the ingredient-match features. The
@@ -265,8 +388,8 @@ Findings:
 - There is one relevant recipe per query, so "relevant" means "the recipe the
   query was built from". Other good answers count as negatives, and this pushes
   every absolute number down.
-- 21-34% of subset-tier queries and 51-67% of pantry queries never reach the
-  ranker (retrieval recall plus the coverage threshold). The ranker cannot fix
-  those.
-- No online or user signal exists. The final numbers on the official eval pool
-  (buckets 0-1) are left to the eval harness.
+- With e5-ft, 12-24% of subset-tier queries and 46-61% of pantry queries never
+  reach the ranker (retrieval recall plus the coverage threshold). The ranker
+  cannot fix those.
+- No online or user signal exists. The official pool (buckets 0-1) was run
+  once per model through `scripts/run_eval.py` and never used for choices.

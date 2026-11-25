@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import webbrowser
 from collections.abc import AsyncIterator
@@ -20,10 +21,14 @@ from app.backend.config import (
     get_auto_build_index,
     get_auto_open_browser,
     get_bm25_index_path,
+    get_embedding_model_name,
     get_ranker_model_path,
     get_ranking_mode,
     get_retrieval_mode,
     get_vector_ids_path,
+    get_vector_index_path,
+    missing_finetuned_files,
+    uses_finetuned_embedding,
 )
 from app.backend.database.init_db import initialize_database
 from app.backend.database.pantry_db import ensure_pantry_tables
@@ -32,6 +37,30 @@ from app.backend.system.routes import router as system_router
 
 logger = logging.getLogger("pantrysense")
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
+
+
+def log_search_setup() -> None:
+    """Say which embedding model, index and ranker this process will use."""
+    if os.getenv("PANTRYSENSE_EMBEDDING_MODEL", "").strip():
+        logger.info("Embedding model %s (PANTRYSENSE_EMBEDDING_MODEL), index %s",
+                    get_embedding_model_name(), get_vector_index_path())
+    elif uses_finetuned_embedding():
+        logger.info("Embedding model: fine-tuned e5 at %s, index %s", get_embedding_model_name(), get_vector_index_path())
+    else:
+        missing = ", ".join(p.name for p in missing_finetuned_files())
+        logger.info("Embedding model: %s, index %s (fine-tuned e5 not used, missing: %s; see docs/embedding.md)",
+                    get_embedding_model_name(), get_vector_index_path(), missing)
+
+    if get_ranking_mode() != "ml":
+        logger.info("Ranking: coverage heuristic (PANTRYSENSE_RANKING_MODE=%s)", get_ranking_mode())
+    elif get_ranker_model_path().exists():
+        logger.info("Ranking: LTR bundle %s", get_ranker_model_path())
+    else:
+        logger.info(
+            "Ranking: no LTR bundle at %s, results keep the hybrid RRF order. "
+            "Build it with scripts/build_ltr_dataset.py and scripts/train_ranker.py (docs/ltr.md).",
+            get_ranker_model_path(),
+        )
 
 
 def _open_default_browser() -> None:
@@ -48,17 +77,17 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     initialize_database()
     ensure_pantry_tables()
 
-    # Smart Auto-Build on first startup if indices or ML model are missing
+    # Build missing retrieval indices on first startup. The LTR ranker is not
+    # trained here: its dataset needs ~10k hybrid searches, so a missing model
+    # just means results keep the RRF order (see log_search_setup).
     if get_auto_build_index():
         mode = get_retrieval_mode()
         if mode in ("semantic", "hybrid", "lexical"):
             ids_path = get_vector_ids_path()
             bm25_path = get_bm25_index_path()
-            model_path = get_ranker_model_path()
 
             sem_missing = mode in ("semantic", "hybrid") and not ids_path.exists()
             bm25_missing = mode in ("lexical", "hybrid") and not bm25_path.exists()
-            model_missing = get_ranking_mode() == "ml" and not model_path.exists()
 
             if sem_missing or bm25_missing:
                 logger.info("Retrieval index files missing for mode '%s'. Automatically building indices...", mode)
@@ -69,14 +98,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
                 except Exception as e:
                     logger.error("Failed to auto-build indices: %s", e)
 
-            if model_missing:
-                logger.info("ML Ranker model missing at '%s'. Automatically training ranker...", model_path)
-                try:
-                    from scripts.train_ranker import train_ranker
-                    train_ranker()
-                    logger.info("Auto-trained ML ranker successfully.")
-                except Exception as e:
-                    logger.error("Failed to auto-train ML ranker: %s", e)
+    log_search_setup()
 
     # Start heartbeat monitor
     monitor = get_heartbeat_monitor()
