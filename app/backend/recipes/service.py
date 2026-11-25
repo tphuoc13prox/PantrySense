@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -219,10 +219,13 @@ class RecipeSearchService:
     hybrid_retriever: HybridRetriever | None = None
     bm25_store: BM25Store | None = None
     metadata_index: MetadataIndex | None = None
+    # Same objects as the public fields once __post_init__ has filled them, typed as never None.
+    _resolved: SearchComponents = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         names = ("matcher", "ranker", "ml_ranker", "retriever", "hybrid_retriever", "bm25_store", "metadata_index")
         if all(getattr(self, name) is not None for name in names):
+            object.__setattr__(self, "_resolved", SearchComponents(**{name: getattr(self, name) for name in names}))
             return
         shared = get_search_components(self.database_path)
 
@@ -235,17 +238,18 @@ class RecipeSearchService:
                 )
             else:
                 hybrid = shared.hybrid_retriever
-        resolved = {
-            "matcher": self.matcher or shared.matcher,
-            "ranker": self.ranker or shared.ranker,
-            "ml_ranker": self.ml_ranker or shared.ml_ranker,
-            "hybrid_retriever": hybrid,
-            "retriever": self.retriever or hybrid.semantic_retriever,
-            "bm25_store": self.bm25_store if self.bm25_store is not None else hybrid.bm25_store,
-            "metadata_index": self.metadata_index or shared.metadata_index,
-        }
-        for name, value in resolved.items():
-            object.__setattr__(self, name, value)
+        resolved = SearchComponents(
+            matcher=self.matcher or shared.matcher,
+            ranker=self.ranker or shared.ranker,
+            ml_ranker=self.ml_ranker or shared.ml_ranker,
+            hybrid_retriever=hybrid,
+            retriever=self.retriever or hybrid.semantic_retriever,
+            bm25_store=self.bm25_store if self.bm25_store is not None else hybrid.bm25_store,
+            metadata_index=self.metadata_index or shared.metadata_index,
+        )
+        for name in names:
+            object.__setattr__(self, name, getattr(resolved, name))
+        object.__setattr__(self, "_resolved", resolved)
 
     def allowed_ids(
         self,
@@ -254,7 +258,7 @@ class RecipeSearchService:
         category: str | None = None,
     ) -> AllowedIds | None:
         """Recipe ids passing the filters, from stored metadata (None if unfiltered)."""
-        return self.metadata_index.allowed(filters, max_cooking_time, category)
+        return self._resolved.metadata_index.allowed(filters, max_cooking_time, category)
 
     def search(
         self,
@@ -285,9 +289,9 @@ class RecipeSearchService:
             return []
 
         if mode == "hybrid":
-            candidates = self.hybrid_retriever.retrieve(raw_ingredients, allowed=allowed)
+            candidates = self._resolved.hybrid_retriever.retrieve(raw_ingredients, allowed=allowed)
         elif mode == "semantic":
-            candidates = self.retriever.retrieve(raw_ingredients, allowed=allowed)
+            candidates = self._resolved.retriever.retrieve(raw_ingredients, allowed=allowed)
         else:
             if not self._ensure_lexical_loaded():
                 raise SemanticIndexNotFoundError(
@@ -296,7 +300,7 @@ class RecipeSearchService:
             query_str = build_query_representation(raw_ingredients)
             candidates = [
                 CandidateMatch(recipe_id=r_id, bm25_score=score, retrieval_rank=rank)
-                for r_id, score, rank in self.bm25_store.search(query_str, allowed=allowed)
+                for r_id, score, rank in self._resolved.bm25_store.search(query_str, allowed=allowed)
             ]
         return self._process_candidates(
             raw_ingredients,
@@ -309,12 +313,12 @@ class RecipeSearchService:
         )
 
     def _ensure_lexical_loaded(self) -> bool:
-        if self.bm25_store is self.hybrid_retriever.bm25_store:
-            return self.hybrid_retriever.ensure_bm25_loaded()
-        if not self.bm25_store.is_empty:
+        if self._resolved.bm25_store is self._resolved.hybrid_retriever.bm25_store:
+            return self._resolved.hybrid_retriever.ensure_bm25_loaded()
+        if not self._resolved.bm25_store.is_empty:
             return True
-        path = preferred_index_path(self.hybrid_retriever.bm25_path)
-        return path.exists() and self.bm25_store.load(path)
+        path = preferred_index_path(self._resolved.hybrid_retriever.bm25_path)
+        return path.exists() and self._resolved.bm25_store.load(path)
 
     def _summary(
         self,
@@ -325,7 +329,7 @@ class RecipeSearchService:
         include_substitutions: bool,
         cand: CandidateMatch | None = None,
     ) -> RecipeSummary:
-        match = self.matcher.match(raw_ingredients, recipe_ingredients)
+        match = self._resolved.matcher.match(raw_ingredients, recipe_ingredients)
         sub_models: list[MissingIngredientSubstitution] = []
         if include_substitutions and match.missing_ingredients:
             sub_models = _build_substitution_models(
@@ -422,8 +426,8 @@ class RecipeSearchService:
         # Apply ML Ranking (or fallback to heuristic)
         r_mode = self.ranking_mode if self.ranking_mode is not None else get_ranking_mode()
         if r_mode == "ml":
-            return self.ml_ranker.rank(matches, details_map=details_map, minimum_coverage=threshold)
-        return self.ranker.rank(matches, threshold)
+            return self._resolved.ml_ranker.rank(matches, details_map=details_map, minimum_coverage=threshold)
+        return self._resolved.ranker.rank(matches, threshold)
 
     def _search_rule_based(
         self,
@@ -466,7 +470,7 @@ class RecipeSearchService:
 
             matches.append(self._summary(row, recipe_ingredients, meta, raw_ingredients, include_substitutions))
 
-        return self.ranker.rank(matches, threshold)
+        return self._resolved.ranker.rank(matches, threshold)
 
     def get_by_id(self, recipe_id: int) -> RecipeDetail | None:
         with get_connection(self.database_path) as connection:
