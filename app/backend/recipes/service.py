@@ -9,6 +9,8 @@ from typing import Any
 from app.backend.config import (
     get_bm25_index_path,
     get_database_path,
+    get_embedder_engine,
+    get_embedding_model_name,
     get_match_threshold,
     get_ranker_model_path,
     get_ranking_mode,
@@ -155,6 +157,8 @@ def _components_key(database_path: Path | None) -> tuple[str, ...]:
         str(get_vector_ids_path()),
         str(get_bm25_index_path()),
         str(get_ranker_model_path()),
+        get_embedding_model_name(),
+        get_embedder_engine(),
     )
 
 

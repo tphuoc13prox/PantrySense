@@ -291,7 +291,7 @@ def run_ann(args: argparse.Namespace) -> dict[str, Any]:
 
     queries = sample_queries(args.queries, args.seed)
     embedder = IngredientEmbedder()
-    qvecs = embedder.embed_texts([build_query_representation(q) for q in queries]).astype(np.float32)
+    qvecs = embedder.embed_queries([build_query_representation(q) for q in queries]).astype(np.float32)
     k = args.k
 
     def timed_search(index: Any, label: str, params: dict[str, Any]) -> dict[str, Any]:
