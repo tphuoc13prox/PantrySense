@@ -32,9 +32,10 @@ import sqlite3
 import sys
 import time
 from collections import Counter, defaultdict
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -370,7 +371,7 @@ class QueryGroup:
     passes: list[bool]
     threshold: float
 
-    def passing(self) -> "QueryGroup":
+    def passing(self) -> QueryGroup:
         keep = [i for i, p in enumerate(self.passes) if p]
         return QueryGroup(
             self.qid,
