@@ -6,6 +6,11 @@ search path reads them instead of re-running the keyword regexes for every
 candidate. Re-run ``scripts/migrate_recipe_metadata.py`` whenever those
 modules change; ``metadata_fingerprint()`` is stored alongside the rows so a
 stale table can be detected.
+
+The ``recipe_source`` side table keeps what the dataset says beyond the stored
+ingredient list: its keywords and category, and the ingredient names past the
+first twelve. The dietary and allergen estimates read it; the setup pipeline
+and the migration script fill it from the source parquet.
 """
 from __future__ import annotations
 
@@ -52,6 +57,15 @@ CREATE TABLE IF NOT EXISTS recipe_metadata (
 )
 """
 
+CREATE_SOURCE_SQL = """
+CREATE TABLE IF NOT EXISTS recipe_source (
+    recipe_id INTEGER PRIMARY KEY,
+    keywords TEXT NOT NULL DEFAULT '[]',
+    category TEXT,
+    extra_ingredients TEXT NOT NULL DEFAULT '[]'
+)
+"""
+
 CREATE_INFO_SQL = """
 CREATE TABLE IF NOT EXISTS recipe_metadata_info (
     key TEXT PRIMARY KEY,
@@ -73,6 +87,11 @@ METADATA_SELECT_COLUMNS = ", ".join(
      "m.servings AS meta_servings", "m.nutrition_total AS meta_nutrition_total"]
     + [f"m.{name} AS meta_{name}" for name in NUTRIENTS]
 )
+# Source fields (alias ``s``, joined with SOURCE_JOIN) for computing metadata on the fly.
+SOURCE_SELECT_COLUMNS = (
+    "s.keywords AS src_keywords, s.category AS src_category, s.extra_ingredients AS src_extra_ingredients"
+)
+SOURCE_JOIN = "LEFT JOIN recipe_source s ON s.recipe_id = r.id"
 
 
 @dataclass
@@ -93,23 +112,35 @@ class RecipeMetadata:
         }
 
 
+def source_tags(keywords: list[str] | None, category: str | None) -> list[str]:
+    """Keywords plus the category: the tag list ``dietary`` takes."""
+    return [str(k) for k in (keywords or [])] + ([str(category)] if category else [])
+
+
 def compute_recipe_metadata(
     ingredients: list[str],
     servings: int | None,
     ingredient_details: list[dict[str, Any]] | None = None,
+    *,
+    title: str | None = None,
+    tags: list[str] | None = None,
+    extra_ingredients: list[str] | None = None,
 ) -> RecipeMetadata:
     """Run the dietary, allergen and nutrition estimators for one recipe.
 
     ``ingredient_details`` (the stored name/quantity/unit records) makes the
-    nutrition estimate use quantities; dietary tags and allergens only need names.
+    nutrition estimate use quantities. Dietary tags and allergens use the names
+    plus what else is known: the title, the source tags and the ingredients the
+    stored list cut off.
     """
-    tags = dietary.classify_recipe_dietary(ingredients)
-    allergens = dietary.detect_recipe_allergens(ingredients)
+    names = list(ingredients) + list(extra_ingredients or [])
+    dietary_tags = dietary.classify_recipe_dietary(names, title=title, tags=tags)
+    allergens = dietary.detect_recipe_allergens(names, title=title, tags=tags)
     nut = nutrition.calculate_recipe_nutrition(
         ingredients, servings=servings, ingredient_details=ingredient_details or None
     )
     return RecipeMetadata(
-        dietary_tags={str(k): bool(v) for k, v in tags.items()},
+        dietary_tags={str(k): bool(v) for k, v in dietary_tags.items()},
         allergens=[str(a) for a in allergens],
         servings=int(nut.get("servings") or 4),
         per_serving={k: float(nut.get("per_serving", {}).get(k, 0.0)) for k in NUTRIENTS},
@@ -131,6 +162,25 @@ def metadata_from_row(row: sqlite3.Row) -> RecipeMetadata | None:
     )
 
 
+def metadata_for_row(row: sqlite3.Row) -> RecipeMetadata:
+    """Stored metadata for a search row, or computed from its fields when absent.
+
+    The row needs ``title``, ``ingredients``, ``ingredient_details``, ``servings``,
+    METADATA_SELECT_COLUMNS and SOURCE_SELECT_COLUMNS.
+    """
+    meta = metadata_from_row(row)
+    if meta is not None:
+        return meta
+    return compute_recipe_metadata(
+        json.loads(row["ingredients"] or "[]"),
+        row["servings"],
+        json.loads(row["ingredient_details"] or "[]"),
+        title=row["title"],
+        tags=source_tags(json.loads(row["src_keywords"] or "[]"), row["src_category"]),
+        extra_ingredients=json.loads(row["src_extra_ingredients"] or "[]"),
+    )
+
+
 def metadata_fingerprint() -> str:
     """Hash of the estimator sources and of how they are called; changes with either."""
     digest = hashlib.sha256()
@@ -144,7 +194,45 @@ def metadata_fingerprint() -> str:
 
 def ensure_metadata_tables(connection: sqlite3.Connection) -> None:
     connection.execute(CREATE_METADATA_SQL)
+    connection.execute(CREATE_SOURCE_SQL)
     connection.execute(CREATE_INFO_SQL)
+
+
+@dataclass
+class RecipeSource:
+    keywords: list[str] = field(default_factory=list)
+    category: str | None = None
+    extra_ingredients: list[str] = field(default_factory=list)
+
+
+def store_recipe_sources(
+    database_path: Path | None,
+    sources: dict[str, RecipeSource],
+    skip_titles: Iterable[str] = (),
+) -> int:
+    """Replace ``recipe_source`` with ``sources`` (keyed by lower-cased title).
+
+    Titles in ``skip_titles`` (curated recipes that did not come from the
+    dataset) are left out. Returns the number of rows written.
+    """
+    skip = {t.strip().lower() for t in skip_titles}
+    with get_connection(database_path) as conn:
+        ensure_metadata_tables(conn)
+        records = []
+        for recipe_id, title in conn.execute("SELECT id, title FROM recipes").fetchall():
+            key = str(title).strip().lower()
+            src = sources.get(key)
+            if src is None or key in skip:
+                continue
+            records.append((int(recipe_id), json.dumps(src.keywords), src.category,
+                            json.dumps(src.extra_ingredients)))
+        conn.execute("DELETE FROM recipe_source")
+        conn.executemany(
+            "INSERT INTO recipe_source (recipe_id, keywords, category, extra_ingredients) VALUES (?, ?, ?, ?)",
+            records,
+        )
+        conn.commit()
+    return len(records)
 
 
 def metadata_record(recipe_id: int, meta: RecipeMetadata) -> tuple[Any, ...]:
@@ -157,19 +245,36 @@ def metadata_record(recipe_id: int, meta: RecipeMetadata) -> tuple[Any, ...]:
     )
 
 
-def _compute_batch(rows: list[tuple[int, str, int | None, str | None]]) -> list[tuple[Any, ...]]:
-    out = []
-    for recipe_id, ingredients_json, servings, details_json in rows:
-        ingredients = json.loads(ingredients_json or "[]")
-        details = json.loads(details_json or "[]")
-        out.append(metadata_record(recipe_id, compute_recipe_metadata(ingredients, servings, details)))
-    return out
+# id, ingredients, servings, ingredient_details, title, keywords, category, extra_ingredients
+_BatchRow = tuple[int, str, int | None, str | None, str, str | None, str | None, str | None]
+_BATCH_SELECT = (
+    "SELECT r.id, r.ingredients, r.servings, r.ingredient_details, r.title, "
+    f"s.keywords, s.category, s.extra_ingredients FROM recipes r {SOURCE_JOIN}"
+)
 
 
-def _iter_batches(
-    connection: sqlite3.Connection, only_missing: bool, batch_size: int
-) -> Iterator[list[tuple[int, str, int | None, str | None]]]:
-    sql = "SELECT r.id, r.ingredients, r.servings, r.ingredient_details FROM recipes r"
+def _metadata_from_batch_row(row: _BatchRow) -> RecipeMetadata:
+    _, ingredients_json, servings, details_json, title, keywords, category, extra = row
+    return compute_recipe_metadata(
+        json.loads(ingredients_json or "[]"),
+        servings,
+        json.loads(details_json or "[]"),
+        title=title,
+        tags=source_tags(json.loads(keywords or "[]"), category),
+        extra_ingredients=json.loads(extra or "[]"),
+    )
+
+
+def _compute_batch(rows: list[_BatchRow]) -> list[tuple[Any, ...]]:
+    return [metadata_record(row[0], _metadata_from_batch_row(row)) for row in rows]
+
+
+def _batch_row(r: Any) -> _BatchRow:
+    return (int(r[0]), r[1], r[2], r[3], r[4], r[5], r[6], r[7])
+
+
+def _iter_batches(connection: sqlite3.Connection, only_missing: bool, batch_size: int) -> Iterator[list[_BatchRow]]:
+    sql = _BATCH_SELECT
     if only_missing:
         sql += " LEFT JOIN recipe_metadata m ON m.recipe_id = r.id WHERE m.recipe_id IS NULL"
     sql += " ORDER BY r.id"
@@ -178,7 +283,7 @@ def _iter_batches(
         chunk = cursor.fetchmany(batch_size)
         if not chunk:
             return
-        yield [(int(r[0]), r[1], r[2], r[3]) for r in chunk]
+        yield [_batch_row(r) for r in chunk]
 
 
 def populate_recipe_metadata(
@@ -212,7 +317,7 @@ def populate_recipe_metadata(
     read_conn = get_connection(database_path)
     write_conn = get_connection(database_path)
     try:
-        batches: Iterable[list[tuple[int, str, int | None, str | None]]] = _iter_batches(
+        batches: Iterable[list[_BatchRow]] = _iter_batches(
             read_conn, only_missing, batch_size
         )
         if only_missing:
@@ -291,6 +396,18 @@ def backfill_small_gaps(database_path: Path | None = None) -> int:
     return 0
 
 
+def _compute_missing(conn: sqlite3.Connection, recipe_ids: list[int]) -> dict[int, RecipeMetadata]:
+    """Metadata computed in memory for recipes without a stored row."""
+    out: dict[int, RecipeMetadata] = {}
+    for start in range(0, len(recipe_ids), 500):
+        chunk = recipe_ids[start:start + 500]
+        placeholders = ",".join("?" for _ in chunk)
+        for r in conn.execute(f"{_BATCH_SELECT} WHERE r.id IN ({placeholders})", chunk).fetchall():
+            row = _batch_row(r)
+            out[row[0]] = _metadata_from_batch_row(row)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # In-memory filter index
 # ---------------------------------------------------------------------------
@@ -348,6 +465,7 @@ class MetadataIndex:
                 ORDER BY r.id
                 """
             ).fetchall()
+            missing_meta = _compute_missing(conn, [int(row[0]) for row in rows if row[5] is None])
 
         n = len(rows)
         ids = np.empty(n, dtype=np.int64)
@@ -384,7 +502,7 @@ class MetadataIndex:
 
             if row[5] is None:
                 missing += 1
-                meta = compute_recipe_metadata(json.loads(row[3] or "[]"), row[4])
+                meta = missing_meta[int(row[0])]
                 for flag in DIETARY_FLAGS:
                     flags[flag][i] = bool(meta.dietary_tags.get(flag, False))
                 bits[i] = allergen_mask(meta.allergens)

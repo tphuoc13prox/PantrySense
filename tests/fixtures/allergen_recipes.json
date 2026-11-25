@@ -1119,7 +1119,8 @@
   },
   "corrections": [
    "'oyster sauce' was left unlabelled in the first pass; relabelled as shellfish / non-vegetarian after review. All metrics in docs/nutrition_dietary.md use the corrected labels."
-  ]
+  ],
+  "dish_labels": "dish_vegetarian / dish_vegan describe the dish, read from the title as well: the ingredient-level vegetarian / vegan labels miss a protein the source left out of the ingredient list (8 recipes, e.g. 'Miso Salmon & Spinach', 'Chesapeake Crab Quiche'). keywords, source_category and extra_ingredients (names past the stored twelve) come from data/food_recipes.parquet, first row of each title."
  },
  "recipes": [
   {
@@ -1144,7 +1145,18 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Rice",
+    "Asian",
+    "Brunch",
+    "< 60 Mins",
+    "Easy"
+   ],
+   "source_category": "White Rice",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 1932,
@@ -1164,7 +1176,21 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Chicken",
+    "Poultry",
+    "Meat",
+    "Very Low Carbs",
+    "Broil/Grill",
+    "< 15 Mins",
+    "For Large Groups",
+    "Oven"
+   ],
+   "source_category": "Whole Chicken",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 46657,
@@ -1185,7 +1211,22 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Cookie & Brownie",
+    "Grains",
+    "Australian",
+    "European",
+    "Free Of...",
+    "Weeknight",
+    "Brunch",
+    "Oven",
+    "< 4 Hours"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 135114,
@@ -1210,7 +1251,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "One Dish Meal",
+    "Chicken Breast",
+    "Chicken",
+    "Poultry",
+    "Meat",
+    "< 60 Mins",
+    "Easy"
+   ],
+   "source_category": "Savory Pies",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 286499,
@@ -1236,7 +1290,18 @@
     "soy"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Dessert",
+    "Cookie & Brownie",
+    "Vegan",
+    "< 30 Mins",
+    "Easy"
+   ],
+   "source_category": "Drop Cookies",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 300936,
@@ -1259,7 +1324,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "European",
+    "Vegan",
+    "< 4 Hours"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 74141,
@@ -1283,7 +1357,18 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Meat",
+    "< 60 Mins",
+    "Beginner Cook",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "One Dish Meal",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 213467,
@@ -1309,7 +1394,17 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Summer",
+    "< 60 Mins"
+   ],
+   "source_category": "Meat",
+   "extra_ingredients": [
+    "pickles"
+   ],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 236720,
@@ -1331,7 +1426,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Healthy",
+    "< 60 Mins",
+    "Easy"
+   ],
+   "source_category": "Low Cholesterol",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 302470,
@@ -1357,7 +1461,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Greens",
+    "Vegetable",
+    "< 30 Mins"
+   ],
+   "source_category": "Spinach",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 98093,
@@ -1382,7 +1495,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Brunch",
+    "< 30 Mins",
+    "Easy"
+   ],
+   "source_category": "Fruit",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 29800,
@@ -1401,7 +1523,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Low Protein",
+    "Low Cholesterol",
+    "Healthy",
+    "Potluck",
+    "< 15 Mins",
+    "No Cook",
+    "Easy"
+   ],
+   "source_category": "Fruit",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 3349,
@@ -1426,7 +1561,19 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Rice",
+    "Asian",
+    "Indian",
+    "< 30 Mins"
+   ],
+   "source_category": "Brown Rice",
+   "extra_ingredients": [
+    "saffron"
+   ],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 272803,
@@ -1449,7 +1596,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Asian",
+    "< 30 Mins",
+    "Easy"
+   ],
+   "source_category": "Curries",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 248742,
@@ -1475,7 +1631,12 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [],
+   "source_category": null,
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 36873,
@@ -1501,7 +1662,23 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Christmas",
+    "Weeknight"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [
+    "golden brown sugar",
+    "eggs",
+    "vanilla extract",
+    "ground cardamom",
+    "ground nutmeg",
+    "salt",
+    "all-purpose flour"
+   ],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 46037,
@@ -1524,7 +1701,18 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Fruit",
+    "Nuts",
+    "Sweet",
+    "< 60 Mins",
+    "Oven"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 191274,
@@ -1552,7 +1740,21 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Quick Breads",
+    "Breads",
+    "Breakfast",
+    "Coconut",
+    "Fruit",
+    "Nuts",
+    "Brunch",
+    "< 60 Mins"
+   ],
+   "source_category": "Scones",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 160983,
@@ -1578,7 +1780,24 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Vegetable",
+    "European",
+    "Low Protein",
+    "Low Cholesterol",
+    "Healthy",
+    "Kosher",
+    "Savory",
+    "< 30 Mins",
+    "Stove Top",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Cauliflower",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 101088,
@@ -1600,7 +1819,22 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "Dessert",
+    "Lemon",
+    "Oranges",
+    "Citrus",
+    "Fruit",
+    "Low Protein",
+    "Healthy",
+    "Sweet",
+    "Easy"
+   ],
+   "source_category": "Pie",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 9624,
@@ -1622,7 +1856,19 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "< 15 Mins",
+    "Beginner Cook",
+    "Stove Top",
+    "Stir Fry",
+    "Oysters",
+    "Easy"
+   ],
+   "source_category": "Lunch/Snacks",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 281912,
@@ -1646,7 +1892,17 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "< 30 Mins",
+    "Beginner Cook",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Asian",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 295550,
@@ -1673,7 +1929,25 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Beans",
+    "Vegetable",
+    "Lactose Free",
+    "Free Of...",
+    "Savory",
+    "Oven",
+    "Small Appliance",
+    "< 4 Hours",
+    "Inexpensive"
+   ],
+   "source_category": "Savory Pies",
+   "extra_ingredients": [
+    "thyme",
+    "savory"
+   ],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 200870,
@@ -1693,7 +1967,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "Southwest Asia (middle East)",
+    "Asian",
+    "Vegan",
+    "< 15 Mins",
+    "Beginner Cook",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Beans",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 305008,
@@ -1714,7 +2001,22 @@
     "soy"
    ],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Chicken",
+    "Poultry",
+    "Meat",
+    "Potluck",
+    "Summer",
+    "< 60 Mins",
+    "Beginner Cook",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Chicken Thigh & Leg",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 137974,
@@ -1738,7 +2040,18 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "< 15 Mins",
+    "Refrigerator",
+    "Beginner Cook",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Summer",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 265380,
@@ -1761,7 +2074,17 @@
     "soy"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Toddler Friendly",
+    "Kid Friendly",
+    "< 15 Mins",
+    "Easy"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 46871,
@@ -1778,7 +2101,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "< 30 Mins",
+    "For Large Groups",
+    "Easy"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 283826,
@@ -1796,7 +2128,19 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Strawberry",
+    "Berries",
+    "Fruit",
+    "< 60 Mins",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 142005,
@@ -1815,7 +2159,21 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "Cookie & Brownie",
+    "Lactose Free",
+    "Vegan",
+    "Egg Free",
+    "Free Of...",
+    "< 30 Mins",
+    "Beginner Cook",
+    "Easy"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 93719,
@@ -1837,7 +2195,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "Greens",
+    "Vegetable",
+    "Free Of...",
+    "Thanksgiving",
+    "< 30 Mins",
+    "Stove Top",
+    "Inexpensive"
+   ],
+   "source_category": "Cauliflower",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 233864,
@@ -1857,7 +2228,15 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "< 30 Mins",
+    "Easy"
+   ],
+   "source_category": "Very Low Carbs",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 267192,
@@ -1878,7 +2257,12 @@
     "gluten"
    ],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [],
+   "source_category": "< 30 Mins",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 204025,
@@ -1904,7 +2288,21 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Vegetable",
+    "Meat",
+    "< 30 Mins"
+   ],
+   "source_category": "Pork",
+   "extra_ingredients": [
+    "baking powder",
+    "salt",
+    "milk",
+    "water"
+   ],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 148228,
@@ -1930,7 +2328,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Meat",
+    "Asian",
+    "< 4 Hours"
+   ],
+   "source_category": "Lunch/Snacks",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 108605,
@@ -1956,7 +2363,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Vegetable",
+    "Brunch",
+    "Refrigerator",
+    "< 4 Hours",
+    "Easy"
+   ],
+   "source_category": "Pasta Shells",
+   "extra_ingredients": [
+    "parmesan cheese"
+   ],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 258630,
@@ -1984,7 +2404,29 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Lunch/Snacks",
+    "Chicken Breast",
+    "Chicken",
+    "Poultry",
+    "Greens",
+    "Vegetable",
+    "Meat",
+    "Austrian",
+    "Belgian",
+    "European",
+    "Kid Friendly",
+    "Brunch",
+    "< 60 Mins",
+    "Inexpensive"
+   ],
+   "source_category": "One Dish Meal",
+   "extra_ingredients": [
+    "lemon wedge"
+   ],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 252924,
@@ -2004,7 +2446,16 @@
     "gluten"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Dessert",
+    "Cookie & Brownie",
+    "< 4 Hours"
+   ],
+   "source_category": "Bar Cookie",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 110174,
@@ -2032,7 +2483,20 @@
     "soy"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Dessert",
+    "Cookie & Brownie",
+    "Grains",
+    "Kid Friendly",
+    "< 30 Mins",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Drop Cookies",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 85554,
@@ -2057,7 +2521,24 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Onions",
+    "Fruit",
+    "Vegetable",
+    "Sweet",
+    "< 60 Mins",
+    "Stove Top"
+   ],
+   "source_category": "Pears",
+   "extra_ingredients": [
+    "crystallized ginger",
+    "salt",
+    "sherry wine",
+    "spicy roasted butternut"
+   ],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 15134,
@@ -2085,7 +2566,17 @@
     "soy"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Kosher",
+    "Weeknight",
+    "Oven",
+    "< 4 Hours"
+   ],
+   "source_category": "Vegetable",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 156083,
@@ -2110,7 +2601,15 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Asian",
+    "< 30 Mins"
+   ],
+   "source_category": "Thai",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 284793,
@@ -2124,7 +2623,19 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "European",
+    "Kid Friendly",
+    "Savory",
+    "< 4 Hours",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Vegetable",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 257196,
@@ -2149,7 +2660,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Iraqi",
+    "Turkish",
+    "Southwest Asia (middle East)",
+    "Asian",
+    "Low Protein",
+    "< 60 Mins",
+    "Easy"
+   ],
+   "source_category": "Vegetable",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 221211,
@@ -2172,7 +2696,21 @@
     "gluten"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Lemon",
+    "Citrus",
+    "Fruit",
+    "Lactose Free",
+    "Low Cholesterol",
+    "Free Of...",
+    "< 15 Mins",
+    "Easy"
+   ],
+   "source_category": "Salad Dressings",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 263958,
@@ -2200,7 +2738,20 @@
     "soy"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Spinach",
+    "Greens",
+    "Vegetable",
+    "< 4 Hours"
+   ],
+   "source_category": "Manicotti",
+   "extra_ingredients": [
+    "fresh spinach",
+    "ground nutmeg"
+   ],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 221983,
@@ -2227,7 +2778,19 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Fruit",
+    "Nuts",
+    "Sweet",
+    "< 4 Hours"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [
+    "cornstarch"
+   ],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 283927,
@@ -2249,7 +2812,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Healthy",
+    "< 15 Mins",
+    "Easy"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 235507,
@@ -2272,7 +2844,15 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "< 30 Mins",
+    "Easy"
+   ],
+   "source_category": "Fruit",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 115130,
@@ -2292,7 +2872,18 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Meat",
+    "High Protein",
+    "High In...",
+    "< 30 Mins",
+    "Easy"
+   ],
+   "source_category": "Pork",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 173930,
@@ -2308,7 +2899,18 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Potato",
+    "Vegetable",
+    "Meat",
+    "European",
+    "< 60 Mins"
+   ],
+   "source_category": "One Dish Meal",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 105527,
@@ -2336,7 +2938,22 @@
     "soy"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Vegetable",
+    "Nuts",
+    "Southwest Asia (middle East)",
+    "Asian",
+    "< 30 Mins",
+    "Stove Top",
+    "Easy"
+   ],
+   "source_category": "Fruit",
+   "extra_ingredients": [
+    "eggs"
+   ],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 99027,
@@ -2359,7 +2976,14 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "< 4 Hours"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 67957,
@@ -2375,7 +2999,22 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "Lemon",
+    "Oranges",
+    "Citrus",
+    "Fruit",
+    "Summer",
+    "Brunch",
+    "< 15 Mins",
+    "Stove Top",
+    "Easy"
+   ],
+   "source_category": "Beverages",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 109617,
@@ -2398,7 +3037,17 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Greek",
+    "European",
+    "< 60 Mins",
+    "Easy"
+   ],
+   "source_category": "Vegetable",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 270752,
@@ -2426,7 +3075,20 @@
     "soy"
    ],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Grains",
+    "Apple",
+    "Fruit",
+    "Microwave",
+    "< 30 Mins",
+    "Beginner Cook",
+    "Easy"
+   ],
+   "source_category": "One Dish Meal",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 218622,
@@ -2446,7 +3108,15 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Christmas",
+    "< 15 Mins"
+   ],
+   "source_category": "Beverages",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 106182,
@@ -2466,7 +3136,16 @@
     "soy"
    ],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Dessert",
+    "< 30 Mins",
+    "Easy"
+   ],
+   "source_category": "Candy",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 41999,
@@ -2487,7 +3166,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "One Dish Meal",
+    "Breakfast",
+    "Crab",
+    "Cheese",
+    "< 60 Mins",
+    "Oven",
+    "Easy"
+   ],
+   "source_category": "Savory Pies",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 229280,
@@ -2507,7 +3199,14 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Easy"
+   ],
+   "source_category": "< 4 Hours",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 91530,
@@ -2524,7 +3223,14 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "< 4 Hours"
+   ],
+   "source_category": "Meat",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 237415,
@@ -2549,7 +3255,19 @@
     "soy"
    ],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Dessert",
+    "Lunch/Snacks",
+    "Sweet",
+    "< 30 Mins",
+    "For Large Groups",
+    "Easy"
+   ],
+   "source_category": "Candy",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 213961,
@@ -2575,7 +3293,22 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Corn",
+    "Vegetable",
+    "< 60 Mins",
+    "Beginner Cook",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Tuna",
+   "extra_ingredients": [
+    "dijon mustard",
+    "green onion"
+   ],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 268912,
@@ -2599,7 +3332,22 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "White Rice",
+    "Long Grain Rice",
+    "Medium Grain Rice",
+    "Rice",
+    "Thai",
+    "Asian",
+    "< 60 Mins",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Clear Soup",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 60157,
@@ -2623,7 +3371,25 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Dessert",
+    "Fruit",
+    "Nuts",
+    "Summer",
+    "Winter",
+    "Christmas",
+    "Hanukkah",
+    "Thanksgiving",
+    "Sweet",
+    "Weeknight",
+    "Oven",
+    "< 4 Hours"
+   ],
+   "source_category": "Pie",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 254133,
@@ -2648,7 +3414,19 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Cookie & Brownie",
+    "Healthy",
+    "Potluck",
+    "Sweet",
+    "< 30 Mins",
+    "For Large Groups"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 17840,
@@ -2675,7 +3453,25 @@
     "soy"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Vegetable",
+    "Canadian",
+    "Low Cholesterol",
+    "Healthy",
+    "Kosher",
+    "Free Of...",
+    "< 60 Mins",
+    "Beginner Cook",
+    "Stove Top",
+    "Easy"
+   ],
+   "source_category": "Chowders",
+   "extra_ingredients": [
+    "cod"
+   ],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 266092,
@@ -2698,7 +3494,18 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Lunch/Snacks",
+    "Grains",
+    "Vegetable",
+    "Healthy",
+    "< 60 Mins"
+   ],
+   "source_category": "Breads",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 227957,
@@ -2714,7 +3521,22 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Shakes",
+    "Beverages",
+    "European",
+    "Low Protein",
+    "Low Cholesterol",
+    "Sweet",
+    "Mixer",
+    "< 15 Mins",
+    "Small Appliance"
+   ],
+   "source_category": "Smoothies",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 313964,
@@ -2729,7 +3551,14 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Meat"
+   ],
+   "source_category": "Roast Beef",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 53232,
@@ -2754,7 +3583,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Breads",
+    "Low Cholesterol",
+    "Healthy",
+    "Weeknight",
+    "Oven",
+    "Deep Fried",
+    "< 4 Hours"
+   ],
+   "source_category": "Yeast Breads",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 18743,
@@ -2774,7 +3616,17 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Southwest Asia (middle East)",
+    "Asian",
+    "< 15 Mins",
+    "Easy"
+   ],
+   "source_category": "Vegetable",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 270685,
@@ -2795,7 +3647,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Grains",
+    "Toddler Friendly",
+    "Healthy",
+    "Kid Friendly",
+    "For Large Groups",
+    "< 4 Hours",
+    "Easy"
+   ],
+   "source_category": "Breads",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 118003,
@@ -2821,7 +3686,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Meat",
+    "Very Low Carbs",
+    "High Protein",
+    "High In...",
+    "Savory",
+    "< 30 Mins",
+    "Easy"
+   ],
+   "source_category": "Pork",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 306704,
@@ -2845,7 +3723,18 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Cheese",
+    "Australian",
+    "Savory",
+    "Brunch",
+    "< 60 Mins"
+   ],
+   "source_category": "Savory Pies",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 200044,
@@ -2863,7 +3752,15 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "< 60 Mins",
+    "Easy"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 272487,
@@ -2882,7 +3779,19 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Dessert",
+    "Cookie & Brownie",
+    "Oranges",
+    "Citrus",
+    "Fruit",
+    "< 60 Mins"
+   ],
+   "source_category": "Bar Cookie",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 91243,
@@ -2904,7 +3813,14 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Oven"
+   ],
+   "source_category": "< 60 Mins",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 78468,
@@ -2922,7 +3838,19 @@
     "eggs"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Beverages",
+    "Free Of...",
+    "St. Patrick's Day",
+    "< 15 Mins",
+    "Small Appliance",
+    "Easy"
+   ],
+   "source_category": "Shakes",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 257752,
@@ -2945,7 +3873,27 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Chicken",
+    "Pork",
+    "Poultry",
+    "Meat",
+    "European",
+    "Lactose Free",
+    "Low Cholesterol",
+    "Free Of...",
+    "< 60 Mins",
+    "Beginner Cook",
+    "Easy"
+   ],
+   "source_category": "Chicken Breast",
+   "extra_ingredients": [
+    "orzo pasta",
+    "pesto sauce"
+   ],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 177898,
@@ -2969,7 +3917,24 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Citrus",
+    "Fruit",
+    "European",
+    "Very Low Carbs",
+    "High Protein",
+    "Kid Friendly",
+    "High In...",
+    "< 15 Mins",
+    "Beginner Cook",
+    "Stove Top",
+    "Easy"
+   ],
+   "source_category": "Lemon",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 19358,
@@ -2989,7 +3954,15 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "< 15 Mins",
+    "Easy"
+   ],
+   "source_category": "Salad Dressings",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 144258,
@@ -3016,7 +3989,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Cookie & Brownie",
+    "Kid Friendly",
+    "< 60 Mins"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 222027,
@@ -3042,7 +4024,20 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Lunch/Snacks",
+    "Cookie & Brownie",
+    "Winter",
+    "Christmas",
+    "Sweet",
+    "Oven",
+    "Refrigerator"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 211931,
@@ -3067,7 +4062,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Fruit",
+    "Healthy",
+    "< 60 Mins"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 194341,
@@ -3081,7 +4085,15 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "< 15 Mins",
+    "Easy"
+   ],
+   "source_category": "Beverages",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 275738,
@@ -3106,7 +4118,12 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [],
+   "source_category": "< 60 Mins",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 179065,
@@ -3133,7 +4150,18 @@
     "soy"
    ],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Dessert",
+    "Mixer",
+    "Oven",
+    "Small Appliance",
+    "< 4 Hours"
+   ],
+   "source_category": "Cheesecake",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 48974,
@@ -3156,7 +4184,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Refrigerator",
+    "Stove Top",
+    "Small Appliance"
+   ],
+   "source_category": "< 60 Mins",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 4830,
@@ -3175,7 +4212,18 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "Southwestern U.S.",
+    "Mexican",
+    "Vegan",
+    "Low Cholesterol",
+    "< 15 Mins"
+   ],
+   "source_category": "Breads",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 49146,
@@ -3193,7 +4241,20 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "Lime",
+    "Oranges",
+    "Citrus",
+    "Fruit",
+    "Vegan",
+    "Brunch",
+    "< 15 Mins"
+   ],
+   "source_category": "Beverages",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 76299,
@@ -3217,7 +4278,12 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [],
+   "source_category": "< 30 Mins",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 301581,
@@ -3236,7 +4302,27 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Dessert",
+    "Apple",
+    "Fruit",
+    "Low Protein",
+    "Low Cholesterol",
+    "Toddler Friendly",
+    "Healthy",
+    "Kid Friendly",
+    "Sweet",
+    "Brunch",
+    "< 60 Mins",
+    "Beginner Cook",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Breakfast",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 150952,
@@ -3259,7 +4345,17 @@
     "soy"
    ],
    "vegetarian": false,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Tuna",
+    "High Protein",
+    "High In...",
+    "< 30 Mins"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 131536,
@@ -3282,7 +4378,15 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Kid Friendly",
+    "< 60 Mins"
+   ],
+   "source_category": "Dessert",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 239744,
@@ -3304,7 +4408,16 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Free Of...",
+    "High In...",
+    "< 30 Mins"
+   ],
+   "source_category": "Breakfast",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 305065,
@@ -3323,7 +4436,19 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "High Protein",
+    "High In...",
+    "Weeknight",
+    "< 30 Mins",
+    "Easy",
+    "Inexpensive"
+   ],
+   "source_category": "Very Low Carbs",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   },
   {
    "id": 282791,
@@ -3347,7 +4472,15 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "Vegan",
+    "< 4 Hours"
+   ],
+   "source_category": "Vegetable",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": true
   },
   {
    "id": 41870,
@@ -3370,7 +4503,17 @@
    ],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": false
+   "vegan": false,
+   "keywords": [
+    "Kid Friendly",
+    "Winter",
+    "< 60 Mins",
+    "Oven"
+   ],
+   "source_category": "Breakfast",
+   "extra_ingredients": [],
+   "dish_vegetarian": true,
+   "dish_vegan": false
   },
   {
    "id": 112103,
@@ -3390,7 +4533,22 @@
    "allergens_contains": [],
    "allergens_may_contain": [],
    "vegetarian": true,
-   "vegan": true
+   "vegan": true,
+   "keywords": [
+    "Meat",
+    "New Zealand",
+    "Lactose Free",
+    "Free Of...",
+    "Spring",
+    "Summer",
+    "Savory",
+    "< 60 Mins",
+    "Easy"
+   ],
+   "source_category": "Pork",
+   "extra_ingredients": [],
+   "dish_vegetarian": false,
+   "dish_vegan": false
   }
  ]
 }

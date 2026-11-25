@@ -13,7 +13,9 @@ substitute for reading labels.
 """
 from __future__ import annotations
 
+import html
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -60,7 +62,7 @@ _r("cream of tartar|eggplant|egg replacer|eggless|nutmeg|butternut|butternut squ
    "butter lettuce|butterhead lettuce|water chestnut|coconut|coconut water|coconut oil|coconut flour|"
    "nutritional yeast|cocoa butter|shea butter|apple butter|pumpkin butter|fruit butter|creme de cacao|"
    "creme de menthe|green creme de|white creme de|cream soda|kidney bean|crab apple|oyster mushroom|"
-   "lobster mushroom|chicken of the woods|hen of the woods|sweetbread|ginger ale|root beer|"
+   "lobster mushroom|chicken of the woods|hen of the woods|ginger ale|root beer|"
    "milk thistle|milkweed|buckwheat|rice flour|corn flour|cornflour|tapioca flour|potato flour|"
    "chickpea flour|cassava flour|teff flour|sorghum flour|millet flour|coconut flour|masa harina|"
    "corn tortilla|rice noodle|rice vermicelli|glass noodle|cellophane noodle|bean thread|shirataki|"
@@ -70,7 +72,17 @@ _r("cream of tartar|eggplant|egg replacer|eggless|nutmeg|butternut|butternut squ
    "unsweetened coconut milk|lite coconut milk|rice milk|hemp milk|flax milk|pea milk|"
    "vegan sugar|sugar snap|seitan-free|peanut-free|nut-free|tree nut-free|coconut butter|"
    "coconut creamer|coconut whipped cream|artichoke heart|hearts of palm|heart of palm|palm heart|"
-   "celery heart|romaine heart|duck sauce|chicken-fried|beefsteak tomato|sweet potato|jackfruit")
+   "celery heart|romaine heart|duck sauce|chicken-fried|beefsteak tomato|sweet potato|jackfruit|"
+   "coconut meat|nut meat|pate a choux|pate brisee|pate sucree|chocolate salami|angel wing|"
+   "tonkatsu sauce|katsu sauce|sloppy joe sauce|sloppy joe seasoning|burger bun|burger roll")
+# Fruit butters are cooked-down fruit.
+_r("peach butter|pear butter|plum butter|apricot butter|cherry butter|berry butter|raspberry butter|"
+   "strawberry butter|blueberry butter|blackberry butter|cranberry butter|mango butter|fig butter|"
+   "quince butter|banana butter|date butter|persimmon butter|rhubarb butter")
+_r("sweetbread", nv=True)
+# Breaded products that the generic gluten list would otherwise swallow whole.
+_r("fish stick|fish finger|fish fillet sandwich", contains="fish gluten", nv=True, carb=True)
+_r("chicken nugget|chicken tender|chicken finger|corn dog", contains="gluten", nv=True, carb=True)
 _r("celery rib|celery stalk|celery heart|rib of celery|rhubarb stalk")
 _r("stuffing|stuffing mix|herb seasoned stuffing|crouton|garlic crouton|seasoned crouton", contains="gluten",
    may="dairy", nvg=True, carb=True)
@@ -165,7 +177,7 @@ _r("flour|all-purpose flour|all purpose flour|plain flour|bread flour|cake flour
    "dumpling|egg roll wrapper|spring roll wrapper|phyllo|filo|puff pastry|pastry|pie crust|pie shell|"
    "pizza dough|pizza crust|dough|cake|cake mix|brownie|brownie mix|cookie|cookie dough|wafer|"
    "pretzel|cereal|bran|bran flake|granola|beer|ale|lager|stout|bisquick|baking mix|pancake mix|"
-   "waffle|pancake|batter|roux|breading|cornbread|hush puppy|fish stick|chicken nugget|"
+   "waffle|pancake|batter|roux|breading|cornbread|hush puppy|"
    "ladyfinger|lady finger|sponge cake|angel food|graham cracker crust|cracker crumb|cookie crumb|"
    "oreo|vanilla wafer|gingersnap|biscotti|tempura", contains="gluten", carb=True)
 _r("oat|oats|rolled oat|oatmeal|old fashioned oat|old-fashioned oat|quick-cooking oat|quick oat|"
@@ -193,7 +205,17 @@ _r("chicken|turkey|duck|goose|quail|pheasant|cornish hen|poultry|beef|steak|veal
    "kidneys|tongue|tripe|gizzard|giblet|heart|bone marrow|marrow bone|lard|suet|tallow|drippings|"
    "bacon grease|bacon fat|duck fat|schmaltz|gelatin|gelatine|jello|jell-o|aspic|marshmallow|"
    "bouillon|broth|stock|consomme|bone broth|demi-glace|pate|bacon bit|chicharron|cracklings|"
-   "roast|pot roast|rump roast|london broil|cutlet|drumstick|wing|thigh|breast", nv=True)
+   "roast|pot roast|rump roast|london broil|cutlet|drumstick|wing|thigh|breast|rib|prime rib|rib roast|"
+   "sparerib|spareribs|baby back|cheeseburger|loin|shank|flank|ground round|"
+   "grouse|partridge|guinea fowl|squab|capon|poussin|ostrich|emu|kangaroo|alligator|frog leg|turtle soup|"
+   "turtle meat|bear meat|curried goat|goat curry|game hen|wild game|haggis|scrapple|pemmican|"
+   "bolognese|carbonara|coq au vin|bouillabaisse|cioppino|jambalaya|carne|carnitas|barbacoa|al pastor|"
+   "birria|shepherd's pie|shepherds pie|cottage pie|stroganoff|bourguignon|bourguignonne|osso buco|"
+   "ossobuco|saltimbocca|schnitzel|gyro|shawarma|souvlaki|reuben|blt|sloppy joe|cassoulet|moussaka|"
+   "rendang|larb|bulgogi|galbi|kalbi|tonkatsu|katsu|yakitori|keema|kheema|nihari|rogan josh|"
+   "picadillo|ropa vieja|feijoada|lechon|sisig|pho|pad thai|tom yum", nv=True)
+_r("ceviche|sashimi|gravlax|kedgeree|bacalao|bacalhau|baccala|gefilte fish|lutefisk|fish taco|fish cake",
+   contains="fish", nv=True)
 _r("honey|honeycomb|bee pollen|royal jelly", nvg=True)
 _r("carmine|cochineal|shellac|isinglass|bone char", nvg=True)
 
@@ -264,20 +286,27 @@ def _normalize(text: str) -> str:
     return f" {text} "
 
 
-def analyze_ingredient(ingredient: str) -> IngredientFlags:
-    """Flags for one ingredient name or line."""
-    flags = IngredientFlags(ingredient=ingredient)
-    text = _normalize(ingredient)
+def _match_rules(text: str) -> list[Rule]:
+    """Rules that fire on normalized text, most specific first, each match blanked."""
+    matched = []
     for rule in RULES:
         if not rule.pattern.search(text):
             continue
+        matched.append(rule)
+        # Blank the match so generic rules do not fire on part of it.
+        text = rule.pattern.sub(lambda m: " " * len(m.group(0)), text)
+    return matched
+
+
+def analyze_ingredient(ingredient: str) -> IngredientFlags:
+    """Flags for one ingredient name or line."""
+    flags = IngredientFlags(ingredient=ingredient)
+    for rule in _match_rules(_normalize(ingredient)):
         flags.contains |= rule.contains
         flags.may_contain |= rule.may_contain
         flags.non_vegetarian |= rule.non_vegetarian
         flags.non_vegan |= rule.non_vegan
         flags.high_carb |= rule.high_carb
-        # Blank the match so generic rules do not fire on part of it.
-        text = rule.pattern.sub(lambda m: " " * len(m.group(0)), text)
 
     original = _normalize(ingredient)
     for pattern, removes, veg, vegan in _FREE_OF:
@@ -302,13 +331,226 @@ def analyze_ingredient(ingredient: str) -> IngredientFlags:
     return flags
 
 
-def _analyze_all(ingredients: list[str]) -> list[IngredientFlags]:
-    return [analyze_ingredient(str(i)) for i in ingredients if i and str(i).strip()]
+# ---------------------------------------------------------------------------
+# Recipe-level signals: the title, and Food.com keywords and category.
+#
+# Food.com drops ingredients it cannot link from its ingredient list, and the
+# main protein is often among them ("Coleman Prime Rib Roast" lists olive oil,
+# lemon juice, rosemary, garlic and pepper). The title and the source tags
+# still name it. They can only add flags, never remove ones the ingredients
+# raised.
+# ---------------------------------------------------------------------------
+
+ANIMAL_ALLERGENS = frozenset({"dairy", "eggs", "fish", "shellfish"})
+
+# Plants that stand in for meat in a named dish: "black bean burger",
+# "cauliflower steak", "tempeh bacon". Each form lists only the plants that make
+# a known vegetarian dish with it; "mushroom burger" and "potato bacon soup"
+# usually contain meat, so they are left out on purpose.
+_PROTEIN_SUBS = (
+    "tofu|tempeh|seitan|soy|soya|tvp|textured vegetable protein|quorn|tofurky|gardein|"
+    "morningstar|boca|wheat meat"
+)
+_PORTOBELLO = r"(?:portobello|portabella|portabello|portobella)(?:[\s-]+mushroom)?"
+_PLANT_FORMS: dict[str, str] = {
+    r"burgers?|patty|patties": (
+        "bean|black bean|white bean|kidney bean|pinto bean|lentil|chickpea|garbanzo|garbanzo bean|quinoa|"
+        f"{_PORTOBELLO}|veggie|vegetable|falafel|nut|walnut|oat|millet|rice|"
+        f"beet|beetroot|sweet potato|zucchini|eggplant|aubergine|cauliflower|spinach|carrot|{_PROTEIN_SUBS}"
+    ),
+    r"steaks?": (
+        f"cauliflower|cabbage|{_PORTOBELLO}|eggplant|aubergine|celeriac|"
+        f"squash|butternut|watermelon|beet|beetroot|{_PROTEIN_SUBS}"
+    ),
+    r"cutlets?": (
+        f"vegetable|veg|veggie|mixed vegetable|potato|aloo|beet|beetroot|lentil|dal|chana|bread|{_PROTEIN_SUBS}"
+    ),
+    r"meatballs?|meat balls?": (
+        f"lentil|eggplant|chickpea|black bean|bean|quinoa|veggie|vegetable|walnut|cauliflower|{_PROTEIN_SUBS}"
+    ),
+    r"sausages?|chorizo|hot dogs?|dogs?": f"carrot|veggie|{_PROTEIN_SUBS}",
+    r"bacon": f"coconut|eggplant|carrot|rice paper|shiitake|mushroom|{_PROTEIN_SUBS}",
+    r"jerky": f"mushroom|eggplant|coconut|banana|{_PROTEIN_SUBS}",
+    r"wings?": f"cauliflower|buffalo cauliflower|{_PROTEIN_SUBS}",
+    r"shepherd'?s pie|cottage pie|bolognese|sloppy joes?|stroganoff|bourguignon|carnitas|crumbles?|ground": (
+        f"lentil|veggie|vegetable|jackfruit|{_PROTEIN_SUBS}"
+    ),
+}
+_PLANT_FORM_PATTERNS = [
+    re.compile(rf"(?<![\w-])(?:{plants})[\s-]+(?:{forms})(?![\w-])") for forms, plants in _PLANT_FORMS.items()
+]
+
+# Title words that look like a rule but are not food: "heart healthy", what a
+# title says is absent ("no mayo", "gelatin-free"), and "roast" used as a verb
+# in front of another word ("roast potatoes").
+_TITLE_NOISE = [
+    re.compile(r"(?<![\w-])hearts?(?![\w-])"),
+    re.compile(r"(?<![\w-])(?:no|without|sans|minus)[\s-]+[\w']+"),
+    re.compile(r"[\w']+[\s-]*free(?![\w-])"),
+    re.compile(r"(?<![\w-])roast(?=\s+(?!with\b|for\b|in\b|and\b|dinner\b|recipe\b|ever\b|sandwich)[a-z])"),
+]
+
+# A qualifier covers the words after it up to the next separator: "vegan
+# chicken noodle soup" is vegan, "salmon with vegan pesto" is not.
+_TITLE_SEPARATORS = re.compile(
+    r"\s(?:with|w/|and|n|or|plus|over|on|in|served|topped|stuffed|filled|wrapped|for)\s|"
+    r"&|\+|,|;|:|/|\(|\)|\[|\]|\s-+\s"
+)
+_TITLE_QUALIFIERS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"(?<![\w-])(?:vegan|plant[\s-]*based)(?![\w-])"), "vegan"),
+    # "veggie" is left out: "veggie beef soup" is beef soup with vegetables.
+    (re.compile(r"(?<![\w-])(?:vegetarian|faux|fake)(?![\w-])"), "vegetarian"),
+    (re.compile(r"(?<![\w-])(?:meatless|meat[\s-]*free|no[\s-]*meat)(?![\w-])"), "meatless"),
+    (re.compile(r"(?<![\w-])(?:dairy[\s-]*free|non[\s-]*dairy|nondairy|milk[\s-]*free)(?![\w-])"), "dairy_free"),
+    (re.compile(r"(?<![\w-])(?:egg[\s-]*free|eggless|no[\s-]*eggs?)(?![\w-])"), "egg_free"),
+]
 
 
-def classify_recipe_dietary(ingredients: list[str]) -> dict[str, bool]:
-    """Dietary tags. A tag is False when any ingredient contains or may contain the item."""
-    flags = _analyze_all(ingredients)
+def _cleared_by(rule: Rule, qualifier: str) -> bool:
+    """Whether a qualifier in front of the rule's word rules it out."""
+    animal = rule.contains & ANIMAL_ALLERGENS
+    if qualifier == "vegan":
+        return rule.non_vegan
+    if qualifier == "vegetarian":
+        return rule.non_vegetarian or bool(animal & {"fish", "shellfish"})
+    if qualifier == "meatless":
+        return rule.non_vegetarian and not animal & {"fish", "shellfish"}
+    if qualifier == "dairy_free":
+        return animal == {"dairy"}
+    if qualifier == "egg_free":
+        return animal == {"eggs"}
+    return False
+
+
+def _title_segment_rules(segment: str) -> list[Rule]:
+    text = _normalize(segment)
+    hits = [(m.start(), kind) for pattern, kind in _TITLE_QUALIFIERS for m in pattern.finditer(text)]
+    for pattern in _PLANT_FORM_PATTERNS + _TITLE_NOISE:
+        text = pattern.sub(lambda m: " " * len(m.group(0)), text)
+    # Rules do not match across a hyphen; in a title "chicken-vegetable" is two words.
+    text = text.replace("-", " ")
+    if not hits:
+        return _match_rules(text)
+    start = min(pos for pos, _ in hits)
+    kinds = {kind for _, kind in hits}
+    after = [rule for rule in _match_rules(" " + text[start:])
+             if not any(_cleared_by(rule, kind) for kind in kinds)]
+    return _match_rules(text[:start] + " ") + after
+
+
+def _title_wide_removals(text: str) -> set[str]:
+    """Animal products a whole title rules out, wherever the qualifier sits.
+
+    "Vegan mac and cheese" and '"Cheese" sauce (dairy free)' name cheese that is
+    not dairy. Only dairy and eggs (and honey, for vegan) are cleared this way,
+    never meat or fish.
+    """
+    removes: set[str] = set()
+    for pattern, kind in _TITLE_QUALIFIERS:
+        if pattern.search(text):
+            removes |= {"vegan": {"dairy", "eggs", "honey"}, "dairy_free": {"dairy"},
+                        "egg_free": {"eggs"}}.get(kind, set())
+    return removes
+
+
+def analyze_title(title: str) -> IngredientFlags:
+    """Animal-product flags named in a recipe title.
+
+    Only meat, fish, shellfish, dairy, eggs and the other non-vegan words count:
+    plant allergen words in titles ("cake", "nutty") are too noisy to be worth the
+    false warnings. A qualifier ("vegan", "vegetarian", "meatless") clears the
+    words after it within the same part of the title.
+    """
+    flags = IngredientFlags(ingredient=f"title: {title}")
+    text = html.unescape(str(title or "")).lower()
+    wide = _title_wide_removals(text)
+    for segment in _TITLE_SEPARATORS.split(f" {text} "):
+        for rule in _title_segment_rules(segment):
+            animal = rule.contains & ANIMAL_ALLERGENS
+            if rule.non_vegetarian or animal & {"fish", "shellfish"}:
+                pass
+            elif animal:
+                animal -= wide
+                if not animal:
+                    continue
+            elif not (rule.non_vegan and not rule.contains and not rule.may_contain) or "honey" in wide:
+                # "May contain" words such as chocolate or margarine say too
+                # little in a title; honey and the like count unless it says vegan.
+                continue
+            flags.contains |= animal
+            flags.non_vegetarian |= rule.non_vegetarian
+            flags.non_vegan = True
+    if flags.contains & {"fish", "shellfish"}:
+        flags.non_vegetarian = True
+    return flags
+
+
+# Food.com keywords and categories (the recipe's RecipeCategory counts as one
+# more tag). Food.com also tags some egg dishes "Poultry" and "Meat"; that costs
+# a few vegetarian recipes and is accepted.
+_MEAT_TAGS = frozenset({
+    "meat", "poultry", "chicken", "chicken breast", "chicken thigh & leg", "whole chicken", "chicken livers",
+    "pork", "pork loin", "ham", "ham and bean soup", "roast beef", "steak", "veal", "lamb/sheep", "wild game",
+    "deer", "elk", "moose", "bear", "rabbit", "duck", "duck breasts", "whole duck", "goose", "pheasant", "quail",
+    "whole turkey", "turkey breasts", "turkey gravy", "beef organ meats", "beef liver", "beef kidney",
+    "beef sauces", "meatballs", "meatloaf", "gelatin",
+})
+_FISH_TAGS = frozenset({
+    "tuna", "fish tuna", "fish salmon", "halibut", "tilapia", "catfish", "trout", "bass", "whitefish",
+    "orange roughy", "mahi mahi", "perch",
+})
+_SHELLFISH_TAGS = frozenset({"crab", "lobster", "mussels", "crawfish", "squid", "octopus", "oysters"})
+_DAIRY_TAGS = frozenset({"cheese", "cheesecake"})
+_EGG_TAGS = frozenset({"breakfast eggs", "eggs breakfast"})
+
+
+def analyze_tags(tags: Iterable[str]) -> IngredientFlags:
+    """Flags from source tags. Other tags (cuisines, times, "Easy") add nothing."""
+    names = {str(t).strip().lower() for t in tags if t and str(t).strip()}
+    flags = IngredientFlags(ingredient="tags: " + ", ".join(sorted(names)))
+    if names & _FISH_TAGS:
+        flags.contains.add("fish")
+    if names & _SHELLFISH_TAGS:
+        flags.contains.add("shellfish")
+    if names & _DAIRY_TAGS:
+        flags.contains.add("dairy")
+    if names & _EGG_TAGS:
+        flags.contains.add("eggs")
+    flags.non_vegetarian = bool(names & _MEAT_TAGS or flags.contains & {"fish", "shellfish"})
+    flags.non_vegan = flags.non_vegetarian or bool(flags.contains)
+    if flags.contains or flags.non_vegetarian:
+        flags.ingredient = "tags: " + ", ".join(
+            sorted(names & (_MEAT_TAGS | _FISH_TAGS | _SHELLFISH_TAGS | _DAIRY_TAGS | _EGG_TAGS))
+        )
+    return flags
+
+
+def _analyze_all(
+    ingredients: list[str], title: str | None = None, tags: Iterable[str] | None = None
+) -> list[IngredientFlags]:
+    flags = [analyze_ingredient(str(i)) for i in ingredients if i and str(i).strip()]
+    if title:
+        flags.append(analyze_title(title))
+    if tags:
+        tag_flags = analyze_tags(tags)
+        # Food.com tags a tofu cheesecake "Cheese"; the title knows better.
+        removes = _title_wide_removals(html.unescape(title).lower()) if title else set()
+        if tag_flags.contains & removes:
+            tag_flags.contains -= removes
+            tag_flags.non_vegan = tag_flags.non_vegetarian or bool(tag_flags.contains)
+        flags.append(tag_flags)
+    return flags
+
+
+def classify_recipe_dietary(
+    ingredients: list[str], title: str | None = None, tags: Iterable[str] | None = None
+) -> dict[str, bool]:
+    """Dietary tags. A tag is False when any ingredient contains or may contain the item.
+
+    ``title`` and ``tags`` (source keywords and category) add the animal products
+    an incomplete ingredient list misses.
+    """
+    flags = _analyze_all(ingredients, title, tags)
     flagged = set().union(*(f.contains | f.may_contain for f in flags)) if flags else set()
     vegetarian = not any(f.non_vegetarian for f in flags)
     vegan = vegetarian and not any(f.non_vegan for f in flags)
@@ -322,19 +564,22 @@ def classify_recipe_dietary(ingredients: list[str]) -> dict[str, bool]:
     }
 
 
-def detect_recipe_allergens(ingredients: list[str]) -> list[str]:
+def detect_recipe_allergens(
+    ingredients: list[str], title: str | None = None, tags: Iterable[str] | None = None
+) -> list[str]:
     """Allergens the recipe contains or may contain (sorted)."""
-    flags = _analyze_all(ingredients)
     found: set[str] = set()
-    for f in flags:
+    for f in _analyze_all(ingredients, title, tags):
         found |= f.contains | f.may_contain
     return sorted(found)
 
 
-def detect_recipe_allergens_detailed(ingredients: list[str]) -> dict[str, dict[str, Any]]:
+def detect_recipe_allergens_detailed(
+    ingredients: list[str], title: str | None = None, tags: Iterable[str] | None = None
+) -> dict[str, dict[str, Any]]:
     """{allergen: {"level": "contains" | "may_contain", "sources": [ingredient, ...]}}."""
     result: dict[str, dict[str, Any]] = {}
-    for f in _analyze_all(ingredients):
+    for f in _analyze_all(ingredients, title, tags):
         for level, items in (("contains", f.contains), ("may_contain", f.may_contain)):
             for allergen in items:
                 entry = result.setdefault(allergen, {"level": level, "sources": []})
