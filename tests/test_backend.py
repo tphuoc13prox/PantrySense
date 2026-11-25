@@ -163,9 +163,10 @@ def test_static_assets_served(client: TestClient) -> None:
     assert css_response.status_code == 200
     assert "PantrySense" in css_response.text
 
-    js_response = client.get("/app.js")
+    js_response = client.get("/js/main.js")
     assert js_response.status_code == 200
-    assert "PantrySense" in js_response.text
+    assert "javascript" in js_response.headers.get("content-type", "")
+    assert "import " in js_response.text
 
 
 def test_v030_search_behavior_regression(client: TestClient) -> None:
