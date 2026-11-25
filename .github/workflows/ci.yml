@@ -51,7 +51,7 @@ jobs:
         # requires_models skip themselves (see tests/conftest.py).
         run: python -m pytest -m "not slow"
       - name: Mypy
-        # Needs the full install: faiss-cpu ships its own stubs, and the
-        # type: ignore comments that work around them are checked as used.
+        # Runs here rather than in the lint job so third-party packages and
+        # their stubs (faiss-cpu ships its own) are installed. Once is enough.
         if: matrix.python-version == '3.12'
         run: python -m mypy

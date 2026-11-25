@@ -67,7 +67,7 @@ class FaissVectorStore:
         index = self._index
         if isinstance(index, faiss.IndexHNSW):
             # faiss-cpu 1.15 stubs omit SearchParametersHNSW, which exists at runtime.
-            params = faiss.SearchParametersHNSW()  # type: ignore[attr-defined]
+            params = faiss.SearchParametersHNSW()  # type: ignore[attr-defined, unused-ignore]
             params.efSearch = int(self.ef_search or index.hnsw.efSearch)
         elif isinstance(index, faiss.IndexIVF):
             params = faiss.SearchParametersIVF()
@@ -150,7 +150,7 @@ class FaissVectorStore:
                 if mask is not None:
                     bitmap = np.packbits(mask, bitorder="little")
                     # The Python wrapper accepts the array alone; the 1.15 stubs only list (n, bitmap).
-                    selector = faiss.IDSelectorBitmap(bitmap)  # type: ignore[call-arg, arg-type]
+                    selector = faiss.IDSelectorBitmap(bitmap)  # type: ignore[call-arg, arg-type, unused-ignore]
                 scores, indices = self._index.search(query, top_k, params=self._search_params(selector))
             for rank, (score, idx) in enumerate(zip(scores[0], indices[0], strict=True), start=1):
                 if idx < 0 or idx >= len(self.recipe_ids):
