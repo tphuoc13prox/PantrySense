@@ -73,7 +73,7 @@ class HybridRetriever:
         ingredients: list[str],
         top_k: int | None = None,
         k_rrf: int | None = None,
-        allowed: "AllowedIds | None" = None,
+        allowed: AllowedIds | None = None,
     ) -> list[CandidateMatch]:
         """Execute hybrid search using both BM25 and FAISS, then fuse with RRF.
 

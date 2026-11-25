@@ -34,7 +34,7 @@ class AllowedIds:
         self,
         sorted_ids: np.ndarray,
         mask: np.ndarray,
-        position_cache: "PositionCache | None" = None,
+        position_cache: PositionCache | None = None,
     ) -> None:
         if sorted_ids.shape != mask.shape:
             raise ValueError("sorted_ids and mask must have the same shape")
@@ -46,7 +46,7 @@ class AllowedIds:
         self._lock = cache.lock
 
     @classmethod
-    def from_ids(cls, recipe_ids: list[int] | np.ndarray) -> "AllowedIds":
+    def from_ids(cls, recipe_ids: list[int] | np.ndarray) -> AllowedIds:
         ids = np.unique(np.asarray(recipe_ids, dtype=np.int64))
         return cls(ids, np.ones(ids.shape[0], dtype=bool))
 

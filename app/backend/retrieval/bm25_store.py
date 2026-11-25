@@ -203,7 +203,7 @@ class BM25Store:
         self,
         query: str | list[str],
         top_k: int = 20,
-        allowed: "AllowedIds | None" = None,
+        allowed: AllowedIds | None = None,
     ) -> list[tuple[int, float, int]]:
         """Top-k BM25 matches, optionally restricted to ``allowed`` recipe ids.
 
@@ -330,7 +330,7 @@ class BM25Store:
         self._finalize()
 
     def _load_json(self, path: Path) -> None:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
         self.k1 = float(data["k1"])
         self.b = float(data["b"])

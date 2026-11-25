@@ -108,7 +108,7 @@ class FaissVectorStore:
         query_vector: np.ndarray,
         top_k: int = 20,
         min_threshold: float = 0.0,
-        allowed: "AllowedIds | None" = None,
+        allowed: AllowedIds | None = None,
     ) -> list[tuple[int, float, int]]:
         """Search top-K nearest recipes given a query vector.
 
@@ -201,7 +201,7 @@ class FaissVectorStore:
         if not ids_path.exists():
             return False
 
-        with open(ids_path, "r", encoding="utf-8") as f:
+        with open(ids_path, encoding="utf-8") as f:
             data = json.load(f)
             self.recipe_ids = [int(i) for i in data.get("recipe_ids", [])]
             self.dimension = int(data.get("dimension", self.dimension))

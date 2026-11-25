@@ -201,7 +201,7 @@ def reset_search_components() -> None:
         _components.clear()
 
 
-def create_search_service(**kwargs: Any) -> "RecipeSearchService":
+def create_search_service(**kwargs: Any) -> RecipeSearchService:
     """Build a service; components not given explicitly come from the shared cache."""
     return RecipeSearchService(**kwargs)
 

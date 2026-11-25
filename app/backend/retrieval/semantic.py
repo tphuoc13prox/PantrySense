@@ -105,7 +105,7 @@ class SemanticRetriever:
         ingredients: list[str],
         top_k: int | None = None,
         min_threshold: float | None = None,
-        allowed: "AllowedIds | None" = None,
+        allowed: AllowedIds | None = None,
     ) -> list[CandidateMatch]:
         """Retrieve candidate recipe IDs matching user ingredients semantically.
 
