@@ -4,13 +4,7 @@ import json
 from pathlib import Path
 
 from app.backend.database.connection import get_connection
-from app.backend.database.recipe_metadata import (
-    INSERT_METADATA_SQL,
-    backfill_small_gaps,
-    compute_recipe_metadata,
-    ensure_metadata_tables,
-    metadata_record,
-)
+from app.backend.database.recipe_metadata import backfill_small_gaps, refresh_recipe_metadata
 from app.backend.database.seed_data import SEED_RECIPES
 
 
@@ -81,14 +75,13 @@ def initialize_database(database_path: Path | None = None) -> None:
                 ),
             )
 
-        # Seed rows are upserted on every start, so refresh their metadata too.
-        ensure_metadata_tables(connection)
-        for recipe in SEED_RECIPES:
-            row = connection.execute("SELECT id FROM recipes WHERE title = ?", (recipe["title"],)).fetchone()
-            if row is not None:
-                meta = compute_recipe_metadata(recipe["ingredients"], recipe["servings"])
-                connection.execute(INSERT_METADATA_SQL, metadata_record(row["id"], meta))
-
         connection.commit()
 
     backfill_small_gaps(database_path)
+    # Seed rows are upserted on every start; their metadata is only redone when needed.
+    refresh_seed_metadata(database_path)
+
+
+def refresh_seed_metadata(database_path: Path | None = None) -> int:
+    """Recompute the seed recipes' metadata only when missing or stale (see refresh_recipe_metadata)."""
+    return refresh_recipe_metadata(database_path, [recipe["title"] for recipe in SEED_RECIPES])

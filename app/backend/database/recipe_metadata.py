@@ -347,6 +347,29 @@ def populate_recipe_metadata(
     return written
 
 
+def refresh_recipe_metadata(database_path: Path | None, titles: list[str]) -> int:
+    """Recompute metadata for the recipes with these titles if it is missing or stale.
+
+    A row is redone when it has no metadata, or when the stored fingerprint is
+    from other estimator code; up-to-date rows are left alone. Uses the same
+    code as the migration, so both write identical values. Returns rows written.
+    """
+    if not titles:
+        return 0
+    with get_connection(database_path) as conn:
+        ensure_metadata_tables(conn)
+        stale = stored_fingerprint(conn) not in (None, metadata_fingerprint())
+        sql = (f"{_BATCH_SELECT} LEFT JOIN recipe_metadata m ON m.recipe_id = r.id "
+               f"WHERE r.title IN ({','.join('?' for _ in titles)})")
+        if not stale:
+            sql += " AND m.recipe_id IS NULL"
+        rows = [_batch_row(r) for r in conn.execute(sql, titles).fetchall()]
+        if rows:
+            conn.executemany(INSERT_METADATA_SQL, _compute_batch(rows))
+            conn.commit()
+    return len(rows)
+
+
 def _store_fingerprint(database_path: Path | None) -> None:
     with get_connection(database_path) as conn:
         ensure_metadata_tables(conn)
@@ -375,9 +398,12 @@ def backfill_small_gaps(database_path: Path | None = None) -> int:
             "SELECT COUNT(*) FROM recipes r LEFT JOIN recipe_metadata m ON m.recipe_id = r.id "
             "WHERE m.recipe_id IS NULL"
         ).fetchone()[0]
-        stale = stored_fingerprint(conn) not in (None, metadata_fingerprint())
+        fingerprint = stored_fingerprint(conn)
+        stale = fingerprint not in (None, metadata_fingerprint())
         total = conn.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
-    if stale and total <= INLINE_BACKFILL_LIMIT:
+    # Small databases are simply recomputed, which also records the fingerprint
+    # so later starts can tell whether the rows are current.
+    if (stale or fingerprint is None) and total <= INLINE_BACKFILL_LIMIT:
         return populate_recipe_metadata(database_path, only_missing=False)
     if missing == 0:
         if stale:
