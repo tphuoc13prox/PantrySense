@@ -612,7 +612,7 @@ def match_ingredient_nutrition(ingredient_raw: str) -> dict[str, float] | None:
     food = match_food(ingredient_raw)
     if food is None:
         return None
-    return dict(zip(NUTRIENT_KEYS, food.per100))
+    return dict(zip(NUTRIENT_KEYS, food.per100, strict=True))
 
 
 def _unit_grams(unit: str, food: Food, parsed: ParsedIngredient) -> tuple[float | None, bool]:
@@ -740,7 +740,7 @@ def calculate_recipe_nutrition(
         if food is not None:
             grams, status = estimate_grams(parsed, food)
             if grams is not None:
-                values = {k: v * grams / 100.0 for k, v in zip(NUTRIENT_KEYS, food.per100)}
+                values = {k: v * grams / 100.0 for k, v in zip(NUTRIENT_KEYS, food.per100, strict=True)}
         if grams is None:
             status = "unknown"
             unknown.append(label)
