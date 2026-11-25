@@ -275,7 +275,7 @@ class BM25Store:
         term_freqs: list[dict[str, int]] = [{} for _ in range(self.total_docs)]
         for tid, term in enumerate(terms):
             start, end = self._indptr[tid], self._indptr[tid + 1]
-            for d, f in zip(self._doc_idx[start:end].tolist(), self._tf[start:end].tolist()):
+            for d, f in zip(self._doc_idx[start:end].tolist(), self._tf[start:end].tolist(), strict=True):
                 term_freqs[d][term] = int(f)
         data = {
             "k1": self.k1,

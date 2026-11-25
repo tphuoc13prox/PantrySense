@@ -150,7 +150,7 @@ class FaissVectorStore:
                     bitmap = np.packbits(mask, bitorder="little")
                     selector = faiss.IDSelectorBitmap(bitmap)
                 scores, indices = self._index.search(query, top_k, params=self._search_params(selector))
-            for rank, (score, idx) in enumerate(zip(scores[0], indices[0]), start=1):
+            for rank, (score, idx) in enumerate(zip(scores[0], indices[0], strict=True), start=1):
                 if idx < 0 or idx >= len(self.recipe_ids):
                     continue
                 score_val = float(score)

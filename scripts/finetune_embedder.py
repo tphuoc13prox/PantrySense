@@ -343,7 +343,7 @@ def evaluate(qv: np.ndarray, pv: np.ndarray, corpus_ids: np.ndarray, relevant: l
     _, idx = index.search(qv, 100)
     hits = {10: 0, 50: 0, 100: 0}
     mrr = 0.0
-    for row, rel in zip(idx, relevant):
+    for row, rel in zip(idx, relevant, strict=True):
         ranked = corpus_ids[row]
         first = next((i for i, rid in enumerate(ranked) if rid in rel), None)
         if first is None:
