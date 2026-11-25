@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 import logging
-from pathlib import Path
 import threading
-from typing import AsyncIterator
 import webbrowser
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -24,7 +24,6 @@ from app.backend.config import (
     get_ranking_mode,
     get_retrieval_mode,
     get_vector_ids_path,
-    get_vector_index_path,
 )
 from app.backend.database.init_db import initialize_database
 from app.backend.database.pantry_db import ensure_pantry_tables

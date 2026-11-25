@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import re
 from typing import Any
+
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from app.backend.recipes import substitution
 from app.backend.recipes.instructions import clean_and_segment_instructions
-from app.backend.recipes.schemas import CookingStepInfo, ExtractedTimer
+from app.backend.recipes.schemas import CookingStepInfo
 
 router = APIRouter(prefix="/api/assistant", tags=["assistant"])
 

@@ -21,9 +21,10 @@ import json
 import logging
 import sys
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -70,7 +71,7 @@ class Prepared:
     matrices: list[np.ndarray]
     n_total_queries: int
 
-    def stack(self, idx: Sequence[int], cols: list[int]) -> tuple[np.ndarray, np.ndarray, list[int]]:
+    def stack(self, idx: Sequence[int] | np.ndarray, cols: list[int]) -> tuple[np.ndarray, np.ndarray, list[int]]:
         X = np.vstack([self.matrices[i][:, cols] for i in idx])
         y = np.concatenate([np.asarray(self.groups[i].labels, dtype=np.float32) for i in idx])
         return X, y, [len(self.groups[i].labels) for i in idx]
@@ -86,7 +87,7 @@ def prepare(groups: list[QueryGroup]) -> Prepared:
     return Prepared(kept, matrices, len(groups))
 
 
-def order_by_scores(g: QueryGroup, scores: Sequence[float]) -> list[int]:
+def order_by_scores(g: QueryGroup, scores: Sequence[float] | np.ndarray) -> list[int]:
     """Labels in the order MLRecipeRanker.rank would return (score, then heuristic)."""
     idx = sorted(range(len(g.recipes)), key=lambda i: (-float(scores[i]), *heuristic_sort_key(g.recipes[i])))
     return [g.labels[i] for i in idx]
@@ -123,7 +124,7 @@ def cross_validate(
     import lightgbm as lgb
 
     folds = group_kfold(len(data.groups), n_folds)
-    oof_scores: list[np.ndarray | None] = [None] * len(data.groups)
+    oof_scores: dict[int, np.ndarray] = {}
     best_iters: list[int] = []
     for f, val_idx in enumerate(folds):
         train_idx = np.concatenate([folds[j] for j in range(n_folds) if j != f])
@@ -139,10 +140,10 @@ def cross_validate(
         best_iters.append(best)
         pred = model.predict(X_va, num_iteration=best)
         offset = 0
-        for qi, size in zip(val_idx, s_va):
-            oof_scores[qi] = pred[offset: offset + size]
+        for qi, size in zip(val_idx, s_va, strict=True):
+            oof_scores[int(qi)] = pred[offset: offset + size]
             offset += size
-    ranked = [order_by_scores(g, s) for g, s in zip(data.groups, oof_scores)]
+    ranked = [order_by_scores(g, oof_scores[i]) for i, g in enumerate(data.groups)]
     return summarize(ranked), best_iters, ranked
 
 
@@ -173,7 +174,7 @@ def train_from_groups(
     best: tuple[float, dict[str, Any], list[int], dict[str, float]] | None = None
     keys = sorted(grid)
     for values in itertools.product(*(grid[k] for k in keys)):
-        cfg = dict(zip(keys, values))
+        cfg = dict(zip(keys, values, strict=True))
         params = {**BASE_PARAMS, **cfg}
         metrics, iters, _ = cross_validate(data, params, all_cols, n_folds)
         search.append({"params": cfg, "cv": metrics, "best_iterations": iters})
@@ -206,9 +207,9 @@ def train_from_groups(
     model = _new_model(final_params)
     model.fit(X, y, group=sizes)
     gain = model.booster_.feature_importance(importance_type="gain")
-    importance = sorted(
+    importance: list[dict[str, Any]] = sorted(
         ({"feature": f, "gain": float(g), "gain_share": float(g / gain.sum()) if gain.sum() else 0.0}
-         for f, g in zip(LTR_FEATURE_NAMES, gain)),
+         for f, g in zip(LTR_FEATURE_NAMES, gain, strict=True)),
         key=lambda d: -d["gain"],
     )
 

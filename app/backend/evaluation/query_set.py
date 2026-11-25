@@ -103,7 +103,7 @@ def corpus_fingerprint(recipes: Sequence[CorpusRecipe]) -> str:
     """Stable hash of (id, title, ingredients) so a run can detect a different corpus."""
     h = hashlib.sha256()
     for r in sorted(recipes, key=lambda x: x.recipe_id):
-        h.update(f"{r.recipe_id}\t{r.title}\t{'|'.join(r.ingredients)}\n".encode("utf-8"))
+        h.update(f"{r.recipe_id}\t{r.title}\t{'|'.join(r.ingredients)}\n".encode())
     return h.hexdigest()
 
 

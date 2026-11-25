@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Sequence
+from collections.abc import Sequence
 
 
 def dcg_at_k(labels: Sequence[float], k: int) -> float:

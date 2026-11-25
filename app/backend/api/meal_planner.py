@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from typing import Any
-from fastapi import APIRouter, HTTPException, Query
+
+from fastapi import APIRouter, Query
+
 from app.backend.database import pantry_db
 from app.backend.recipes.schemas import (
     FavoriteCreate,

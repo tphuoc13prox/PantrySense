@@ -84,7 +84,7 @@ def test_reference_error_is_below_baseline():
     errors = []
     for item in data["aligned"]:
         details = [{"name": n, "quantity": parse_quantity(q), "unit": "portion"}
-                   for n, q in zip(item["parts"], item["quantities"])]
+                   for n, q in zip(item["parts"], item["quantities"], strict=True)]
         r = calculate_recipe_nutrition(item["parts"], servings=item["servings"], ingredient_details=details)
         ref = item["reference_per_serving"]["calories"]
         errors.append(abs(r["per_serving"]["calories"] - ref) / ref)

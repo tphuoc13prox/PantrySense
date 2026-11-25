@@ -4,6 +4,7 @@ import json
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
 import numpy as np
 
 if TYPE_CHECKING:
@@ -65,7 +66,8 @@ class FaissVectorStore:
 
         index = self._index
         if isinstance(index, faiss.IndexHNSW):
-            params = faiss.SearchParametersHNSW()
+            # faiss-cpu 1.15 stubs omit SearchParametersHNSW, which exists at runtime.
+            params = faiss.SearchParametersHNSW()  # type: ignore[attr-defined, unused-ignore]
             params.efSearch = int(self.ef_search or index.hnsw.efSearch)
         elif isinstance(index, faiss.IndexIVF):
             params = faiss.SearchParametersIVF()
@@ -107,7 +109,7 @@ class FaissVectorStore:
         query_vector: np.ndarray,
         top_k: int = 20,
         min_threshold: float = 0.0,
-        allowed: "AllowedIds | None" = None,
+        allowed: AllowedIds | None = None,
     ) -> list[tuple[int, float, int]]:
         """Search top-K nearest recipes given a query vector.
 
@@ -147,9 +149,10 @@ class FaissVectorStore:
                 selector = None
                 if mask is not None:
                     bitmap = np.packbits(mask, bitorder="little")
-                    selector = faiss.IDSelectorBitmap(bitmap)
+                    # The Python wrapper accepts the array alone; the 1.15 stubs only list (n, bitmap).
+                    selector = faiss.IDSelectorBitmap(bitmap)  # type: ignore[call-arg, arg-type, unused-ignore]
                 scores, indices = self._index.search(query, top_k, params=self._search_params(selector))
-            for rank, (score, idx) in enumerate(zip(scores[0], indices[0]), start=1):
+            for rank, (score, idx) in enumerate(zip(scores[0], indices[0], strict=True), start=1):
                 if idx < 0 or idx >= len(self.recipe_ids):
                     continue
                 score_val = float(score)
@@ -200,7 +203,7 @@ class FaissVectorStore:
         if not ids_path.exists():
             return False
 
-        with open(ids_path, "r", encoding="utf-8") as f:
+        with open(ids_path, encoding="utf-8") as f:
             data = json.load(f)
             self.recipe_ids = [int(i) for i in data.get("recipe_ids", [])]
             self.dimension = int(data.get("dimension", self.dimension))

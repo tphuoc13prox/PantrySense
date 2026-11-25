@@ -10,8 +10,6 @@ from app.backend.config import (
     get_rrf_k,
     get_semantic_threshold,
     get_semantic_top_k,
-    get_vector_ids_path,
-    get_vector_index_path,
 )
 from app.backend.retrieval.bm25_store import BM25Store, preferred_index_path
 from app.backend.retrieval.candidates import CandidateMatch
@@ -75,7 +73,7 @@ class HybridRetriever:
         ingredients: list[str],
         top_k: int | None = None,
         k_rrf: int | None = None,
-        allowed: "AllowedIds | None" = None,
+        allowed: AllowedIds | None = None,
     ) -> list[CandidateMatch]:
         """Execute hybrid search using both BM25 and FAISS, then fuse with RRF.
 

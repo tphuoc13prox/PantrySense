@@ -6,11 +6,11 @@ import json
 import logging
 import threading
 from pathlib import Path
-from typing import Any
 
 from app.backend.config import get_database_path
 from app.backend.database.connection import get_connection
 from app.backend.recipes.matching import normalize_ingredient
+from app.backend.recipes.schemas import IngredientSuggestion
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ class IngredientSuggester:
         elif self.vocab_path and self.vocab_path.exists():
             # Fast-path: Load pre-cached JSON vocabulary in < 2ms
             try:
-                with open(self.vocab_path, "r", encoding="utf-8") as f:
+                with open(self.vocab_path, encoding="utf-8") as f:
                     cached_data = json.load(f)
                 if cached_data:
                     self._frequencies = cached_data
@@ -129,7 +129,7 @@ class IngredientSuggester:
         # Check if pre-cached JSON file exists
         if self.vocab_path and self.vocab_path.exists():
             try:
-                with open(self.vocab_path, "r", encoding="utf-8") as f:
+                with open(self.vocab_path, encoding="utf-8") as f:
                     cached_data = json.load(f)
                 if cached_data:
                     self._frequencies = cached_data
@@ -190,7 +190,6 @@ class IngredientSuggester:
 
     def suggest(self, query: str, limit: int = 10) -> list[IngredientSuggestion]:
         """Finds autocomplete suggestions and typo corrections for a given query."""
-        from app.backend.recipes.schemas import IngredientSuggestion
 
         self.ensure_loaded()
         cleaned_query = query.strip().lower()

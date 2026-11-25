@@ -113,7 +113,7 @@ class MLRecipeRanker:
                 predictions = self.score(filtered, details_map)
                 scored = [
                     summary.model_copy(update={"ml_score": round(float(score), 4)})
-                    for summary, score in zip(filtered, predictions)
+                    for summary, score in zip(filtered, predictions, strict=True)
                 ]
                 scored.sort(key=lambda r: (-(r.ml_score if r.ml_score is not None else -999.0), *heuristic_sort_key(r)))
                 return scored

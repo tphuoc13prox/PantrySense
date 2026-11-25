@@ -200,7 +200,7 @@ class SetupManager:
                 online_recipes = load_recipes_from_parquet(parquet_path, limit=target_limit, progress_callback=parse_cb)
 
             if len(online_recipes) < min(100, target_limit):
-                self._update_step(2, 34.0, "step2", f"Step 2/8: Fetching online recipes from Hugging Face...")
+                self._update_step(2, 34.0, "step2", "Step 2/8: Fetching online recipes from Hugging Face...")
                 hf_rows = fetch_online_recipes_from_huggingface(limit=min(target_limit, 200))
                 for r in hf_rows:
                     if not any(x["title"].lower() == r["title"].lower() for x in online_recipes):

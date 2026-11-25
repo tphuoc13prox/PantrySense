@@ -1,4 +1,6 @@
-SEED_RECIPES = [
+from typing import Any
+
+SEED_RECIPES: list[dict[str, Any]] = [
     {
         "title": "Chicken Tomato Stir Fry",
         "ingredients": ["chicken", "tomato", "onion", "garlic", "cooking oil"],

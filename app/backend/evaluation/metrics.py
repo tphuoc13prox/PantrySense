@@ -186,5 +186,5 @@ def paired_bootstrap_diff(
     """
     if len(a) != len(b):
         raise ValueError("paired samples must have equal length")
-    diffs = [x - y for x, y in zip(a, b)]
+    diffs = [x - y for x, y in zip(a, b, strict=True)]
     return bootstrap_ci(diffs, n_resamples=n_resamples, confidence=confidence, seed=seed)

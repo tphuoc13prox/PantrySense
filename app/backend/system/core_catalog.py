@@ -1,8 +1,10 @@
 """Hand-written recipes always ingested ahead of the downloaded dataset."""
 from __future__ import annotations
 
+from typing import Any
+
 # Comprehensive, diverse culinary recipe dataset (covering noodles, milk, eggs, meats, vegetables, pasta, soups, desserts, etc.)
-CORE_RECIPE_CATALOG = [
+CORE_RECIPE_CATALOG: list[dict[str, Any]] = [
     # --- PORK & NOODLE DISHES ---
     {
         "title": "Savory Pork Garlic Stir Fried Noodles",

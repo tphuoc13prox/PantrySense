@@ -360,7 +360,7 @@ def main(argv: list[str] | None = None) -> int:
         for mname in METRIC_NAMES:
             vals = [r[0][mname] for r in rows]
             rule_based["metrics"][mname] = dict(zip(("mean", "ci_low", "ci_high"),
-                                                    bootstrap_ci(vals, n_resamples=args.bootstrap, seed=args.seed)))
+                                                    bootstrap_ci(vals, n_resamples=args.bootstrap, seed=args.seed), strict=True))
         lats = [r[1] * 1000 for r in rows]
         rule_based["latency_ms"] = {"p50": percentile(lats, 50), "p95": percentile(lats, 95)}
 
@@ -370,13 +370,14 @@ def main(argv: list[str] | None = None) -> int:
         for mname in METRIC_NAMES:
             vals = [r["configs"][key][mname] for r in records]
             out["metrics"][mname] = dict(zip(("mean", "ci_low", "ci_high"),
-                                             bootstrap_ci(vals, n_resamples=args.bootstrap, seed=args.seed)))
+                                             bootstrap_ci(vals, n_resamples=args.bootstrap, seed=args.seed), strict=True))
         lats = [r["configs"][key]["latency_ms"] for r in records]
         for pname, q in (("p50", 50), ("p95", 95)):
             out["latency_ms"][pname] = dict(zip(
                 ("value", "ci_low", "ci_high"),
                 bootstrap_ci(lats, statistic=lambda v, q=q: percentile(v, q),
                              n_resamples=min(args.bootstrap, 500), seed=args.seed),
+                strict=True,
             ))
         out["mean_results"] = sum(r["configs"][key]["n"] for r in records) / len(records)
         out["found_any_depth"] = sum(1 for r in records if r["configs"][key]["rank"] is not None) / len(records)
@@ -405,7 +406,7 @@ def main(argv: list[str] | None = None) -> int:
             va = [r["configs"][ka][mname] for r in per_query]
             vb = [r["configs"][kb][mname] for r in per_query]
             row[mname] = dict(zip(("diff", "ci_low", "ci_high"),
-                                  paired_bootstrap_diff(va, vb, n_resamples=args.bootstrap, seed=args.seed)))
+                                  paired_bootstrap_diff(va, vb, n_resamples=args.bootstrap, seed=args.seed), strict=True))
         comparisons.append(row)
 
     components = {}
@@ -508,7 +509,7 @@ def render_markdown(res: dict) -> str:
         lines += [f"## {title}", "",
                   "| Config | Recall@10 | Recall@50 | Recall@100 | MRR@10 | nDCG@10 | Hit@1 | p50 ms | p95 ms | avg #results |",
                   "|---|---|---|---|---|---|---|---|---|---|"]
-        for key, row in res["summary"].items():
+        for row in res["summary"].values():
             if row["layer"] != layer:
                 continue
             m = row["metrics"]

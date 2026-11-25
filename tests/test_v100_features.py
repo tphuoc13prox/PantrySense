@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import datetime
 from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.backend.database import pantry_db
 from app.backend.main import app
 from app.backend.recipes import dietary, nutrition, substitution
-from app.backend.recipes.schemas import DietaryFilters, RecipeSearchRequest
-from app.backend.recipes.service import RecipeSearchService
 
 
 @pytest.fixture

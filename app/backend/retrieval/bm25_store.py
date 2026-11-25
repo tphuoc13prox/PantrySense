@@ -203,7 +203,7 @@ class BM25Store:
         self,
         query: str | list[str],
         top_k: int = 20,
-        allowed: "AllowedIds | None" = None,
+        allowed: AllowedIds | None = None,
     ) -> list[tuple[int, float, int]]:
         """Top-k BM25 matches, optionally restricted to ``allowed`` recipe ids.
 
@@ -275,7 +275,7 @@ class BM25Store:
         term_freqs: list[dict[str, int]] = [{} for _ in range(self.total_docs)]
         for tid, term in enumerate(terms):
             start, end = self._indptr[tid], self._indptr[tid + 1]
-            for d, f in zip(self._doc_idx[start:end].tolist(), self._tf[start:end].tolist()):
+            for d, f in zip(self._doc_idx[start:end].tolist(), self._tf[start:end].tolist(), strict=True):
                 term_freqs[d][term] = int(f)
         data = {
             "k1": self.k1,
@@ -330,7 +330,7 @@ class BM25Store:
         self._finalize()
 
     def _load_json(self, path: Path) -> None:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
         self.k1 = float(data["k1"])
         self.b = float(data["b"])

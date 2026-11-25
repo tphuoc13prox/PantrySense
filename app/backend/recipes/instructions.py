@@ -70,7 +70,7 @@ def clean_and_segment_instructions(raw_instructions: list[str] | str | None) -> 
                 if step_text:
                     segmented.append(step_text)
         else:
-            sub_lines = [l.strip() for l in item.split("\n") if l.strip()]
+            sub_lines = [line.strip() for line in item.split("\n") if line.strip()]
             if len(sub_lines) > 1:
                 segmented.extend(sub_lines)
             else:

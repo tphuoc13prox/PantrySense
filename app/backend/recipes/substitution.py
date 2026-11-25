@@ -199,7 +199,7 @@ def suggest_recipe_substitutions(
         if not subs:
             continue
 
-        scored_subs = []
+        scored_subs: list[dict[str, Any]] = []
         for sub in subs:
             sub_name = normalize_ingredient_key(sub["substitute"])
             in_pantry = any(p in sub_name or sub_name in p for p in pantry_set)

@@ -32,9 +32,10 @@ import sqlite3
 import sys
 import time
 from collections import Counter, defaultdict
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -261,7 +262,7 @@ class RecordingRanker(MLRecipeRanker):
         super().__init__(model_path=Path("__unused__"))
         self.last: tuple[list[RecipeSummary], dict[int, dict[str, Any]], float] | None = None
 
-    def rank(self, recipes, details_map=None, minimum_coverage=0.34, force_heuristic=False):  # type: ignore[override]
+    def rank(self, recipes, details_map=None, minimum_coverage=0.34, force_heuristic=False):
         self.last = (list(recipes), dict(details_map or {}), float(minimum_coverage))
         return []
 
@@ -280,13 +281,15 @@ def run_retrieval(queries: list[LTRQuery], top_k: int) -> tuple[dict[str, list],
     )
 
     cols: dict[str, list] = defaultdict(list)
-    stats = Counter()
-    tier_stats: dict[str, Counter] = defaultdict(Counter)
+    stats: Counter[str] = Counter()
+    tier_stats: dict[str, Counter[str]] = defaultdict(Counter)
     orig_ranks: list[int] = []
     t0 = time.time()
     for n, q in enumerate(queries, start=1):
         recorder.last = None
         service.search(q.ingredients)
+        recipes: list[RecipeSummary]
+        details: dict[int, dict[str, Any]]
         recipes, details, threshold = recorder.last if recorder.last else ([], {}, 0.0)
         relevant = set(q.relevant_ids)
         labels = [2 if r.id == q.recipe_id else (1 if r.id in relevant else 0) for r in recipes]
@@ -299,13 +302,13 @@ def run_retrieval(queries: list[LTRQuery], top_k: int) -> tuple[dict[str, list],
             c["candidates_passing"] += sum(passes)
             c["orig_in_candidates"] += int(2 in labels)
             c["any_rel_in_candidates"] += int(any(labels))
-            c["orig_passing"] += int(any(lb == 2 and p for lb, p in zip(labels, passes)))
-            c["any_rel_passing"] += int(any(lb > 0 and p for lb, p in zip(labels, passes)))
-        for r, lb in zip(recipes, labels):
+            c["orig_passing"] += int(any(lb == 2 and p for lb, p in zip(labels, passes, strict=True)))
+            c["any_rel_passing"] += int(any(lb > 0 and p for lb, p in zip(labels, passes, strict=True)))
+        for r, lb in zip(recipes, labels, strict=True):
             if lb == 2 and r.retrieval_rank is not None:
                 orig_ranks.append(int(r.retrieval_rank))
 
-        for r, lb, p in zip(recipes, labels, passes):
+        for r, lb, p in zip(recipes, labels, passes, strict=True):
             d = details.get(r.id, {})
             cols["qid"].append(q.qid)
             cols["cand_id"].append(r.id)
@@ -370,7 +373,7 @@ class QueryGroup:
     passes: list[bool]
     threshold: float
 
-    def passing(self) -> "QueryGroup":
+    def passing(self) -> QueryGroup:
         keep = [i for i, p in enumerate(self.passes) if p]
         return QueryGroup(
             self.qid,
