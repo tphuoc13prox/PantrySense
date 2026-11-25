@@ -37,7 +37,7 @@ SEED = 42
 
 
 def ranked_labels(g: QueryGroup, method: str, ranker: MLRecipeRanker | None) -> list[int]:
-    label_of = {r.id: lb for r, lb in zip(g.recipes, g.labels)}
+    label_of = {r.id: lb for r, lb in zip(g.recipes, g.labels, strict=True)}
     if method == "rrf":
         kept = [r for r in g.recipes if r.coverage >= g.threshold]
         kept.sort(key=lambda r: (r.retrieval_rank or 10**6, r.id))
@@ -66,7 +66,7 @@ def evaluate_dataset(path: Path, rankers: dict[str, MLRecipeRanker], tiers: dict
     source_qcov: list[float] = []
     qcov_col = LTR_FEATURE_NAMES.index("query_coverage")
     for g in groups:
-        reachable.append(any(lb > 0 and r.coverage >= g.threshold for r, lb in zip(g.recipes, g.labels)))
+        reachable.append(any(lb > 0 and r.coverage >= g.threshold for r, lb in zip(g.recipes, g.labels, strict=True)))
         p = g.passing()
         if 2 in p.labels:
             source_qcov.append(float(build_feature_matrix(p.recipes, p.details_map)[p.labels.index(2), qcov_col]))
@@ -85,7 +85,7 @@ def evaluate_dataset(path: Path, rankers: dict[str, MLRecipeRanker], tiers: dict
         "source_query_coverage_eq_1": float(np.mean([v >= 0.999 for v in source_qcov])) if source_qcov else None,
     }
     out["end_to_end"] = {m: summarize(v) for m, v in per_method.items()}
-    out["conditional"] = {m: summarize([x for x, ok in zip(v, reachable) if ok]) for m, v in per_method.items()}
+    out["conditional"] = {m: summarize([x for x, ok in zip(v, reachable, strict=True) if ok]) for m, v in per_method.items()}
 
     by_tier: dict[str, dict] = defaultdict(dict)
     for tier in sorted(set(tiers.get(g.qid, "?") for g in groups)):
@@ -97,7 +97,7 @@ def evaluate_dataset(path: Path, rankers: dict[str, MLRecipeRanker], tiers: dict
     cond_idx = [i for i, ok in enumerate(reachable) if ok]
     nd = {m: [ndcg_at_k(per_method[m][i], 10) for i in cond_idx] for m in methods}
     out["ndcg10_diff_vs_heuristic"] = {
-        m: dict(zip(("mean", "ci95_low", "ci95_high"), paired_bootstrap(nd[m], nd["heuristic"])))
+        m: dict(zip(("mean", "ci95_low", "ci95_high"), paired_bootstrap(nd[m], nd["heuristic"]), strict=True))
         for m in methods if m != "heuristic"
     }
     return out

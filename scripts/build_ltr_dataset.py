@@ -300,13 +300,13 @@ def run_retrieval(queries: list[LTRQuery], top_k: int) -> tuple[dict[str, list],
             c["candidates_passing"] += sum(passes)
             c["orig_in_candidates"] += int(2 in labels)
             c["any_rel_in_candidates"] += int(any(labels))
-            c["orig_passing"] += int(any(lb == 2 and p for lb, p in zip(labels, passes)))
-            c["any_rel_passing"] += int(any(lb > 0 and p for lb, p in zip(labels, passes)))
-        for r, lb in zip(recipes, labels):
+            c["orig_passing"] += int(any(lb == 2 and p for lb, p in zip(labels, passes, strict=True)))
+            c["any_rel_passing"] += int(any(lb > 0 and p for lb, p in zip(labels, passes, strict=True)))
+        for r, lb in zip(recipes, labels, strict=True):
             if lb == 2 and r.retrieval_rank is not None:
                 orig_ranks.append(int(r.retrieval_rank))
 
-        for r, lb, p in zip(recipes, labels, passes):
+        for r, lb, p in zip(recipes, labels, passes, strict=True):
             d = details.get(r.id, {})
             cols["qid"].append(q.qid)
             cols["cand_id"].append(r.id)

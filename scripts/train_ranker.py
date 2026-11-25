@@ -140,10 +140,10 @@ def cross_validate(
         best_iters.append(best)
         pred = model.predict(X_va, num_iteration=best)
         offset = 0
-        for qi, size in zip(val_idx, s_va):
+        for qi, size in zip(val_idx, s_va, strict=True):
             oof_scores[qi] = pred[offset: offset + size]
             offset += size
-    ranked = [order_by_scores(g, s) for g, s in zip(data.groups, oof_scores)]
+    ranked = [order_by_scores(g, s) for g, s in zip(data.groups, oof_scores, strict=True)]
     return summarize(ranked), best_iters, ranked
 
 
@@ -174,7 +174,7 @@ def train_from_groups(
     best: tuple[float, dict[str, Any], list[int], dict[str, float]] | None = None
     keys = sorted(grid)
     for values in itertools.product(*(grid[k] for k in keys)):
-        cfg = dict(zip(keys, values))
+        cfg = dict(zip(keys, values, strict=True))
         params = {**BASE_PARAMS, **cfg}
         metrics, iters, _ = cross_validate(data, params, all_cols, n_folds)
         search.append({"params": cfg, "cv": metrics, "best_iterations": iters})
@@ -209,7 +209,7 @@ def train_from_groups(
     gain = model.booster_.feature_importance(importance_type="gain")
     importance = sorted(
         ({"feature": f, "gain": float(g), "gain_share": float(g / gain.sum()) if gain.sum() else 0.0}
-         for f, g in zip(LTR_FEATURE_NAMES, gain)),
+         for f, g in zip(LTR_FEATURE_NAMES, gain, strict=True)),
         key=lambda d: -d["gain"],
     )
 

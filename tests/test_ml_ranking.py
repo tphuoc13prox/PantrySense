@@ -200,7 +200,7 @@ def test_train_and_rank_with_ml_model(tmp_path: Path) -> None:
     assert len(ranked) == 12
     assert all(r.ml_score is not None for r in ranked)
     assert [r.ml_score for r in ranked] == sorted((r.ml_score for r in ranked), reverse=True)
-    relevant_id = next(r.id for r, lb in zip(test_group.recipes, test_group.labels) if lb == 2)
+    relevant_id = next(r.id for r, lb in zip(test_group.recipes, test_group.labels, strict=True) if lb == 2)
     assert relevant_id in [r.id for r in ranked[:3]]
 
     # LightGBM predict must stay single-threaded at serving time.
