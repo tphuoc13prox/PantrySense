@@ -63,7 +63,7 @@ class AllowedIds:
 
     def __contains__(self, recipe_id: object) -> bool:
         try:
-            rid = int(recipe_id)  # type: ignore[arg-type]
+            rid = int(recipe_id)  # type: ignore[call-overload]
         except (TypeError, ValueError):
             return False
         pos = int(np.searchsorted(self._sorted_ids, rid))
