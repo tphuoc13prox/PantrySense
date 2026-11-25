@@ -71,6 +71,18 @@ def _normalize_model_id(model_name: str) -> str:
     return model_name.strip()
 
 
+def same_embedding_model(index_model: str, query_model: str) -> bool:
+    if _normalize_model_id(index_model) == _normalize_model_id(query_model):
+        return True
+    # An index records the absolute path of a local model. A copy of that folder
+    # elsewhere (e.g. in another checkout's data/models/) is accepted when the
+    # folder name matches; prefixes and dimension are still checked.
+    query_path = Path(query_model)
+    index_name = index_model.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+    is_local_index_model = "/" in index_model.replace("\\", "/")
+    return is_local_index_model and query_path.is_dir() and index_name.lower() == query_path.name.lower()
+
+
 def _cuda_available() -> bool:
     try:
         import torch
@@ -263,7 +275,7 @@ def check_index_compatibility(metadata: dict[str, Any], embedder: IngredientEmbe
     problems: list[str] = []
     index_model = str(metadata.get("model", ""))
     query_model = str(getattr(embedder, "model_name", ""))
-    if _normalize_model_id(index_model) != _normalize_model_id(query_model):
+    if not same_embedding_model(index_model, query_model):
         problems.append(f"model {index_model!r} != {query_model!r}")
 
     query_prefix = getattr(embedder, "query_prefix", "")

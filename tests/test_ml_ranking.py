@@ -115,16 +115,30 @@ def test_ranking_metrics() -> None:
     assert hit_at_k([0, 2], 1) == 0.0 and hit_at_k([2], 1) == 1.0
 
 
-def test_ml_ranker_heuristic_fallback(tmp_path: Path) -> None:
-    ranker = MLRecipeRanker(model_path=tmp_path / "missing_ranker.joblib")
-    recipes = [
-        RecipeSummary(id=1, title="Recipe Low", coverage=0.4, matched_count=1),
-        RecipeSummary(id=2, title="Recipe High", coverage=0.9, matched_count=3),
-        RecipeSummary(id=3, title="Recipe Filtered", coverage=0.1, matched_count=1),
+def _ranked_candidates() -> list[RecipeSummary]:
+    return [
+        RecipeSummary(id=1, title="Recipe Low", coverage=0.4, matched_count=1, retrieval_rank=1),
+        RecipeSummary(id=2, title="Recipe High", coverage=0.9, matched_count=3, retrieval_rank=2),
+        RecipeSummary(id=3, title="Recipe Filtered", coverage=0.1, matched_count=1, retrieval_rank=3),
     ]
-    ranked = ranker.rank(recipes, minimum_coverage=0.3)
-    assert [r.title for r in ranked] == ["Recipe High", "Recipe Low"]
+
+
+def test_missing_model_keeps_retrieval_order(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PANTRYSENSE_RANKING_MODE", "ml")
+    ranker = MLRecipeRanker(model_path=tmp_path / "missing_ranker.joblib")
+    ranked = ranker.rank(_ranked_candidates(), minimum_coverage=0.3)
+    assert [r.title for r in ranked] == ["Recipe Low", "Recipe High"]
     assert all(r.ml_score is None for r in ranked)
+
+
+def test_heuristic_only_when_asked(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    ranker = MLRecipeRanker(model_path=tmp_path / "missing_ranker.joblib")
+    monkeypatch.setenv("PANTRYSENSE_RANKING_MODE", "ml")
+    forced = ranker.rank(_ranked_candidates(), minimum_coverage=0.3, force_heuristic=True)
+    assert [r.title for r in forced] == ["Recipe High", "Recipe Low"]
+    monkeypatch.setenv("PANTRYSENSE_RANKING_MODE", "heuristic")
+    by_env = ranker.rank(_ranked_candidates(), minimum_coverage=0.3)
+    assert [r.title for r in by_env] == ["Recipe High", "Recipe Low"]
 
 
 def test_bundle_with_unknown_feature_falls_back(tmp_path: Path) -> None:
@@ -136,21 +150,79 @@ def test_bundle_with_unknown_feature_falls_back(tmp_path: Path) -> None:
     assert len(ranked) == 1 and ranked[0].ml_score is None
 
 
-def test_legacy_bare_model_still_loads(tmp_path: Path) -> None:
+def test_legacy_bare_model_is_ignored(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from sklearn.linear_model import LinearRegression
 
     X = np.array([[0.9, 5, 0.03, 1.0, 2, 0, 10, 1, 2], [0.1, 0, 0.01, 0.2, 1, 4, 60, 2, 5]], dtype=np.float32)
     path = tmp_path / "legacy.joblib"
     joblib.dump(LinearRegression().fit(X, [3.0, 0.0]), path)
+    monkeypatch.setenv("PANTRYSENSE_RANKING_MODE", "ml")
     ranker = MLRecipeRanker(model_path=path)
+    assert ranker.is_ready is False
     recipes = [
         RecipeSummary(id=1, title="Weak", coverage=0.2, matched_count=1, missing_ingredients=list("abcd"),
-                      semantic_score=0.1, bm25_score=0.0, rrf_score=0.01),
+                      semantic_score=0.1, bm25_score=0.0, rrf_score=0.03, retrieval_rank=1),
         RecipeSummary(id=2, title="Strong", coverage=1.0, matched_count=2, semantic_score=0.9, bm25_score=5.0,
-                      rrf_score=0.03),
+                      rrf_score=0.01, retrieval_rank=2),
     ]
     ranked = ranker.rank(recipes, minimum_coverage=0.1)
-    assert ranked[0].title == "Strong" and ranked[0].ml_score is not None
+    assert [r.title for r in ranked] == ["Weak", "Strong"]
+    assert all(r.ml_score is None for r in ranked)
+
+
+def _fake_finetuned_setup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, complete: bool) -> Path:
+    from app.backend import config
+
+    model_dir = tmp_path / "models" / "e5-small-pantry"
+    model_dir.mkdir(parents=True)
+    (model_dir / "config.json").write_text("{}", encoding="utf-8")
+    index = tmp_path / "recipe_vectors_e5ft.index"
+    ids = tmp_path / "recipe_vector_ids_e5ft.json"
+    index.write_bytes(b"")
+    ids.write_text("[]", encoding="utf-8")
+    if complete:
+        Path(str(index) + ".meta.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(config, "FINETUNED_EMBEDDING_MODEL_DIR", model_dir)
+    monkeypatch.setattr(config, "FINETUNED_VECTOR_INDEX_PATH", index)
+    monkeypatch.setattr(config, "FINETUNED_VECTOR_IDS_PATH", ids)
+    for var in ("PANTRYSENSE_EMBEDDING_MODEL", "PANTRYSENSE_VECTOR_INDEX_PATH", "PANTRYSENSE_VECTOR_IDS_PATH"):
+        monkeypatch.delenv(var, raising=False)
+    return model_dir
+
+
+def test_default_embedding_uses_finetuned_e5_when_present(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.backend import config
+
+    model_dir = _fake_finetuned_setup(tmp_path, monkeypatch, complete=True)
+    assert config.uses_finetuned_embedding() is True
+    assert config.get_embedding_model_name() == str(model_dir)
+    assert config.get_vector_index_path() == config.FINETUNED_VECTOR_INDEX_PATH
+    assert config.get_vector_ids_path() == config.FINETUNED_VECTOR_IDS_PATH
+
+    # An explicit model wins, and the index paths follow it.
+    monkeypatch.setenv("PANTRYSENSE_EMBEDDING_MODEL", config.DEFAULT_EMBEDDING_MODEL_NAME)
+    assert config.uses_finetuned_embedding() is False
+    assert config.get_vector_index_path() == config.DEFAULT_VECTOR_INDEX_PATH
+
+
+def test_default_embedding_falls_back_to_minilm(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.backend import config
+
+    _fake_finetuned_setup(tmp_path, monkeypatch, complete=False)  # index metadata missing
+    assert config.uses_finetuned_embedding() is False
+    assert config.get_embedding_model_name() == config.DEFAULT_EMBEDDING_MODEL_NAME
+    assert config.get_vector_index_path() == config.DEFAULT_VECTOR_INDEX_PATH
+    assert [p.name for p in config.missing_finetuned_files()] == ["recipe_vectors_e5ft.index.meta.json"]
+
+
+def test_index_built_from_a_copied_model_folder_matches(tmp_path: Path) -> None:
+    from app.backend.retrieval.embedder import same_embedding_model
+
+    here = tmp_path / "data" / "models" / "e5-small-pantry"
+    here.mkdir(parents=True)
+    assert same_embedding_model(r"D:\other\checkout\data\models\e5-small-pantry", str(here))
+    assert not same_embedding_model(r"D:\other\models\e5-base", str(here))
+    assert not same_embedding_model("sentence-transformers/all-MiniLM-L6-v2", str(here))
 
 
 def _synthetic_groups(n_queries: int, seed: int = 0) -> list[QueryGroup]:

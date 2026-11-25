@@ -9,6 +9,12 @@ DEFAULT_VECTOR_INDEX_PATH = BASE_DIR / "data" / "recipe_vectors.index"
 DEFAULT_VECTOR_IDS_PATH = BASE_DIR / "data" / "recipe_vector_ids.json"
 DEFAULT_BM25_INDEX_PATH = BASE_DIR / "data" / "recipe_bm25.json"
 DEFAULT_RANKER_MODEL_PATH = BASE_DIR / "data" / "ranker_model.joblib"
+DEFAULT_EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+# Fine-tuned e5-small and the index built from it (see docs/embedding.md). All
+# of these are gitignored; when any is missing the app falls back to MiniLM.
+FINETUNED_EMBEDDING_MODEL_DIR = BASE_DIR / "data" / "models" / "e5-small-pantry"
+FINETUNED_VECTOR_INDEX_PATH = BASE_DIR / "data" / "recipe_vectors_e5ft.index"
+FINETUNED_VECTOR_IDS_PATH = BASE_DIR / "data" / "recipe_vector_ids_e5ft.json"
 DEFAULT_INGREDIENT_VOCAB_PATH = BASE_DIR / "data" / "ingredient_vocab.json"
 
 
@@ -42,8 +48,36 @@ def get_ranker_model_path() -> Path:
     return Path(os.getenv("PANTRYSENSE_RANKER_MODEL_PATH", DEFAULT_RANKER_MODEL_PATH))
 
 
+def missing_finetuned_files() -> list[Path]:
+    """Files the fine-tuned e5 setup needs that are not on disk."""
+    index_meta = Path(str(FINETUNED_VECTOR_INDEX_PATH) + ".meta.json")
+    required = [
+        FINETUNED_EMBEDDING_MODEL_DIR / "config.json",
+        FINETUNED_VECTOR_INDEX_PATH,
+        index_meta,
+        FINETUNED_VECTOR_IDS_PATH,
+    ]
+    return [p for p in required if not p.is_file()]
+
+
+def uses_finetuned_embedding() -> bool:
+    """True when queries go through the fine-tuned e5 model and its index.
+
+    PANTRYSENSE_EMBEDDING_MODEL, when set, decides on its own. Otherwise the
+    fine-tuned model is used only if the model, its index, the index metadata and
+    the id file all exist, so a fresh clone runs on MiniLM.
+    """
+    env_model = os.getenv("PANTRYSENSE_EMBEDDING_MODEL", "").strip()
+    if env_model:
+        return Path(env_model).resolve() == FINETUNED_EMBEDDING_MODEL_DIR.resolve()
+    return not missing_finetuned_files()
+
+
 def get_embedding_model_name() -> str:
-    return os.getenv("PANTRYSENSE_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2").strip()
+    env_model = os.getenv("PANTRYSENSE_EMBEDDING_MODEL", "").strip()
+    if env_model:
+        return env_model
+    return str(FINETUNED_EMBEDDING_MODEL_DIR) if uses_finetuned_embedding() else DEFAULT_EMBEDDING_MODEL_NAME
 
 
 def get_semantic_top_k() -> int:
@@ -55,11 +89,17 @@ def get_semantic_threshold() -> float:
 
 
 def get_vector_index_path() -> Path:
-    return Path(os.getenv("PANTRYSENSE_VECTOR_INDEX_PATH", DEFAULT_VECTOR_INDEX_PATH))
+    env = os.getenv("PANTRYSENSE_VECTOR_INDEX_PATH")
+    if env:
+        return Path(env)
+    return FINETUNED_VECTOR_INDEX_PATH if uses_finetuned_embedding() else DEFAULT_VECTOR_INDEX_PATH
 
 
 def get_vector_ids_path() -> Path:
-    return Path(os.getenv("PANTRYSENSE_VECTOR_IDS_PATH", DEFAULT_VECTOR_IDS_PATH))
+    env = os.getenv("PANTRYSENSE_VECTOR_IDS_PATH")
+    if env:
+        return Path(env)
+    return FINETUNED_VECTOR_IDS_PATH if uses_finetuned_embedding() else DEFAULT_VECTOR_IDS_PATH
 
 
 def get_bm25_index_path() -> Path:
