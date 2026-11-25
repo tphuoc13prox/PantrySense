@@ -15,9 +15,6 @@ concurrency:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    # Non-blocking for now: the existing code has not been cleaned up against
-    # the ruff rules in pyproject.toml. Remove continue-on-error once it is.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -53,3 +50,8 @@ jobs:
         # data/ is not part of the checkout, so tests marked requires_data or
         # requires_models skip themselves (see tests/conftest.py).
         run: python -m pytest -m "not slow"
+      - name: Mypy
+        # Needs the full install: faiss-cpu ships its own stubs, and the
+        # type: ignore comments that work around them are checked as used.
+        if: matrix.python-version == '3.12'
+        run: python -m mypy
