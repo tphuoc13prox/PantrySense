@@ -22,6 +22,29 @@ def get_database_path() -> Path:
     return Path(os.getenv("PANTRYSENSE_DB_PATH", DEFAULT_DB_PATH))
 
 
+def display_path(path: str | Path) -> str:
+    """Return ``path`` in the form written to reports and result files.
+
+    Absolute paths inside the project become relative to it
+    (``data/recipe_bm25.npz``), paths under the data directory (the folder that
+    holds the database) become ``<data-dir>/...`` and any other absolute path is
+    reduced to its file name, so committed results carry no machine-specific
+    prefix. Relative values, including model ids such as
+    ``sentence-transformers/all-MiniLM-L6-v2``, are returned unchanged.
+    """
+    p = Path(path)
+    if not p.is_absolute():
+        return p.as_posix() if isinstance(path, Path) else str(path)
+    p = p.resolve()
+    bases = ((BASE_DIR, ""), (get_database_path().resolve().parent, "<data-dir>/"))
+    for base, prefix in bases:
+        try:
+            return prefix + p.relative_to(base).as_posix()
+        except ValueError:
+            continue
+    return p.name
+
+
 def get_ingredient_vocab_path() -> Path:
     return Path(os.getenv("PANTRYSENSE_INGREDIENT_VOCAB_PATH", DEFAULT_INGREDIENT_VOCAB_PATH))
 

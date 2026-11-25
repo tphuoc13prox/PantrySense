@@ -10,6 +10,8 @@ Measures two layers for every query in a query set built by build_eval_set.py:
       configuration (PANTRYSENSE_SEMANTIC_TOP_K, coverage threshold, ...).
 
 It only reads the data files; nothing is rebuilt or written next to them.
+File and model paths in the results are written relative to the project (or
+as <data-dir>/... for a data directory outside it), never as absolute paths.
 
 Example:
     python scripts/run_eval.py --data-dir data
@@ -417,11 +419,13 @@ def main(argv: list[str] | None = None) -> int:
     embedder = sem.embedder
     embed_backend = f"{embedder.backend}-{embedder._device or 'cpu'}"
     index_meta = read_index_metadata(cfg.get_vector_index_path())
+    if index_meta and isinstance(index_meta.get("model"), str):
+        index_meta = {**index_meta, "model": cfg.display_path(index_meta["model"])}
     result = {
         "name": name,
         "created_unix": int(time.time()),
         "git_commit": git_commit(),
-        "query_set": {"path": args.queries.as_posix(), "sha256": sha256_file(args.queries),
+        "query_set": {"path": cfg.display_path(args.queries), "sha256": sha256_file(args.queries),
                       "n_queries": len(per_query), "limit": args.limit},
         "settings": {
             "candidate_k": K,
@@ -442,7 +446,7 @@ def main(argv: list[str] | None = None) -> int:
             "processor": platform.processor(),
             "embedder_engine": embedder.engine,
             "embedder_backend": embed_backend,
-            "embedding_model": embedder.model_name,
+            "embedding_model": cfg.display_path(embedder.model_name),
             "vector_index": cfg.get_vector_index_path().name,
             "vector_index_metadata": index_meta,
             "bm25_index": bm25_path.name,
