@@ -139,7 +139,7 @@ def _tokens(text: str) -> set[str]:
 
 def _dense_ranks(values: list[float | None]) -> list[float]:
     """1-based rank by descending value; None gets ABSENT_RANK."""
-    present = sorted((i for i, v in enumerate(values) if v is not None), key=lambda i: -float(values[i]))
+    present = [i for i, _ in sorted(((i, v) for i, v in enumerate(values) if v is not None), key=lambda iv: -float(iv[1]))]
     ranks = [ABSENT_RANK] * len(values)
     for rank, idx in enumerate(present, start=1):
         ranks[idx] = float(rank)
@@ -199,7 +199,8 @@ def build_feature_matrix(
 
     rows = np.zeros((n, len(LTR_FEATURE_NAMES)), dtype=np.float32)
     for i, s in enumerate(summaries):
-        detail = details_map.get(getattr(s, "id", None))
+        recipe_id = getattr(s, "id", None)
+        detail = details_map.get(recipe_id) if recipe_id is not None else None
         matched = float(getattr(s, "matched_count", 0) or 0)
         missing = list(getattr(s, "missing_ingredients", None) or [])
         required = float(getattr(s, "required_count", 0) or 0) or matched + len(missing)
@@ -213,17 +214,18 @@ def build_feature_matrix(
         diff_str = str((detail or {}).get("difficulty") or "medium").strip().lower()
 
         fused = getattr(s, "retrieval_rank", None)
+        sem_i, bm25_i = sem[i], bm25[i]
         rows[i] = [
-            float(sem[i] or 0.0),
-            float(bm25[i] or 0.0),
+            float(sem_i or 0.0),
+            float(bm25_i or 0.0),
             rrf[i],
-            0.0 if sem[i] is None else 1.0,
-            0.0 if bm25[i] is None else 1.0,
+            0.0 if sem_i is None else 1.0,
+            0.0 if bm25_i is None else 1.0,
             dense_rank[i],
             bm25_rank[i],
             float(fused) if fused is not None else ABSENT_RANK,
-            float(bm25[i]) / max_bm25 if bm25[i] is not None and max_bm25 > 0 else 0.0,
-            max_sem - float(sem[i]) if sem[i] is not None else 1.0,
+            float(bm25_i) / max_bm25 if bm25_i is not None and max_bm25 > 0 else 0.0,
+            max_sem - float(sem_i) if sem_i is not None else 1.0,
             rrf[i] / max_rrf if max_rrf > 0 else 0.0,
             float(getattr(s, "coverage", 0.0) or 0.0),
             matched,
