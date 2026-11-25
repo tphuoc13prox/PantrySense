@@ -19,7 +19,6 @@ from app.backend.evaluation.metrics import (
     reciprocal_rank,
 )
 
-
 RANKED = [10, 20, 30, 40, 50]
 
 

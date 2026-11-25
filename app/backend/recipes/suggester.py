@@ -6,7 +6,6 @@ import json
 import logging
 import threading
 from pathlib import Path
-from typing import Any
 
 from app.backend.config import get_database_path
 from app.backend.database.connection import get_connection

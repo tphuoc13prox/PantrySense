@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.backend.evaluation.split import is_eval_recipe, split_bucket
 from app.backend.evaluation.query_set import (
     QuerySetConfig,
     build_query_set,
@@ -12,6 +11,7 @@ from app.backend.evaluation.query_set import (
     to_corpus_recipe,
     write_query_set,
 )
+from app.backend.evaluation.split import is_eval_recipe, split_bucket
 
 
 def _corpus():

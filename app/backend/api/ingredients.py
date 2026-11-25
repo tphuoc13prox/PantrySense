@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Query
 
-from app.backend.recipes.schemas import IngredientSuggestResponse, IngredientSuggestion
+from app.backend.recipes.schemas import IngredientSuggestion, IngredientSuggestResponse
 from app.backend.recipes.suggester import get_ingredient_suggester
 
 router = APIRouter(prefix="/api/ingredients", tags=["ingredients"])

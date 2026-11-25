@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -13,7 +11,6 @@ from app.backend.main import app
 from app.backend.recipes.service import RecipeSearchService
 from app.backend.retrieval.embedder import IngredientEmbedder
 from app.backend.retrieval.semantic import (
-    CandidateMatch,
     SemanticIndexNotFoundError,
     SemanticRetriever,
     build_query_representation,

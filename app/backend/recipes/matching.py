@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 _WHITESPACE_RE = re.compile(r"\s+")
 _STRIP_PUNCT_RE = re.compile(r"['\"(),:;]+")
 _TRAILING_STOP_RE = re.compile(r"\s+(?:and|with|or|in|of|for|to|the|a|an|from|by|on|at|as|into)$")
