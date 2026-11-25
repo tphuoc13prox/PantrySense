@@ -231,12 +231,13 @@ def train_from_groups(
 
     bundle = {
         "format": BUNDLE_FORMAT,
-        "version": 2,
+        "version": 3,
         "model": model,
         "feature_names": list(LTR_FEATURE_NAMES),
         "params": final_params,
         "cv": {"lambdamart": cv_metrics, "heuristic": heur, "rrf": rrf},
         **({"dataset": extra_meta.get("dataset")} if extra_meta else {}),
+        "embedding_model": _embedding_model_of((extra_meta or {}).get("dataset")),
     }
     import joblib
 
@@ -258,6 +259,12 @@ def train_from_groups(
     return report
 
 
+def _embedding_model_of(datasets: list[dict[str, Any]] | None) -> str | None:
+    """The embedding model behind the training candidates, if all datasets agree."""
+    models = {(d.get("retrieval_config") or {}).get("embedding_model") for d in datasets or []}
+    return models.pop() if len(models) == 1 else None
+
+
 def train_ranker(
     output_path: Path | None = None,
     dataset: Path | Sequence[Path] | None = None,
@@ -277,7 +284,8 @@ def train_ranker(
         meta_path = path.with_suffix(".meta.json")
         ds_meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
         ds_info.append({"file": path.name, "tiers": ds_meta.get("tiers"), "top_k": ds_meta.get("top_k"),
-                        "retrieval": ds_meta.get("retrieval")})
+                        "retrieval": ds_meta.get("retrieval"),
+                        "retrieval_config": ds_meta.get("retrieval_config")})
     report = train_from_groups(
         groups, target, n_folds=n_folds, grid=grid, ablation=ablation, extra_meta={"dataset": ds_info},
     )
