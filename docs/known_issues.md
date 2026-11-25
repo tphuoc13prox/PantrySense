@@ -13,6 +13,15 @@ entry says what is wrong, what it affects and what a fix would involve.
   392 kcal per serving, but p99 is 3,355. Fixing it needs the loader to keep
   only aligned quantities or store an alignment flag (see
   `docs/nutrition_dietary.md`).
+- **Dietary tags are a word list over incomplete data.** Food.com often leaves
+  the main protein out of the ingredient list, so vegan and vegetarian tags
+  also read the title, Food.com's keywords and category, and the ingredients
+  past the stored twelve (`docs/nutrition_dietary.md`). A meat dish that none
+  of these name is still tagged vegetarian. The rules lean the other way on
+  purpose, so some vegetarian recipes lose the tag: sauces "for chicken", egg
+  dishes Food.com tagged "Poultry", titles with a quoted stand-in. The extra
+  fields come from `food_recipes.parquet`; a database migrated without it (or
+  without `pyarrow`) relies on titles and ingredients alone.
 - **The MiniLM index has drifted a little from the database.** It covers
   exactly the same 315,447 ids, but a few recipe texts changed after it was
   built. Rebuilding it with `scripts/build_vector_index.py` should fix this. The
