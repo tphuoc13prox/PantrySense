@@ -6,7 +6,7 @@ import os
 import signal
 import threading
 import time
-from typing import Callable
+from collections.abc import Callable
 
 from app.backend.config import (
     get_auto_shutdown_enabled,

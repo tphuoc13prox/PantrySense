@@ -15,10 +15,11 @@ import json
 import logging
 import sqlite3
 import threading
+from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator
+from typing import Any
 
 import numpy as np
 

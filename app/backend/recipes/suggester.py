@@ -102,7 +102,7 @@ class IngredientSuggester:
         elif self.vocab_path and self.vocab_path.exists():
             # Fast-path: Load pre-cached JSON vocabulary in < 2ms
             try:
-                with open(self.vocab_path, "r", encoding="utf-8") as f:
+                with open(self.vocab_path, encoding="utf-8") as f:
                     cached_data = json.load(f)
                 if cached_data:
                     self._frequencies = cached_data
@@ -128,7 +128,7 @@ class IngredientSuggester:
         # Check if pre-cached JSON file exists
         if self.vocab_path and self.vocab_path.exists():
             try:
-                with open(self.vocab_path, "r", encoding="utf-8") as f:
+                with open(self.vocab_path, encoding="utf-8") as f:
                     cached_data = json.load(f)
                 if cached_data:
                     self._frequencies = cached_data
