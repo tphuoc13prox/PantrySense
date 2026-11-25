@@ -1,0 +1,936 @@
+{
+  "name": "queries_v1_topk20_v1_1_e5ft_ltrv2",
+  "created_unix": 1795575713,
+  "git_commit": "f606e284a66c8dfcdf41e64f25231afb1773e5f0",
+  "query_set": {
+    "path": "eval/queries_v1.jsonl",
+    "sha256": "eb051d0d17f52c4105817eb625e123a63adc3fa9dbf6069674ea641243d75bf6",
+    "n_queries": 1000,
+    "limit": null
+  },
+  "settings": {
+    "candidate_k": 100,
+    "pipeline_semantic_top_k": 20,
+    "lexical_pipeline_top_k": 20,
+    "semantic_threshold": 0.35,
+    "rrf_k": 60,
+    "coverage_threshold": 0.28,
+    "coverage_threshold_le2_ingredients": 0.1,
+    "bootstrap_resamples": 2000,
+    "bootstrap_seed": 0,
+    "warmup_queries": 5,
+    "relevance": "source recipe; near-duplicates collapsed onto it (1 relevant item per query)"
+  },
+  "environment": {
+    "python": "3.11.16",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "embedder_engine": "cpu",
+    "embedder_backend": "sentence-transformers-cpu",
+    "embedding_model": "data/models/e5-small-pantry",
+    "vector_index": "recipe_vectors_e5ft.index",
+    "vector_index_metadata": {
+      "format_version": 1,
+      "model": "data/models/e5-small-pantry",
+      "backend": "sentence-transformers",
+      "dimension": 384,
+      "query_prefix": "query: ",
+      "passage_prefix": "passage: ",
+      "normalized": true,
+      "count": 315447
+    },
+    "bm25_index": "recipe_bm25.npz",
+    "ml_ranker_loaded": true,
+    "ml_ranker_model": "LGBMRanker",
+    "ml_scored_queries": 997,
+    "index_load_s": {
+      "bm25_s": 0.16117020000092452,
+      "faiss_s": 0.38435349999781465
+    }
+  },
+  "summary": {
+    "a:bm25": {
+      "layer": "a",
+      "config": "bm25",
+      "description": "BM25 top-K candidates",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.645,
+          "ci_low": 0.615,
+          "ci_high": 0.675
+        },
+        "recall@50": {
+          "mean": 0.801,
+          "ci_low": 0.776,
+          "ci_high": 0.827
+        },
+        "recall@100": {
+          "mean": 0.855,
+          "ci_low": 0.833,
+          "ci_high": 0.877
+        },
+        "mrr@10": {
+          "mean": 0.455854351,
+          "ci_low": 0.42983308792499997,
+          "ci_high": 0.48269927342499996
+        },
+        "ndcg@10": {
+          "mean": 0.501217294,
+          "ci_low": 0.47600119982500005,
+          "ci_high": 0.52717228655
+        },
+        "hit@1": {
+          "mean": 0.369,
+          "ci_low": 0.341,
+          "ci_high": 0.399
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 6.5175,
+          "ci_low": 6.198899999999999,
+          "ci_high": 6.718500000000001
+        },
+        "p95": {
+          "value": 12.072399999999998,
+          "ci_low": 11.582219999999998,
+          "ci_high": 12.587603749999998
+        }
+      },
+      "mean_results": 99.996,
+      "found_any_depth": 0.855
+    },
+    "a:dense": {
+      "layer": "a",
+      "config": "dense",
+      "description": "FAISS dense top-K candidates (semantic threshold applied)",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.722,
+          "ci_low": 0.694,
+          "ci_high": 0.75
+        },
+        "recall@50": {
+          "mean": 0.863,
+          "ci_low": 0.841,
+          "ci_high": 0.884
+        },
+        "recall@100": {
+          "mean": 0.907,
+          "ci_low": 0.888,
+          "ci_high": 0.925
+        },
+        "mrr@10": {
+          "mean": 0.529145615,
+          "ci_low": 0.502047751025,
+          "ci_high": 0.5561971429499999
+        },
+        "ndcg@10": {
+          "mean": 0.575454683,
+          "ci_low": 0.5490209556000001,
+          "ci_high": 0.6011612820750001
+        },
+        "hit@1": {
+          "mean": 0.439,
+          "ci_low": 0.409,
+          "ci_high": 0.47
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 40.708,
+          "ci_low": 40.429424999999995,
+          "ci_high": 40.9562625
+        },
+        "p95": {
+          "value": 49.296249999999986,
+          "ci_low": 48.360005,
+          "ci_high": 50.552476249999984
+        }
+      },
+      "mean_results": 99.604,
+      "found_any_depth": 0.907
+    },
+    "a:hybrid_rrf": {
+      "layer": "a",
+      "config": "hybrid_rrf",
+      "description": "BM25 + dense fused with RRF, top-K",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.729,
+          "ci_low": 0.702,
+          "ci_high": 0.756
+        },
+        "recall@50": {
+          "mean": 0.856,
+          "ci_low": 0.833,
+          "ci_high": 0.878
+        },
+        "recall@100": {
+          "mean": 0.903,
+          "ci_low": 0.8839750000000001,
+          "ci_high": 0.922
+        },
+        "mrr@10": {
+          "mean": 0.5354519700000001,
+          "ci_low": 0.508010601775,
+          "ci_high": 0.562338826
+        },
+        "ndcg@10": {
+          "mean": 0.581668909,
+          "ci_low": 0.5551668790250001,
+          "ci_high": 0.60707521985
+        },
+        "hit@1": {
+          "mean": 0.449,
+          "ci_low": 0.418,
+          "ci_high": 0.48
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 48.194500000000005,
+          "ci_low": 47.7903125,
+          "ci_high": 48.692125000000004
+        },
+        "p95": {
+          "value": 59.49154999999999,
+          "ci_low": 58.721531250000005,
+          "ci_high": 60.91156249999997
+        }
+      },
+      "mean_results": 99.996,
+      "found_any_depth": 0.903
+    },
+    "b:bm25": {
+      "layer": "b",
+      "config": "bm25",
+      "description": "lexical mode, coverage filter, BM25 order",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.655,
+          "ci_low": 0.626,
+          "ci_high": 0.685
+        },
+        "recall@50": {
+          "mean": 0.688,
+          "ci_low": 0.66,
+          "ci_high": 0.718
+        },
+        "recall@100": {
+          "mean": 0.688,
+          "ci_low": 0.66,
+          "ci_high": 0.718
+        },
+        "mrr@10": {
+          "mean": 0.48180712300000006,
+          "ci_low": 0.4559222572,
+          "ci_high": 0.509189532625
+        },
+        "ndcg@10": {
+          "mean": 0.523918427,
+          "ci_low": 0.49831612425,
+          "ci_high": 0.551085006575
+        },
+        "hit@1": {
+          "mean": 0.393,
+          "ci_low": 0.364,
+          "ci_high": 0.423
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 10.6155,
+          "ci_low": 10.4051375,
+          "ci_high": 10.9832125
+        },
+        "p95": {
+          "value": 18.375099999999996,
+          "ci_low": 17.732539999999997,
+          "ci_high": 18.802888749999997
+        }
+      },
+      "mean_results": 11.231,
+      "found_any_depth": 0.688
+    },
+    "b:bm25_heuristic": {
+      "layer": "b",
+      "config": "bm25_heuristic",
+      "description": "lexical mode, coverage filter, heuristic ranking",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.664,
+          "ci_low": 0.6349750000000001,
+          "ci_high": 0.693
+        },
+        "recall@50": {
+          "mean": 0.688,
+          "ci_low": 0.66,
+          "ci_high": 0.718
+        },
+        "recall@100": {
+          "mean": 0.688,
+          "ci_low": 0.66,
+          "ci_high": 0.718
+        },
+        "mrr@10": {
+          "mean": 0.375064263,
+          "ci_low": 0.351692053575,
+          "ci_high": 0.39888052037500005
+        },
+        "ndcg@10": {
+          "mean": 0.444843438,
+          "ci_low": 0.42118284410000006,
+          "ci_high": 0.46881207232500005
+        },
+        "hit@1": {
+          "mean": 0.238,
+          "ci_low": 0.212,
+          "ci_high": 0.264
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 10.6155,
+          "ci_low": 10.4051375,
+          "ci_high": 10.9832125
+        },
+        "p95": {
+          "value": 18.375099999999996,
+          "ci_low": 17.732539999999997,
+          "ci_high": 18.802888749999997
+        }
+      },
+      "mean_results": 11.231,
+      "found_any_depth": 0.688
+    },
+    "b:dense": {
+      "layer": "b",
+      "config": "dense",
+      "description": "semantic mode*, coverage filter, dense order",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.717,
+          "ci_low": 0.689,
+          "ci_high": 0.745
+        },
+        "recall@50": {
+          "mean": 0.752,
+          "ci_low": 0.725,
+          "ci_high": 0.78
+        },
+        "recall@100": {
+          "mean": 0.752,
+          "ci_low": 0.725,
+          "ci_high": 0.78
+        },
+        "mrr@10": {
+          "mean": 0.5512527629999999,
+          "ci_low": 0.5232498967000001,
+          "ci_high": 0.579053780975
+        },
+        "ndcg@10": {
+          "mean": 0.591519086,
+          "ci_low": 0.565177366275,
+          "ci_high": 0.6188603107249999
+        },
+        "hit@1": {
+          "mean": 0.464,
+          "ci_low": 0.432,
+          "ci_high": 0.494
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 49.507000000000005,
+          "ci_low": 48.9731875,
+          "ci_high": 49.807900000000004
+        },
+        "p95": {
+          "value": 66.03529999999999,
+          "ci_low": 61.3304,
+          "ci_high": 70.42926874999998
+        }
+      },
+      "mean_results": 10.565,
+      "found_any_depth": 0.752
+    },
+    "b:dense_heuristic": {
+      "layer": "b",
+      "config": "dense_heuristic",
+      "description": "semantic mode*, coverage filter, heuristic ranking",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.718,
+          "ci_low": 0.69,
+          "ci_high": 0.7460249999999998
+        },
+        "recall@50": {
+          "mean": 0.752,
+          "ci_low": 0.725,
+          "ci_high": 0.78
+        },
+        "recall@100": {
+          "mean": 0.752,
+          "ci_low": 0.725,
+          "ci_high": 0.78
+        },
+        "mrr@10": {
+          "mean": 0.474090458,
+          "ci_low": 0.44850781609999996,
+          "ci_high": 0.50142416645
+        },
+        "ndcg@10": {
+          "mean": 0.5328404339999999,
+          "ci_low": 0.507702605325,
+          "ci_high": 0.558855110075
+        },
+        "hit@1": {
+          "mean": 0.362,
+          "ci_low": 0.332,
+          "ci_high": 0.393
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 49.507000000000005,
+          "ci_low": 48.9731875,
+          "ci_high": 49.807900000000004
+        },
+        "p95": {
+          "value": 66.03529999999999,
+          "ci_low": 61.3304,
+          "ci_high": 70.42926874999998
+        }
+      },
+      "mean_results": 10.565,
+      "found_any_depth": 0.752
+    },
+    "b:hybrid_rrf": {
+      "layer": "b",
+      "config": "hybrid_rrf",
+      "description": "hybrid mode, coverage filter, RRF order",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.729,
+          "ci_low": 0.701,
+          "ci_high": 0.757
+        },
+        "recall@50": {
+          "mean": 0.761,
+          "ci_low": 0.734,
+          "ci_high": 0.788
+        },
+        "recall@100": {
+          "mean": 0.761,
+          "ci_low": 0.734,
+          "ci_high": 0.788
+        },
+        "mrr@10": {
+          "mean": 0.5548138739999999,
+          "ci_low": 0.5271869070000001,
+          "ci_high": 0.583617356825
+        },
+        "ndcg@10": {
+          "mean": 0.596590962,
+          "ci_low": 0.56980974805,
+          "ci_high": 0.6241369895500001
+        },
+        "hit@1": {
+          "mean": 0.475,
+          "ci_low": 0.443,
+          "ci_high": 0.507
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 55.4225,
+          "ci_low": 54.8746625,
+          "ci_high": 56.000362499999994
+        },
+        "p95": {
+          "value": 72.07584999999997,
+          "ci_low": 70.35235999999999,
+          "ci_high": 75.011
+        }
+      },
+      "mean_results": 11.296,
+      "found_any_depth": 0.761
+    },
+    "b:hybrid_heuristic": {
+      "layer": "b",
+      "config": "hybrid_heuristic",
+      "description": "hybrid mode, coverage filter, heuristic ranking",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.722,
+          "ci_low": 0.693975,
+          "ci_high": 0.751
+        },
+        "recall@50": {
+          "mean": 0.761,
+          "ci_low": 0.734,
+          "ci_high": 0.788
+        },
+        "recall@100": {
+          "mean": 0.761,
+          "ci_low": 0.734,
+          "ci_high": 0.788
+        },
+        "mrr@10": {
+          "mean": 0.41823291900000004,
+          "ci_low": 0.39407318980000006,
+          "ci_high": 0.44319962162499993
+        },
+        "ndcg@10": {
+          "mean": 0.491471753,
+          "ci_low": 0.467887587475,
+          "ci_high": 0.515912685925
+        },
+        "hit@1": {
+          "mean": 0.276,
+          "ci_low": 0.249,
+          "ci_high": 0.304
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 55.4225,
+          "ci_low": 54.8746625,
+          "ci_high": 56.000362499999994
+        },
+        "p95": {
+          "value": 72.07584999999997,
+          "ci_low": 70.35235999999999,
+          "ci_high": 75.011
+        }
+      },
+      "mean_results": 11.296,
+      "found_any_depth": 0.761
+    },
+    "b:hybrid_ml": {
+      "layer": "b",
+      "config": "hybrid_ml",
+      "description": "hybrid mode, coverage filter, LightGBM ranker (app default)",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.755,
+          "ci_low": 0.728,
+          "ci_high": 0.782
+        },
+        "recall@50": {
+          "mean": 0.761,
+          "ci_low": 0.734,
+          "ci_high": 0.788
+        },
+        "recall@100": {
+          "mean": 0.761,
+          "ci_low": 0.734,
+          "ci_high": 0.788
+        },
+        "mrr@10": {
+          "mean": 0.648427373,
+          "ci_low": 0.6209563296500001,
+          "ci_high": 0.676548859625
+        },
+        "ndcg@10": {
+          "mean": 0.674610283,
+          "ci_low": 0.648608073225,
+          "ci_high": 0.70203476895
+        },
+        "hit@1": {
+          "mean": 0.589,
+          "ci_low": 0.559,
+          "ci_high": 0.6200249999999998
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 57.955,
+          "ci_low": 57.397375000000004,
+          "ci_high": 58.321262499999996
+        },
+        "p95": {
+          "value": 73.60334999999999,
+          "ci_low": 72.2943925,
+          "ci_high": 76.22180999999999
+        }
+      },
+      "mean_results": 11.296,
+      "found_any_depth": 0.761
+    }
+  },
+  "by_tier": {
+    "noisy": {
+      "n": 333,
+      "a:bm25": {
+        "recall@10": 0.5555555555555556,
+        "recall@100": 0.7777777777777778,
+        "mrr@10": 0.4098860690690691,
+        "hit@1": 0.34534534534534533
+      },
+      "a:dense": {
+        "recall@10": 0.6696696696696697,
+        "recall@100": 0.8438438438438438,
+        "mrr@10": 0.4917691231231232,
+        "hit@1": 0.4144144144144144
+      },
+      "a:hybrid_rrf": {
+        "recall@10": 0.6756756756756757,
+        "recall@100": 0.8408408408408409,
+        "mrr@10": 0.5111003783783782,
+        "hit@1": 0.43843843843843844
+      },
+      "b:bm25": {
+        "recall@10": 0.5705705705705706,
+        "recall@100": 0.5855855855855856,
+        "mrr@10": 0.44277489489489497,
+        "hit@1": 0.3663663663663664
+      },
+      "b:bm25_heuristic": {
+        "recall@10": 0.5795795795795796,
+        "recall@100": 0.5855855855855856,
+        "mrr@10": 0.3438247687687688,
+        "hit@1": 0.22522522522522523
+      },
+      "b:dense": {
+        "recall@10": 0.6636636636636637,
+        "recall@100": 0.6876876876876877,
+        "mrr@10": 0.5488893513513514,
+        "hit@1": 0.4804804804804805
+      },
+      "b:dense_heuristic": {
+        "recall@10": 0.6816816816816816,
+        "recall@100": 0.6876876876876877,
+        "mrr@10": 0.522128066066066,
+        "hit@1": 0.4444444444444444
+      },
+      "b:hybrid_rrf": {
+        "recall@10": 0.6876876876876877,
+        "recall@100": 0.6936936936936937,
+        "mrr@10": 0.5571785945945945,
+        "hit@1": 0.4894894894894895
+      },
+      "b:hybrid_heuristic": {
+        "recall@10": 0.6816816816816816,
+        "recall@100": 0.6936936936936937,
+        "mrr@10": 0.44096714114114116,
+        "hit@1": 0.3213213213213213
+      },
+      "b:hybrid_ml": {
+        "recall@10": 0.6936936936936937,
+        "recall@100": 0.6936936936936937,
+        "mrr@10": 0.6320070060060059,
+        "hit@1": 0.5975975975975976
+      }
+    },
+    "sparse": {
+      "n": 333,
+      "a:bm25": {
+        "recall@10": 0.6126126126126126,
+        "recall@100": 0.8708708708708709,
+        "mrr@10": 0.3500107027027026,
+        "hit@1": 0.24024024024024024
+      },
+      "a:dense": {
+        "recall@10": 0.6606606606606606,
+        "recall@100": 0.9039039039039038,
+        "mrr@10": 0.41474328528528526,
+        "hit@1": 0.3003003003003003
+      },
+      "a:hybrid_rrf": {
+        "recall@10": 0.6966966966966966,
+        "recall@100": 0.9039039039039038,
+        "mrr@10": 0.41894034234234245,
+        "hit@1": 0.2972972972972973
+      },
+      "b:bm25": {
+        "recall@10": 0.6276276276276276,
+        "recall@100": 0.6726726726726727,
+        "mrr@10": 0.37702223423423425,
+        "hit@1": 0.2672672672672673
+      },
+      "b:bm25_heuristic": {
+        "recall@10": 0.6246246246246246,
+        "recall@100": 0.6726726726726727,
+        "mrr@10": 0.29906331231231237,
+        "hit@1": 0.15915915915915915
+      },
+      "b:dense": {
+        "recall@10": 0.6516516516516516,
+        "recall@100": 0.7057057057057057,
+        "mrr@10": 0.42031433633633636,
+        "hit@1": 0.30930930930930933
+      },
+      "b:dense_heuristic": {
+        "recall@10": 0.6396396396396397,
+        "recall@100": 0.7057057057057057,
+        "mrr@10": 0.3288633633633633,
+        "hit@1": 0.19519519519519518
+      },
+      "b:hybrid_rrf": {
+        "recall@10": 0.6846846846846847,
+        "recall@100": 0.7297297297297297,
+        "mrr@10": 0.4250833933933935,
+        "hit@1": 0.3153153153153153
+      },
+      "b:hybrid_heuristic": {
+        "recall@10": 0.6456456456456456,
+        "recall@100": 0.7297297297297297,
+        "mrr@10": 0.3017838978978979,
+        "hit@1": 0.15615615615615616
+      },
+      "b:hybrid_ml": {
+        "recall@10": 0.7147147147147147,
+        "recall@100": 0.7297297297297297,
+        "mrr@10": 0.5571642942942943,
+        "hit@1": 0.47147147147147145
+      }
+    },
+    "standard": {
+      "n": 334,
+      "a:bm25": {
+        "recall@10": 0.7664670658682635,
+        "recall@100": 0.9161676646706587,
+        "mrr@10": 0.6072117544910177,
+        "hit@1": 0.5209580838323353
+      },
+      "a:dense": {
+        "recall@10": 0.8353293413173652,
+        "recall@100": 0.9730538922155688,
+        "mrr@10": 0.6804700089820358,
+        "hit@1": 0.6017964071856288
+      },
+      "a:hybrid_rrf": {
+        "recall@10": 0.8143712574850299,
+        "recall@100": 0.9640718562874252,
+        "mrr@10": 0.6758934431137723,
+        "hit@1": 0.6107784431137725
+      },
+      "b:bm25": {
+        "recall@10": 0.7664670658682635,
+        "recall@100": 0.8053892215568862,
+        "mrr@10": 0.6251936497005987,
+        "hit@1": 0.5449101796407185
+      },
+      "b:bm25_heuristic": {
+        "recall@10": 0.7874251497005988,
+        "recall@100": 0.8053892215568862,
+        "mrr@10": 0.48198362874251494,
+        "hit@1": 0.32934131736526945
+      },
+      "b:dense": {
+        "recall@10": 0.8353293413173652,
+        "recall@100": 0.8622754491017964,
+        "mrr@10": 0.6841554940119758,
+        "hit@1": 0.6017964071856288
+      },
+      "b:dense_heuristic": {
+        "recall@10": 0.8323353293413174,
+        "recall@100": 0.8622754491017964,
+        "mrr@10": 0.5709889580838322,
+        "hit@1": 0.44610778443113774
+      },
+      "b:hybrid_rrf": {
+        "recall@10": 0.8143712574850299,
+        "recall@100": 0.8592814371257484,
+        "mrr@10": 0.6817982994011975,
+        "hit@1": 0.6197604790419161
+      },
+      "b:hybrid_heuristic": {
+        "recall@10": 0.8383233532934131,
+        "recall@100": 0.8592814371257484,
+        "mrr@10": 0.5116671347305392,
+        "hit@1": 0.3502994011976048
+      },
+      "b:hybrid_ml": {
+        "recall@10": 0.8562874251497006,
+        "recall@100": 0.8592814371257484,
+        "mrr@10": 0.7557884131736526,
+        "hit@1": 0.6976047904191617
+      }
+    }
+  },
+  "paired_comparisons": [
+    {
+      "layer": "a",
+      "a": "hybrid_rrf",
+      "b": "bm25",
+      "recall@10": {
+        "diff": 0.084,
+        "ci_low": 0.066,
+        "ci_high": 0.103
+      },
+      "mrr@10": {
+        "diff": 0.07959761900000001,
+        "ci_low": 0.06506684292499999,
+        "ci_high": 0.094514791825
+      },
+      "ndcg@10": {
+        "diff": 0.080451615,
+        "ci_low": 0.06744294597500002,
+        "ci_high": 0.0940190987
+      },
+      "hit@1": {
+        "diff": 0.08,
+        "ci_low": 0.058,
+        "ci_high": 0.102
+      }
+    },
+    {
+      "layer": "a",
+      "a": "hybrid_rrf",
+      "b": "dense",
+      "recall@10": {
+        "diff": 0.007,
+        "ci_low": -0.011,
+        "ci_high": 0.024
+      },
+      "mrr@10": {
+        "diff": 0.006306354999999999,
+        "ci_low": -0.007117195649999995,
+        "ci_high": 0.019967563924999997
+      },
+      "ndcg@10": {
+        "diff": 0.006214225999999999,
+        "ci_low": -0.005759118174999995,
+        "ci_high": 0.018472900699999982
+      },
+      "hit@1": {
+        "diff": 0.01,
+        "ci_low": -0.009,
+        "ci_high": 0.029
+      }
+    },
+    {
+      "layer": "b",
+      "a": "hybrid_rrf",
+      "b": "bm25",
+      "recall@10": {
+        "diff": 0.074,
+        "ci_low": 0.058,
+        "ci_high": 0.093
+      },
+      "mrr@10": {
+        "diff": 0.073006751,
+        "ci_low": 0.059270438175,
+        "ci_high": 0.08738854657499999
+      },
+      "ndcg@10": {
+        "diff": 0.07267253500000001,
+        "ci_low": 0.06061827905000001,
+        "ci_high": 0.08522339757499996
+      },
+      "hit@1": {
+        "diff": 0.082,
+        "ci_low": 0.061,
+        "ci_high": 0.104
+      }
+    },
+    {
+      "layer": "b",
+      "a": "hybrid_heuristic",
+      "b": "hybrid_rrf",
+      "recall@10": {
+        "diff": -0.007,
+        "ci_low": -0.02,
+        "ci_high": 0.007
+      },
+      "mrr@10": {
+        "diff": -0.136580955,
+        "ci_low": -0.15772865900000002,
+        "ci_high": -0.11493550920000001
+      },
+      "ndcg@10": {
+        "diff": -0.10511920899999999,
+        "ci_low": -0.121779149975,
+        "ci_high": -0.08795201177500003
+      },
+      "hit@1": {
+        "diff": -0.199,
+        "ci_low": -0.231,
+        "ci_high": -0.166
+      }
+    },
+    {
+      "layer": "b",
+      "a": "hybrid_ml",
+      "b": "hybrid_rrf",
+      "recall@10": {
+        "diff": 0.026,
+        "ci_low": 0.016,
+        "ci_high": 0.037
+      },
+      "mrr@10": {
+        "diff": 0.09361349899999999,
+        "ci_low": 0.07857977240000001,
+        "ci_high": 0.109752042725
+      },
+      "ndcg@10": {
+        "diff": 0.078019321,
+        "ci_low": 0.0657891333,
+        "ci_high": 0.09116788897499999
+      },
+      "hit@1": {
+        "diff": 0.114,
+        "ci_low": 0.093,
+        "ci_high": 0.136
+      }
+    },
+    {
+      "layer": "b",
+      "a": "hybrid_ml",
+      "b": "hybrid_heuristic",
+      "recall@10": {
+        "diff": 0.033,
+        "ci_low": 0.022,
+        "ci_high": 0.045
+      },
+      "mrr@10": {
+        "diff": 0.23019445400000002,
+        "ci_low": 0.20939607417499997,
+        "ci_high": 0.250595953475
+      },
+      "ndcg@10": {
+        "diff": 0.18313853,
+        "ci_low": 0.166799262825,
+        "ci_high": 0.199583605425
+      },
+      "hit@1": {
+        "diff": 0.313,
+        "ci_low": 0.283,
+        "ci_high": 0.343
+      }
+    }
+  ],
+  "latency_components_ms": {
+    "embed": {
+      "p50": 19.09,
+      "p95": 24.485,
+      "mean": 19.416505000000015
+    },
+    "faiss": {
+      "p50": 21.573999999999998,
+      "p95": 27.58065,
+      "mean": 21.952918000000018
+    },
+    "bm25": {
+      "p50": 6.5175,
+      "p95": 12.072399999999998,
+      "mean": 6.834092000000002
+    },
+    "rrf": {
+      "p50": 0.747,
+      "p95": 1.2261499999999999,
+      "mean": 0.7931729999999998
+    }
+  },
+  "rule_based": null,
+  "semantic_via_service": true,
+  "notes": [
+    "v1.1 code with the LTR v2 bundle; DB is a copy with recipe_metadata migrated; BM25 is the original recipe_bm25.json converted to npz (same content).",
+    "Machine otherwise idle during the run (no other heavy job).",
+    "ML ranker: LTR v2 bundle (sha256 3990497d68fe), trained on hybrid candidates from MiniLM.",
+    "Dense model: fine-tuned e5-small-v2. The LTR v2 model was NOT retrained for e5: semantic_score and dense ranks now come from a different distribution than in training."
+  ]
+}

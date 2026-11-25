@@ -1,0 +1,927 @@
+{
+  "name": "queries_v1_topk20_v1_1_minilm_ltrv2",
+  "created_unix": 1795575465,
+  "git_commit": "f606e284a66c8dfcdf41e64f25231afb1773e5f0",
+  "query_set": {
+    "path": "eval/queries_v1.jsonl",
+    "sha256": "eb051d0d17f52c4105817eb625e123a63adc3fa9dbf6069674ea641243d75bf6",
+    "n_queries": 1000,
+    "limit": null
+  },
+  "settings": {
+    "candidate_k": 100,
+    "pipeline_semantic_top_k": 20,
+    "lexical_pipeline_top_k": 20,
+    "semantic_threshold": 0.35,
+    "rrf_k": 60,
+    "coverage_threshold": 0.28,
+    "coverage_threshold_le2_ingredients": 0.1,
+    "bootstrap_resamples": 2000,
+    "bootstrap_seed": 0,
+    "warmup_queries": 5,
+    "relevance": "source recipe; near-duplicates collapsed onto it (1 relevant item per query)"
+  },
+  "environment": {
+    "python": "3.11.16",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "embedder_engine": "cpu",
+    "embedder_backend": "sentence-transformers-cpu",
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "vector_index": "recipe_vectors.index",
+    "vector_index_metadata": null,
+    "bm25_index": "recipe_bm25.npz",
+    "ml_ranker_loaded": true,
+    "ml_ranker_model": "LGBMRanker",
+    "ml_scored_queries": 993,
+    "index_load_s": {
+      "bm25_s": 0.19336170000315178,
+      "faiss_s": 0.4958316999982344
+    }
+  },
+  "summary": {
+    "a:bm25": {
+      "layer": "a",
+      "config": "bm25",
+      "description": "BM25 top-K candidates",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.645,
+          "ci_low": 0.615,
+          "ci_high": 0.675
+        },
+        "recall@50": {
+          "mean": 0.801,
+          "ci_low": 0.776,
+          "ci_high": 0.827
+        },
+        "recall@100": {
+          "mean": 0.855,
+          "ci_low": 0.833,
+          "ci_high": 0.877
+        },
+        "mrr@10": {
+          "mean": 0.455854351,
+          "ci_low": 0.42983308792499997,
+          "ci_high": 0.48269927342499996
+        },
+        "ndcg@10": {
+          "mean": 0.501217294,
+          "ci_low": 0.47600119982500005,
+          "ci_high": 0.52717228655
+        },
+        "hit@1": {
+          "mean": 0.369,
+          "ci_low": 0.341,
+          "ci_high": 0.399
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 5.812,
+          "ci_low": 5.472787500000001,
+          "ci_high": 6.0247625000000005
+        },
+        "p95": {
+          "value": 10.4744,
+          "ci_low": 10.10526125,
+          "ci_high": 11.263
+        }
+      },
+      "mean_results": 99.996,
+      "found_any_depth": 0.855
+    },
+    "a:dense": {
+      "layer": "a",
+      "config": "dense",
+      "description": "FAISS dense top-K candidates (semantic threshold applied)",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.291,
+          "ci_low": 0.264,
+          "ci_high": 0.32
+        },
+        "recall@50": {
+          "mean": 0.444,
+          "ci_low": 0.414,
+          "ci_high": 0.475
+        },
+        "recall@100": {
+          "mean": 0.535,
+          "ci_low": 0.504,
+          "ci_high": 0.565
+        },
+        "mrr@10": {
+          "mean": 0.163357535,
+          "ci_low": 0.144340848125,
+          "ci_high": 0.18378852509999996
+        },
+        "ndcg@10": {
+          "mean": 0.19338697100000002,
+          "ci_low": 0.173281888525,
+          "ci_high": 0.21501463835
+        },
+        "hit@1": {
+          "mean": 0.112,
+          "ci_low": 0.093,
+          "ci_high": 0.132
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 33.907,
+          "ci_low": 33.67395,
+          "ci_high": 34.145625
+        },
+        "p95": {
+          "value": 45.117349999999995,
+          "ci_low": 42.97729999999999,
+          "ci_high": 47.668
+        }
+      },
+      "mean_results": 99.92,
+      "found_any_depth": 0.535
+    },
+    "a:hybrid_rrf": {
+      "layer": "a",
+      "config": "hybrid_rrf",
+      "description": "BM25 + dense fused with RRF, top-K",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.478,
+          "ci_low": 0.448,
+          "ci_high": 0.5070249999999998
+        },
+        "recall@50": {
+          "mean": 0.746,
+          "ci_low": 0.719975,
+          "ci_high": 0.773
+        },
+        "recall@100": {
+          "mean": 0.821,
+          "ci_low": 0.7979750000000001,
+          "ci_high": 0.845
+        },
+        "mrr@10": {
+          "mean": 0.28445117500000006,
+          "ci_low": 0.261149787475,
+          "ci_high": 0.31009027937499994
+        },
+        "ndcg@10": {
+          "mean": 0.330072766,
+          "ci_low": 0.30615296370000006,
+          "ci_high": 0.35498194254999993
+        },
+        "hit@1": {
+          "mean": 0.209,
+          "ci_low": 0.184,
+          "ci_high": 0.235
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 40.335,
+          "ci_low": 40.0363625,
+          "ci_high": 40.642
+        },
+        "p95": {
+          "value": 53.84894999999999,
+          "ci_low": 52.22373625,
+          "ci_high": 55.740843749999996
+        }
+      },
+      "mean_results": 99.996,
+      "found_any_depth": 0.821
+    },
+    "b:bm25": {
+      "layer": "b",
+      "config": "bm25",
+      "description": "lexical mode, coverage filter, BM25 order",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.655,
+          "ci_low": 0.626,
+          "ci_high": 0.685
+        },
+        "recall@50": {
+          "mean": 0.688,
+          "ci_low": 0.66,
+          "ci_high": 0.718
+        },
+        "recall@100": {
+          "mean": 0.688,
+          "ci_low": 0.66,
+          "ci_high": 0.718
+        },
+        "mrr@10": {
+          "mean": 0.48180712300000006,
+          "ci_low": 0.4559222572,
+          "ci_high": 0.509189532625
+        },
+        "ndcg@10": {
+          "mean": 0.523918427,
+          "ci_low": 0.49831612425,
+          "ci_high": 0.551085006575
+        },
+        "hit@1": {
+          "mean": 0.393,
+          "ci_low": 0.364,
+          "ci_high": 0.423
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 9.498000000000001,
+          "ci_low": 9.175012500000001,
+          "ci_high": 9.6388375
+        },
+        "p95": {
+          "value": 15.481349999999997,
+          "ci_low": 14.965881249999997,
+          "ci_high": 16.535
+        }
+      },
+      "mean_results": 11.231,
+      "found_any_depth": 0.688
+    },
+    "b:bm25_heuristic": {
+      "layer": "b",
+      "config": "bm25_heuristic",
+      "description": "lexical mode, coverage filter, heuristic ranking",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.664,
+          "ci_low": 0.6349750000000001,
+          "ci_high": 0.693
+        },
+        "recall@50": {
+          "mean": 0.688,
+          "ci_low": 0.66,
+          "ci_high": 0.718
+        },
+        "recall@100": {
+          "mean": 0.688,
+          "ci_low": 0.66,
+          "ci_high": 0.718
+        },
+        "mrr@10": {
+          "mean": 0.375064263,
+          "ci_low": 0.351692053575,
+          "ci_high": 0.39888052037500005
+        },
+        "ndcg@10": {
+          "mean": 0.444843438,
+          "ci_low": 0.42118284410000006,
+          "ci_high": 0.46881207232500005
+        },
+        "hit@1": {
+          "mean": 0.238,
+          "ci_low": 0.212,
+          "ci_high": 0.264
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 9.498000000000001,
+          "ci_low": 9.175012500000001,
+          "ci_high": 9.6388375
+        },
+        "p95": {
+          "value": 15.481349999999997,
+          "ci_low": 14.965881249999997,
+          "ci_high": 16.535
+        }
+      },
+      "mean_results": 11.231,
+      "found_any_depth": 0.688
+    },
+    "b:dense": {
+      "layer": "b",
+      "config": "dense",
+      "description": "semantic mode*, coverage filter, dense order",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.331,
+          "ci_low": 0.304,
+          "ci_high": 0.361
+        },
+        "recall@50": {
+          "mean": 0.35,
+          "ci_low": 0.322,
+          "ci_high": 0.381
+        },
+        "recall@100": {
+          "mean": 0.35,
+          "ci_low": 0.322,
+          "ci_high": 0.381
+        },
+        "mrr@10": {
+          "mean": 0.213410712,
+          "ci_low": 0.19133906425,
+          "ci_high": 0.236727600275
+        },
+        "ndcg@10": {
+          "mean": 0.24146387700000002,
+          "ci_low": 0.21903042040000004,
+          "ci_high": 0.26564664415
+        },
+        "hit@1": {
+          "mean": 0.16,
+          "ci_low": 0.138,
+          "ci_high": 0.183
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 38.036500000000004,
+          "ci_low": 37.765,
+          "ci_high": 38.371
+        },
+        "p95": {
+          "value": 69.5949,
+          "ci_low": 56.87692124999987,
+          "ci_high": 73.47999999999998
+        }
+      },
+      "mean_results": 8.854,
+      "found_any_depth": 0.35
+    },
+    "b:dense_heuristic": {
+      "layer": "b",
+      "config": "dense_heuristic",
+      "description": "semantic mode*, coverage filter, heuristic ranking",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.341,
+          "ci_low": 0.313,
+          "ci_high": 0.371
+        },
+        "recall@50": {
+          "mean": 0.35,
+          "ci_low": 0.322,
+          "ci_high": 0.381
+        },
+        "recall@100": {
+          "mean": 0.35,
+          "ci_low": 0.322,
+          "ci_high": 0.381
+        },
+        "mrr@10": {
+          "mean": 0.22380078500000003,
+          "ci_low": 0.202478941525,
+          "ci_high": 0.24720118975
+        },
+        "ndcg@10": {
+          "mean": 0.252412082,
+          "ci_low": 0.23084419985000001,
+          "ci_high": 0.2767496647
+        },
+        "hit@1": {
+          "mean": 0.16,
+          "ci_low": 0.138,
+          "ci_high": 0.183
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 38.036500000000004,
+          "ci_low": 37.765,
+          "ci_high": 38.371
+        },
+        "p95": {
+          "value": 69.5949,
+          "ci_low": 56.87692124999987,
+          "ci_high": 73.47999999999998
+        }
+      },
+      "mean_results": 8.854,
+      "found_any_depth": 0.35
+    },
+    "b:hybrid_rrf": {
+      "layer": "b",
+      "config": "hybrid_rrf",
+      "description": "hybrid mode, coverage filter, RRF order",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.604,
+          "ci_low": 0.574,
+          "ci_high": 0.635
+        },
+        "recall@50": {
+          "mean": 0.655,
+          "ci_low": 0.626,
+          "ci_high": 0.685
+        },
+        "recall@100": {
+          "mean": 0.655,
+          "ci_low": 0.626,
+          "ci_high": 0.685
+        },
+        "mrr@10": {
+          "mean": 0.36420831899999995,
+          "ci_low": 0.3394673908,
+          "ci_high": 0.3913445029499999
+        },
+        "ndcg@10": {
+          "mean": 0.421314788,
+          "ci_low": 0.39651262845000007,
+          "ci_high": 0.4477555255249999
+        },
+        "hit@1": {
+          "mean": 0.265,
+          "ci_low": 0.239,
+          "ci_high": 0.29302499999999987
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 43.843,
+          "ci_low": 43.4501875,
+          "ci_high": 44.21
+        },
+        "p95": {
+          "value": 65.06999999999995,
+          "ci_low": 60.30175,
+          "ci_high": 74.55079624999998
+        }
+      },
+      "mean_results": 10.715,
+      "found_any_depth": 0.655
+    },
+    "b:hybrid_heuristic": {
+      "layer": "b",
+      "config": "hybrid_heuristic",
+      "description": "hybrid mode, coverage filter, heuristic ranking",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.638,
+          "ci_low": 0.609,
+          "ci_high": 0.668
+        },
+        "recall@50": {
+          "mean": 0.655,
+          "ci_low": 0.626,
+          "ci_high": 0.685
+        },
+        "recall@100": {
+          "mean": 0.655,
+          "ci_low": 0.626,
+          "ci_high": 0.685
+        },
+        "mrr@10": {
+          "mean": 0.358696013,
+          "ci_low": 0.3356091505,
+          "ci_high": 0.38239014637499996
+        },
+        "ndcg@10": {
+          "mean": 0.42608818800000003,
+          "ci_low": 0.403220886725,
+          "ci_high": 0.449722361725
+        },
+        "hit@1": {
+          "mean": 0.227,
+          "ci_low": 0.201,
+          "ci_high": 0.253
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 43.843,
+          "ci_low": 43.4501875,
+          "ci_high": 44.21
+        },
+        "p95": {
+          "value": 65.06999999999995,
+          "ci_low": 60.30175,
+          "ci_high": 74.55079624999998
+        }
+      },
+      "mean_results": 10.715,
+      "found_any_depth": 0.655
+    },
+    "b:hybrid_ml": {
+      "layer": "b",
+      "config": "hybrid_ml",
+      "description": "hybrid mode, coverage filter, LightGBM ranker (app default)",
+      "metrics": {
+        "recall@10": {
+          "mean": 0.651,
+          "ci_low": 0.622,
+          "ci_high": 0.681
+        },
+        "recall@50": {
+          "mean": 0.655,
+          "ci_low": 0.626,
+          "ci_high": 0.685
+        },
+        "recall@100": {
+          "mean": 0.655,
+          "ci_low": 0.626,
+          "ci_high": 0.685
+        },
+        "mrr@10": {
+          "mean": 0.5904968159999999,
+          "ci_low": 0.561584076025,
+          "ci_high": 0.6205209037
+        },
+        "ndcg@10": {
+          "mean": 0.6055704840000001,
+          "ci_low": 0.5766675018,
+          "ci_high": 0.6352722869749999
+        },
+        "hit@1": {
+          "mean": 0.553,
+          "ci_low": 0.521,
+          "ci_high": 0.5850249999999998
+        }
+      },
+      "latency_ms": {
+        "p50": {
+          "value": 45.436499999999995,
+          "ci_low": 45.072937499999995,
+          "ci_high": 45.842400000000005
+        },
+        "p95": {
+          "value": 70.47329999999998,
+          "ci_low": 63.679,
+          "ci_high": 78.16700874999997
+        }
+      },
+      "mean_results": 10.715,
+      "found_any_depth": 0.655
+    }
+  },
+  "by_tier": {
+    "noisy": {
+      "n": 333,
+      "a:bm25": {
+        "recall@10": 0.5555555555555556,
+        "recall@100": 0.7777777777777778,
+        "mrr@10": 0.4098860690690691,
+        "hit@1": 0.34534534534534533
+      },
+      "a:dense": {
+        "recall@10": 0.24324324324324326,
+        "recall@100": 0.4804804804804805,
+        "mrr@10": 0.1448221951951952,
+        "hit@1": 0.1021021021021021
+      },
+      "a:hybrid_rrf": {
+        "recall@10": 0.43243243243243246,
+        "recall@100": 0.7507507507507507,
+        "mrr@10": 0.2515944384384386,
+        "hit@1": 0.1831831831831832
+      },
+      "b:bm25": {
+        "recall@10": 0.5705705705705706,
+        "recall@100": 0.5855855855855856,
+        "mrr@10": 0.44277489489489497,
+        "hit@1": 0.3663663663663664
+      },
+      "b:bm25_heuristic": {
+        "recall@10": 0.5795795795795796,
+        "recall@100": 0.5855855855855856,
+        "mrr@10": 0.3438247687687688,
+        "hit@1": 0.22522522522522523
+      },
+      "b:dense": {
+        "recall@10": 0.27927927927927926,
+        "recall@100": 0.3003003003003003,
+        "mrr@10": 0.20416606606606608,
+        "hit@1": 0.15915915915915915
+      },
+      "b:dense_heuristic": {
+        "recall@10": 0.2972972972972973,
+        "recall@100": 0.3003003003003003,
+        "mrr@10": 0.20499427327327327,
+        "hit@1": 0.15315315315315314
+      },
+      "b:hybrid_rrf": {
+        "recall@10": 0.5585585585585585,
+        "recall@100": 0.5735735735735735,
+        "mrr@10": 0.3476607387387388,
+        "hit@1": 0.25225225225225223
+      },
+      "b:hybrid_heuristic": {
+        "recall@10": 0.5705705705705706,
+        "recall@100": 0.5735735735735735,
+        "mrr@10": 0.3382847027027028,
+        "hit@1": 0.2132132132132132
+      },
+      "b:hybrid_ml": {
+        "recall@10": 0.5705705705705706,
+        "recall@100": 0.5735735735735735,
+        "mrr@10": 0.5443943933933933,
+        "hit@1": 0.5255255255255256
+      }
+    },
+    "sparse": {
+      "n": 333,
+      "a:bm25": {
+        "recall@10": 0.6126126126126126,
+        "recall@100": 0.8708708708708709,
+        "mrr@10": 0.3500107027027026,
+        "hit@1": 0.24024024024024024
+      },
+      "a:dense": {
+        "recall@10": 0.24024024024024024,
+        "recall@100": 0.4984984984984985,
+        "mrr@10": 0.1061644954954955,
+        "hit@1": 0.06606606606606606
+      },
+      "a:hybrid_rrf": {
+        "recall@10": 0.42342342342342343,
+        "recall@100": 0.8378378378378378,
+        "mrr@10": 0.21483981981981992,
+        "hit@1": 0.13513513513513514
+      },
+      "b:bm25": {
+        "recall@10": 0.6276276276276276,
+        "recall@100": 0.6726726726726727,
+        "mrr@10": 0.37702223423423425,
+        "hit@1": 0.2672672672672673
+      },
+      "b:bm25_heuristic": {
+        "recall@10": 0.6246246246246246,
+        "recall@100": 0.6726726726726727,
+        "mrr@10": 0.29906331231231237,
+        "hit@1": 0.15915915915915915
+      },
+      "b:dense": {
+        "recall@10": 0.2822822822822823,
+        "recall@100": 0.30930930930930933,
+        "mrr@10": 0.1433862402402403,
+        "hit@1": 0.0960960960960961
+      },
+      "b:dense_heuristic": {
+        "recall@10": 0.2972972972972973,
+        "recall@100": 0.30930930930930933,
+        "mrr@10": 0.15819270570570576,
+        "hit@1": 0.09009009009009009
+      },
+      "b:hybrid_rrf": {
+        "recall@10": 0.5315315315315315,
+        "recall@100": 0.6186186186186187,
+        "mrr@10": 0.2816483003003003,
+        "hit@1": 0.1831831831831832
+      },
+      "b:hybrid_heuristic": {
+        "recall@10": 0.5825825825825826,
+        "recall@100": 0.6186186186186187,
+        "mrr@10": 0.26840290690690694,
+        "hit@1": 0.13213213213213212
+      },
+      "b:hybrid_ml": {
+        "recall@10": 0.6096096096096096,
+        "recall@100": 0.6186186186186187,
+        "mrr@10": 0.5018923513513512,
+        "hit@1": 0.44144144144144143
+      }
+    },
+    "standard": {
+      "n": 334,
+      "a:bm25": {
+        "recall@10": 0.7664670658682635,
+        "recall@100": 0.9161676646706587,
+        "mrr@10": 0.6072117544910177,
+        "hit@1": 0.5209580838323353
+      },
+      "a:dense": {
+        "recall@10": 0.38922155688622756,
+        "recall@100": 0.625748502994012,
+        "mrr@10": 0.2388591826347306,
+        "hit@1": 0.16766467065868262
+      },
+      "a:hybrid_rrf": {
+        "recall@10": 0.5778443113772455,
+        "recall@100": 0.874251497005988,
+        "mrr@10": 0.3866124760479043,
+        "hit@1": 0.3083832335329341
+      },
+      "b:bm25": {
+        "recall@10": 0.7664670658682635,
+        "recall@100": 0.8053892215568862,
+        "mrr@10": 0.6251936497005987,
+        "hit@1": 0.5449101796407185
+      },
+      "b:bm25_heuristic": {
+        "recall@10": 0.7874251497005988,
+        "recall@100": 0.8053892215568862,
+        "mrr@10": 0.48198362874251494,
+        "hit@1": 0.32934131736526945
+      },
+      "b:dense": {
+        "recall@10": 0.4311377245508982,
+        "recall@100": 0.44011976047904194,
+        "mrr@10": 0.2924424970059881,
+        "hit@1": 0.2245508982035928
+      },
+      "b:dense_heuristic": {
+        "recall@10": 0.4281437125748503,
+        "recall@100": 0.44011976047904194,
+        "mrr@10": 0.30796263772455096,
+        "hit@1": 0.23652694610778444
+      },
+      "b:hybrid_rrf": {
+        "recall@10": 0.7215568862275449,
+        "recall@100": 0.7724550898203593,
+        "mrr@10": 0.46301918862275443,
+        "hit@1": 0.3592814371257485
+      },
+      "b:hybrid_heuristic": {
+        "recall@10": 0.7604790419161677,
+        "recall@100": 0.7724550898203593,
+        "mrr@10": 0.46906897904191613,
+        "hit@1": 0.33532934131736525
+      },
+      "b:hybrid_ml": {
+        "recall@10": 0.7724550898203593,
+        "recall@100": 0.7724550898203593,
+        "mrr@10": 0.724800389221557,
+        "hit@1": 0.6916167664670658
+      }
+    }
+  },
+  "paired_comparisons": [
+    {
+      "layer": "a",
+      "a": "hybrid_rrf",
+      "b": "bm25",
+      "recall@10": {
+        "diff": -0.167,
+        "ci_low": -0.193,
+        "ci_high": -0.139
+      },
+      "mrr@10": {
+        "diff": -0.171403176,
+        "ci_low": -0.193596860575,
+        "ci_high": -0.14998897285000004
+      },
+      "ndcg@10": {
+        "diff": -0.17114452800000002,
+        "ci_low": -0.1916395439,
+        "ci_high": -0.15084743322500002
+      },
+      "hit@1": {
+        "diff": -0.16,
+        "ci_low": -0.18602499999999997,
+        "ci_high": -0.133
+      }
+    },
+    {
+      "layer": "a",
+      "a": "hybrid_rrf",
+      "b": "dense",
+      "recall@10": {
+        "diff": 0.187,
+        "ci_low": 0.163,
+        "ci_high": 0.212
+      },
+      "mrr@10": {
+        "diff": 0.12109364,
+        "ci_low": 0.10704537832500001,
+        "ci_high": 0.13576967455
+      },
+      "ndcg@10": {
+        "diff": 0.13668579499999997,
+        "ci_low": 0.1227557019,
+        "ci_high": 0.15139856995000003
+      },
+      "hit@1": {
+        "diff": 0.097,
+        "ci_low": 0.079,
+        "ci_high": 0.116
+      }
+    },
+    {
+      "layer": "b",
+      "a": "hybrid_rrf",
+      "b": "bm25",
+      "recall@10": {
+        "diff": -0.051,
+        "ci_low": -0.068,
+        "ci_high": -0.033
+      },
+      "mrr@10": {
+        "diff": -0.117598804,
+        "ci_low": -0.13495789312499998,
+        "ci_high": -0.09989920382499999
+      },
+      "ndcg@10": {
+        "diff": -0.102603639,
+        "ci_low": -0.11677511934999998,
+        "ci_high": -0.08785871047500002
+      },
+      "hit@1": {
+        "diff": -0.128,
+        "ci_low": -0.152,
+        "ci_high": -0.103
+      }
+    },
+    {
+      "layer": "b",
+      "a": "hybrid_heuristic",
+      "b": "hybrid_rrf",
+      "recall@10": {
+        "diff": 0.034,
+        "ci_low": 0.02,
+        "ci_high": 0.048
+      },
+      "mrr@10": {
+        "diff": -0.005512306,
+        "ci_low": -0.026790987450000005,
+        "ci_high": 0.014316214175
+      },
+      "ndcg@10": {
+        "diff": 0.004773399999999999,
+        "ci_low": -0.012291858399999998,
+        "ci_high": 0.020494853625
+      },
+      "hit@1": {
+        "diff": -0.038,
+        "ci_low": -0.067,
+        "ci_high": -0.009
+      }
+    },
+    {
+      "layer": "b",
+      "a": "hybrid_ml",
+      "b": "hybrid_rrf",
+      "recall@10": {
+        "diff": 0.047,
+        "ci_low": 0.034,
+        "ci_high": 0.061
+      },
+      "mrr@10": {
+        "diff": 0.226288497,
+        "ci_low": 0.206024899675,
+        "ci_high": 0.248114786125
+      },
+      "ndcg@10": {
+        "diff": 0.184255696,
+        "ci_low": 0.16753776709999998,
+        "ci_high": 0.202634757025
+      },
+      "hit@1": {
+        "diff": 0.288,
+        "ci_low": 0.259,
+        "ci_high": 0.317
+      }
+    },
+    {
+      "layer": "b",
+      "a": "hybrid_ml",
+      "b": "hybrid_heuristic",
+      "recall@10": {
+        "diff": 0.013,
+        "ci_low": 0.006,
+        "ci_high": 0.021
+      },
+      "mrr@10": {
+        "diff": 0.231800803,
+        "ci_low": 0.21161179757499998,
+        "ci_high": 0.252302918875
+      },
+      "ndcg@10": {
+        "diff": 0.179482296,
+        "ci_low": 0.16372632355,
+        "ci_high": 0.195682787075
+      },
+      "hit@1": {
+        "diff": 0.326,
+        "ci_low": 0.297,
+        "ci_high": 0.35602499999999987
+      }
+    }
+  ],
+  "latency_components_ms": {
+    "embed": {
+      "p50": 10.49,
+      "p95": 16.193499999999997,
+      "mean": 11.566096999999996
+    },
+    "faiss": {
+      "p50": 23.3685,
+      "p95": 30.766799999999996,
+      "mean": 23.535133999999992
+    },
+    "bm25": {
+      "p50": 5.812,
+      "p95": 10.4744,
+      "mean": 6.102008
+    },
+    "rrf": {
+      "p50": 0.653,
+      "p95": 0.9330999999999999,
+      "mean": 0.6918680000000009
+    }
+  },
+  "rule_based": null,
+  "semantic_via_service": true,
+  "notes": [
+    "v1.1 code with the LTR v2 bundle; DB is a copy with recipe_metadata migrated; BM25 is the original recipe_bm25.json converted to npz (same content).",
+    "Machine otherwise idle during the run (no other heavy job).",
+    "ML ranker: LTR v2 bundle (sha256 3990497d68fe), trained on hybrid candidates from MiniLM.",
+    "Dense model: all-MiniLM-L6-v2 with the original index."
+  ]
+}

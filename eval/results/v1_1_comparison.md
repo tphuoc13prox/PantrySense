@@ -8,17 +8,20 @@ near-duplicates collapsed onto it. Layer (b) uses the app settings
 Runs:
 
 - `baseline`: `queries_v1_topk20` (the v1.0 retrieval and ranking code, unchanged).
-- `minilm`: `queries_v1_topk20_v1_1_minilm`, the v1.1 code with the
-  original MiniLM index.
-- `e5ft`: `queries_v1_topk20_v1_1_e5ft`, the v1.1 code with the
-  fine-tuned e5-small-v2 and a full 315k index built from it.
+- `minilm` / `e5ft`: `queries_v1_topk20_v1_1_{minilm,e5ft}`. The v1.1
+  code before the LTR retrain, with the old v1.0 LightGBM model as the ML ranker.
+- `minilm_ltrv2` / `e5ft_ltrv2`: `queries_v1_topk20_v1_1_{minilm,e5ft}_ltrv2`.
+  The same code with the LTR v2 bundle (sha256 `3990497d68fe`) as the
+  ML ranker. Only the `hybrid_ml` rows differ from the runs above.
+- `e5ft*` use the fine-tuned e5-small-v2 and a full 315k index built from it.
+  **LTR v2 was trained on hybrid candidates from MiniLM and has not been retrained
+  for e5**, so with e5 its `semantic_score` and dense-rank features come from a
+  different distribution than in training.
 
-Both new runs used the same DB copy (with `recipe_metadata`) and the same BM25
-content (main JSON converted to `.npz`). The ML ranker is still the old v1.0
-model in every run; the retrained LTR model comes later. The machine was
-otherwise idle during the new runs. The baseline ran next to other CPU-heavy jobs,
-so its latency is not a fair comparison: its p95 is inflated, and its p50 includes
-the old pure-Python BM25.
+All new runs used the same DB copy (with `recipe_metadata`) and the same BM25
+content (main JSON converted to `.npz`), and ran one at a time on an otherwise
+idle machine. The baseline ran next to other CPU-heavy jobs, so its latency is not
+a fair comparison: its p95 is inflated, and its p50 includes the old pure-Python BM25.
 
 The query file hash in the new result files (`eb051d0d17f5`) differs from the
 baseline (`0b9aabd48bb2`) only because of CRLF line endings in this checkout
@@ -41,6 +44,8 @@ baseline (`0b9aabd48bb2`) only because of CRLF line endings in this checkout
 | Hybrid MiniLM + old LightGBM (app default on main) | baseline | 0.599 [0.570, 0.630] | 0.331 [0.307, 0.356] | 0.395 [0.370, 0.419] | 0.221 [0.195, 0.247] | 412.7 | 2227.9 |
 | Hybrid MiniLM + old LightGBM | minilm | 0.601 [0.572, 0.632] | 0.331 [0.307, 0.355] | 0.395 [0.371, 0.419] | 0.221 [0.195, 0.247] | 58.8 | 83.9 |
 | Hybrid e5-small-ft + old LightGBM | e5ft | 0.724 [0.696, 0.753] | 0.523 [0.497, 0.551] | 0.571 [0.546, 0.598] | 0.430 [0.400, 0.462] | 68.8 | 83.6 |
+| Hybrid MiniLM + LTR v2 | minilm_ltrv2 | 0.651 [0.622, 0.681] | 0.590 [0.562, 0.621] | 0.606 [0.577, 0.635] | 0.553 [0.521, 0.585] | 45.4 | 70.5 |
+| Hybrid e5-small-ft + LTR v2 (not retrained for e5) | e5ft_ltrv2 | 0.755 [0.728, 0.782] | 0.648 [0.621, 0.677] | 0.675 [0.649, 0.702] | 0.589 [0.559, 0.620] | 58.0 | 73.6 |
 
 ## Layer (a): retriever candidates
 
@@ -64,23 +69,33 @@ baseline (`0b9aabd48bb2`) only because of CRLF line endings in this checkout
 | (b) e5-ft: heuristic vs RRF order | -0.007 [-0.020, +0.007] | -0.137 [-0.158, -0.115] | -0.105 [-0.122, -0.088] | -0.199 [-0.231, -0.166] |
 | (b) e5-ft: old LightGBM vs RRF order | -0.005 [-0.017, +0.008] | -0.032 [-0.048, -0.015] | -0.025 [-0.039, -0.012] | -0.045 [-0.070, -0.020] |
 | (b) e5-ft + old LGBM vs app default on main | +0.125 [+0.101, +0.149] | +0.192 [+0.171, +0.215] | +0.177 [+0.158, +0.196] | +0.209 [+0.181, +0.238] |
+| (b) MiniLM: LTR v2 vs RRF order | +0.047 [+0.034, +0.061] | +0.226 [+0.206, +0.248] | +0.184 [+0.168, +0.203] | +0.288 [+0.259, +0.317] |
+| (b) MiniLM: LTR v2 vs old LightGBM | +0.050 [+0.036, +0.064] | +0.260 [+0.238, +0.282] | +0.211 [+0.192, +0.229] | +0.332 [+0.303, +0.363] |
+| (b) e5-ft: LTR v2 vs RRF order | +0.026 [+0.016, +0.037] | +0.094 [+0.079, +0.110] | +0.078 [+0.066, +0.091] | +0.114 [+0.093, +0.136] |
+| (b) e5-ft: LTR v2 vs old LightGBM | +0.031 [+0.020, +0.042] | +0.125 [+0.108, +0.144] | +0.103 [+0.089, +0.118] | +0.159 [+0.133, +0.185] |
+| (b) e5-ft + LTR v2 vs app default on main | +0.156 [+0.133, +0.180] | +0.318 [+0.294, +0.342] | +0.280 [+0.259, +0.301] | +0.368 [+0.339, +0.399] |
+| (b) LTR v2: e5-ft vs MiniLM retrieval | +0.104 [+0.084, +0.126] | +0.058 [+0.043, +0.074] | +0.069 [+0.054, +0.086] | +0.036 [+0.019, +0.052] |
+| (b) e5-ft + LTR v2 vs BM25 | +0.100 [+0.081, +0.120] | +0.167 [+0.148, +0.186] | +0.151 [+0.134, +0.168] | +0.196 [+0.171, +0.222] |
 
 ## Reading
 
-- With MiniLM, the v1.1 code reproduces the baseline quality. Every
-  layer (b) metric matches to three decimals, and per-query ranks matched on a
-  10-query smoke check. End-to-end latency drops 8-9x at p50 (hybrid 419 -> 49 ms,
-  lexical 310 -> 12 ms). That comes from the BM25 `.npz` scoring and the shared
-  components from the search performance work.
-- Fine-tuned e5 changes the picture. Dense alone goes from the weakest
-  retriever to the strongest (layer (b) MRR@10 0.213 -> 0.551). Hybrid RRF with e5
-  now beats BM25 (+0.073 MRR@10, CI excludes 0) instead of losing to it.
-- Re-ranking still hurts. With e5, the heuristic ranker loses 0.137 MRR@10 against
-  plain RRF order, and the old LightGBM model loses 0.032. The app default (hybrid +
-  ML) gains +0.192 MRR@10 over the main default, but plain hybrid RRF with e5 would
-  be better still. The retrained LTR has to beat `e5ft b:hybrid_rrf`
-  (MRR@10 0.555) to be worth enabling.
-- Caveat: the e5 fine-tune used queries generated the same way as this eval set
-  (random subsets of a recipe's ingredients, from buckets 2-9). The eval recipes
-  are unseen, but the query style is in-distribution, so the gain on real pantry
-  lists is likely smaller.
+- With MiniLM and the old model, the v1.1 code reproduces the baseline
+  quality. Every layer (b) metric matches to three decimals. End-to-end latency
+  drops 8-9x at p50 (hybrid 419 -> 49 ms, lexical 310 -> 12 ms).
+- Fine-tuned e5 is the biggest retrieval gain. Dense goes from 0.213 to 0.551
+  MRR@10, hybrid RRF from 0.364 to 0.555, and hybrid now beats BM25.
+- LTR v2 is the first re-ranker that helps on the official pool:
+  - With MiniLM: +0.226 MRR@10 over RRF order (0.364 -> 0.590).
+  - With e5: +0.094 MRR@10 over RRF order (0.555 -> 0.648), even without retraining.
+  - The best configuration is hybrid e5-ft + LTR v2: MRR@10 0.648, Hit@1 0.589,
+    Recall@10 0.755, p50 58 ms. Against the `main` app default that is +0.318 MRR@10.
+- The heuristic ranker and the old LightGBM model still lose to plain RRF order.
+- Caveats:
+  - Both the e5 fine-tune and the LTR training queries were generated the same
+    way as this eval set (subsets of a recipe's ingredients, from buckets 2-9),
+    so the query style is in-distribution. The gain on real pantry lists is likely
+    smaller.
+  - The LTR card notes that `query_coverage` carries most of its gain, a feature
+    the synthetic protocol favours.
+  - LTR v2 with e5 is a mismatched pairing. Retraining it on e5 candidates is the
+    obvious next step and may add more.
