@@ -1,3 +1,7 @@
+"""Legacy smoke check on hand-written seed examples; not a real measurement.
+
+Use scripts/build_eval_set.py and scripts/run_eval.py for evaluation on the full corpus.
+"""
 from __future__ import annotations
 
 import math

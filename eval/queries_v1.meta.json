@@ -1,0 +1,103 @@
+{
+  "format_version": 1,
+  "config": {
+    "n_queries": 1000,
+    "seed": 20261124,
+    "staple_df_threshold": 0.09,
+    "min_pool_size": 3,
+    "min_query_size": 2,
+    "max_duplicate_group": 5,
+    "distractor_min_df": 100,
+    "pool": "eval",
+    "n_excluded_recipe_ids": 0,
+    "tier_fractions": {
+      "standard": [
+        0.55,
+        0.7
+      ],
+      "sparse": [
+        0.4,
+        0.55
+      ],
+      "noisy": [
+        0.4,
+        0.7
+      ]
+    }
+  },
+  "corpus": {
+    "n_recipes": 315447,
+    "fingerprint_sha256": "3e50c9b35e354ef102c2a0bd59af6b96e3d8311317997d601bacbb3b68d5e0d1",
+    "n_in_pool": 63295,
+    "n_eligible": 52527,
+    "n_with_duplicates": 29254
+  },
+  "staples": [
+    {
+      "ingredient": "salt",
+      "df": 112248,
+      "df_ratio": 0.3558
+    },
+    {
+      "ingredient": "butter",
+      "df": 75665,
+      "df_ratio": 0.2399
+    },
+    {
+      "ingredient": "egg",
+      "df": 68945,
+      "df_ratio": 0.2186
+    },
+    {
+      "ingredient": "onion",
+      "df": 65817,
+      "df_ratio": 0.2086
+    },
+    {
+      "ingredient": "sugar",
+      "df": 63595,
+      "df_ratio": 0.2016
+    },
+    {
+      "ingredient": "water",
+      "df": 47372,
+      "df_ratio": 0.1502
+    },
+    {
+      "ingredient": "garlic clove",
+      "df": 44870,
+      "df_ratio": 0.1422
+    },
+    {
+      "ingredient": "olive oil",
+      "df": 42147,
+      "df_ratio": 0.1336
+    },
+    {
+      "ingredient": "milk",
+      "df": 36233,
+      "df_ratio": 0.1149
+    },
+    {
+      "ingredient": "flour",
+      "df": 35490,
+      "df_ratio": 0.1125
+    },
+    {
+      "ingredient": "pepper",
+      "df": 30788,
+      "df_ratio": 0.0976
+    }
+  ],
+  "stats": {
+    "tiers": {
+      "noisy": 333,
+      "sparse": 333,
+      "standard": 334
+    },
+    "mean_query_size": 3.705,
+    "queries_with_duplicates": 6,
+    "noisy_without_distractor": 0
+  },
+  "excluded_sets": []
+}
