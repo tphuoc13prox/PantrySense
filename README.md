@@ -119,7 +119,7 @@ python scripts/run_eval.py --data-dir "D:/path/to/data"            # ~50 min for
 python scripts/run_eval.py --data-dir "D:/path/to/data" --limit 50 --name smoke
 ```
 
-`run_eval.py` only reads the data files. It needs `lightgbm` installed, otherwise the ML ranker cannot load; the script aborts instead of silently measuring the heuristic. Layer (a) scores raw retriever candidates at depth 100. Layer (b) scores `RecipeSearchService.search` with the production settings: 20 candidates, coverage filter, then ranking. Output goes to `eval/results/` (JSON, markdown, per-query JSONL).
+`run_eval.py` picks the embedding model and index the way the app does: the fine-tuned e5 setup when all its files are in the data folder, MiniLM otherwise. `--embedding e5` or `--embedding minilm` forces one, and the result file records which one ran (`environment.embedding_setup`). It only reads the data files. It needs `lightgbm` installed, otherwise the ML ranker cannot load; the script aborts instead of silently measuring the heuristic. Layer (a) scores raw retriever candidates at depth 100. Layer (b) scores `RecipeSearchService.search` with the production settings: 20 candidates, coverage filter, then ranking. Output goes to `eval/results/` (JSON, markdown, per-query JSONL).
 
 **Results** (`eval/results/queries_v1_topk20.md`, 1000 queries, 95% bootstrap CI). Latency is a single process on CPU (sentence-transformers, no fastembed). Other jobs were running on the machine, so treat p95 as an upper bound.
 

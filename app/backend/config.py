@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -71,19 +72,26 @@ def get_ranker_model_path() -> Path:
     return Path(os.getenv("PANTRYSENSE_RANKER_MODEL_PATH", DEFAULT_RANKER_MODEL_PATH))
 
 
-def missing_finetuned_files() -> list[Path]:
+def finetuned_files(data_dir: Path | None = None) -> tuple[Path, Path, Path]:
+    """(model folder, index, id file) of the fine-tuned e5 setup.
+
+    With ``data_dir`` the same file names are looked up in that folder instead of
+    the project's ``data/``.
+    """
+    if data_dir is None:
+        return FINETUNED_EMBEDDING_MODEL_DIR, FINETUNED_VECTOR_INDEX_PATH, FINETUNED_VECTOR_IDS_PATH
+    return (data_dir / FINETUNED_EMBEDDING_MODEL_DIR.relative_to(BASE_DIR / "data"),
+            data_dir / FINETUNED_VECTOR_INDEX_PATH.name, data_dir / FINETUNED_VECTOR_IDS_PATH.name)
+
+
+def missing_finetuned_files(data_dir: Path | None = None) -> list[Path]:
     """Files the fine-tuned e5 setup needs that are not on disk."""
-    index_meta = Path(str(FINETUNED_VECTOR_INDEX_PATH) + ".meta.json")
-    required = [
-        FINETUNED_EMBEDDING_MODEL_DIR / "config.json",
-        FINETUNED_VECTOR_INDEX_PATH,
-        index_meta,
-        FINETUNED_VECTOR_IDS_PATH,
-    ]
+    model_dir, index, ids = finetuned_files(data_dir)
+    required = [model_dir / "config.json", index, Path(str(index) + ".meta.json"), ids]
     return [p for p in required if not p.is_file()]
 
 
-def uses_finetuned_embedding() -> bool:
+def uses_finetuned_embedding(data_dir: Path | None = None) -> bool:
     """True when queries go through the fine-tuned e5 model and its index.
 
     PANTRYSENSE_EMBEDDING_MODEL, when set, decides on its own. Otherwise the
@@ -92,15 +100,42 @@ def uses_finetuned_embedding() -> bool:
     """
     env_model = os.getenv("PANTRYSENSE_EMBEDDING_MODEL", "").strip()
     if env_model:
-        return Path(env_model).resolve() == FINETUNED_EMBEDDING_MODEL_DIR.resolve()
-    return not missing_finetuned_files()
+        return Path(env_model).resolve() == finetuned_files(data_dir)[0].resolve()
+    return not missing_finetuned_files(data_dir)
+
+
+@dataclass(frozen=True)
+class EmbeddingSetup:
+    """An embedding model and the index built with it."""
+
+    name: str  # "e5-finetuned" or "minilm"
+    model: str
+    index_path: Path
+    ids_path: Path
+
+
+def resolve_embedding_setup(data_dir: Path | None = None, prefer: str = "auto") -> EmbeddingSetup:
+    """The embedding setup to use: ``prefer`` "e5", "minilm", or "auto" (the app default).
+
+    "auto" picks the fine-tuned e5 setup when uses_finetuned_embedding() says so
+    and MiniLM otherwise. Environment overrides are not applied here.
+    """
+    if prefer not in ("auto", "e5", "minilm"):
+        raise ValueError(f"unknown embedding setup: {prefer}")
+    if prefer == "e5" or (prefer == "auto" and uses_finetuned_embedding(data_dir)):
+        model_dir, index, ids = finetuned_files(data_dir)
+        return EmbeddingSetup("e5-finetuned", str(model_dir), index, ids)
+    if data_dir is None:
+        return EmbeddingSetup("minilm", DEFAULT_EMBEDDING_MODEL_NAME, DEFAULT_VECTOR_INDEX_PATH, DEFAULT_VECTOR_IDS_PATH)
+    return EmbeddingSetup("minilm", DEFAULT_EMBEDDING_MODEL_NAME, data_dir / DEFAULT_VECTOR_INDEX_PATH.name,
+                          data_dir / DEFAULT_VECTOR_IDS_PATH.name)
 
 
 def get_embedding_model_name() -> str:
     env_model = os.getenv("PANTRYSENSE_EMBEDDING_MODEL", "").strip()
     if env_model:
         return env_model
-    return str(FINETUNED_EMBEDDING_MODEL_DIR) if uses_finetuned_embedding() else DEFAULT_EMBEDDING_MODEL_NAME
+    return resolve_embedding_setup().model
 
 
 def get_semantic_top_k() -> int:
@@ -115,14 +150,14 @@ def get_vector_index_path() -> Path:
     env = os.getenv("PANTRYSENSE_VECTOR_INDEX_PATH")
     if env:
         return Path(env)
-    return FINETUNED_VECTOR_INDEX_PATH if uses_finetuned_embedding() else DEFAULT_VECTOR_INDEX_PATH
+    return resolve_embedding_setup().index_path
 
 
 def get_vector_ids_path() -> Path:
     env = os.getenv("PANTRYSENSE_VECTOR_IDS_PATH")
     if env:
         return Path(env)
-    return FINETUNED_VECTOR_IDS_PATH if uses_finetuned_embedding() else DEFAULT_VECTOR_IDS_PATH
+    return resolve_embedding_setup().ids_path
 
 
 def get_bm25_index_path() -> Path:
