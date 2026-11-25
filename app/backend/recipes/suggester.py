@@ -10,6 +10,7 @@ from pathlib import Path
 from app.backend.config import get_database_path
 from app.backend.database.connection import get_connection
 from app.backend.recipes.matching import normalize_ingredient
+from app.backend.recipes.schemas import IngredientSuggestion
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +190,6 @@ class IngredientSuggester:
 
     def suggest(self, query: str, limit: int = 10) -> list[IngredientSuggestion]:
         """Finds autocomplete suggestions and typo corrections for a given query."""
-        from app.backend.recipes.schemas import IngredientSuggestion
 
         self.ensure_loaded()
         cleaned_query = query.strip().lower()

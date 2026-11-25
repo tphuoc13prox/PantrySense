@@ -91,7 +91,7 @@ _PREP_WORDS = {
     "peeled", "seeded", "deseeded", "cored", "halved", "quartered", "trimmed", "melted", "softened",
     "beaten", "whisked", "sifted", "drained", "rinsed", "divided", "packed", "toasted", "thawed",
     "mashed", "pitted", "zested", "juiced", "torn", "crumbled", "deveined", "hulled", "stemmed",
-    "frozen", "scrubbed", "snipped", "slivered", "cut", "squeezed", "chilled", "warmed", "rinsed",
+    "frozen", "scrubbed", "snipped", "slivered", "cut", "squeezed", "chilled", "warmed",
     "pureed", "puréed", "strained", "separated", "skinned", "boned", "flaked", "broken",
 }
 _PREP_ADVERBS = {"finely", "coarsely", "thinly", "thickly", "roughly", "lightly", "firmly", "loosely",
@@ -239,10 +239,10 @@ def singularize(word: str) -> str:
 
 
 def _expand_unicode_fractions(text: str) -> str:
-    for char, value in _UNICODE_FRACTIONS.items():
+    for char, (num, den) in _FRACTION_PAIRS.items():
         if char in text:
-            num, den = _FRACTION_PAIRS[char]
-            text = re.sub(rf"(\d)?{char}", lambda m: f"{m[1] + ' ' if m[1] else ''}{num}/{den}", text)
+            frac = f"{num}/{den}"
+            text = re.sub(rf"(\d){char}", rf"\1 {frac}", text).replace(char, frac)
     return text
 
 
