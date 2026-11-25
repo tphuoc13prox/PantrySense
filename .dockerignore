@@ -1,10 +1,9 @@
 # Dataset, indices and models are mounted as a volume, never copied in.
 data/
-.git/
-.github/
-.cursor/
-.vscode/
-.idea/
+
+# Hidden files and folders at the top level: VCS metadata, CI config, editor
+# and local tool settings, env files. Nothing in them is needed in the image.
+.*
 
 # Python and tooling caches
 __pycache__/
