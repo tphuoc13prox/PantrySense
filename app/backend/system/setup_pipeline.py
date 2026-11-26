@@ -16,6 +16,7 @@ from app.backend.config import (
     get_dataset_download_limit,
     get_embedder_engine,
     get_index_build_setup,
+    get_ingredient_vocab_path,
     get_ranker_model_path,
     get_vector_ids_path,
     get_vector_index_path,
@@ -347,6 +348,8 @@ def ingest_dataset(db_path: Path, target_limit: int, report: StepReport = _log_s
     # upserts them by title); doing it now keeps the stored rows the same
     # before and after the first restart.
     initialize_database(db_path)
+    # Autocomplete's vocabulary is a cache of the old rows; it is rebuilt on next use.
+    get_ingredient_vocab_path().unlink(missing_ok=True)
 
     # Dietary tags, allergens and nutrition are computed once here so
     # search can filter on them before retrieval.

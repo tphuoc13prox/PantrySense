@@ -24,7 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.backend.config import get_database_path, get_dataset_download_limit, get_ingredient_vocab_path  # noqa: E402
+from app.backend.config import get_database_path, get_dataset_download_limit  # noqa: E402
 from app.backend.evaluation.query_set import corpus_fingerprint  # noqa: E402
 from app.backend.recipes.suggester import IngredientSuggester  # noqa: E402
 from app.backend.system.setup_pipeline import ingest_dataset  # noqa: E402
@@ -51,8 +51,6 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         for suffix in ("", "-wal", "-shm"):
             Path(str(db_path) + suffix).unlink(missing_ok=True)
-    # The vocabulary is a cache of the database's ingredients, so it goes too.
-    get_ingredient_vocab_path().unlink(missing_ok=True)
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     start = time.perf_counter()

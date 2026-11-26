@@ -51,3 +51,11 @@ def test_ids_of_an_earlier_dataset_are_not_reused(tmp_path: Path, offline: None)
 
     setup_pipeline.ingest_dataset(db, 100)
     assert min(i for i, _ in _rows(db).values()) > first_max
+
+
+def test_ingest_drops_the_old_vocabulary_cache(tmp_path: Path, offline: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    vocab = tmp_path / "ingredient_vocab.json"
+    vocab.write_text(json.dumps({"ingredient from the old dataset": 5}), encoding="utf-8")
+    monkeypatch.setenv("PANTRYSENSE_INGREDIENT_VOCAB_PATH", str(vocab))
+    setup_pipeline.ingest_dataset(tmp_path / "recipes.db", 100)
+    assert not vocab.exists()
