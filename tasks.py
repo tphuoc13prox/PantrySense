@@ -3,7 +3,7 @@
     python tasks.py <command> [extra args passed to the underlying tool]
 
 Commands: install, test, test-all, lint, typecheck, run, fetch-models,
-build-index, train-ranker, docker-build, docker-run.
+build-index, train-ranker, reproduce, docker-build, docker-run.
 """
 
 from __future__ import annotations
@@ -72,6 +72,11 @@ def train_ranker(extra: list[str]) -> int:
     return _run(PY, "-m", "scripts.train_ranker", extra=extra)
 
 
+def reproduce(extra: list[str]) -> int:
+    """Rebuild dataset, e5 fine-tune, indices and LTR from scratch, then run the eval."""
+    return _run(PY, "-m", "scripts.reproduce", extra=extra)
+
+
 def docker_build(extra: list[str]) -> int:
     """Build the image as pantrysense."""
     return _run("docker", "build", "-t", "pantrysense", ".", extra=extra)
@@ -96,6 +101,7 @@ COMMANDS = {
     "fetch-models": fetch_models,
     "build-index": build_index,
     "train-ranker": train_ranker,
+    "reproduce": reproduce,
     "docker-build": docker_build,
     "docker-run": docker_run,
 }
