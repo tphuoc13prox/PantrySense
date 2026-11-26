@@ -35,7 +35,15 @@ def build_indices(
     setup = get_index_build_setup()
     setup = EmbeddingSetup(setup.name, setup.model, index_path or setup.index_path, ids_path or setup.ids_path)
     initialize_database(target_db)
-    return build_search_indices(target_db, setup, bm25_path=bm25_path, legacy_json=legacy_json).recipes
+
+    def progress(stage: str, done: int, total: int) -> None:
+        if stage == "embed":
+            logger.info("Embedded %d / %d recipes", done, total)
+        else:
+            logger.info("Building the %s index", "FAISS" if stage == "faiss" else "BM25")
+
+    return build_search_indices(target_db, setup, bm25_path=bm25_path, legacy_json=legacy_json,
+                                progress=progress).recipes
 
 
 def convert_faiss_to_hnsw(
