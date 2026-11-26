@@ -55,3 +55,44 @@ jobs:
         # their stubs (faiss-cpu ships its own) are installed. Once is enough.
         if: matrix.python-version == '3.12'
         run: python -m mypy
+
+  e2e-smoke:
+    # A fresh checkout end to end: setup on an empty data folder with a small
+    # row limit, then a search against the running server. Once with the
+    # MiniLM fallback, once with the models from the GitHub release.
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PARQUET_CACHE: ${{ github.workspace }}/../smoke-cache
+      FASTEMBED_CACHE_PATH: ${{ github.workspace }}/../smoke-cache/fastembed
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+      - name: Cache the dataset and embedding downloads
+        # The parquet is about 230 MB from Hugging Face; caching it keeps the
+        # job fast and off the network on most runs. A cache miss runs the
+        # same download code as the app.
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PARQUET_CACHE }}
+            ~/.cache/huggingface
+          key: smoke-${{ hashFiles('app/backend/system/dataset_sources.py', 'requirements.txt') }}
+      - name: Download the dataset
+        run: |
+          PANTRYSENSE_DATA_DIR="$PARQUET_CACHE" python -c "from app.backend.system.dataset_sources import download_full_hf_parquet_file as d; print(d())"
+          for dir in minilm e5; do mkdir -p "$RUNNER_TEMP/$dir" && cp "$PARQUET_CACHE/food_recipes.parquet" "$RUNNER_TEMP/$dir/"; done
+      - name: Fallback setup (no pretrained models)
+        run: python scripts/smoke_test.py --data-dir "$RUNNER_TEMP/minilm" --limit 2000 --expect minilm
+      - name: Full setup (fetch-models, e5 and LTR)
+        run: |
+          python tasks.py fetch-models --data-dir "$RUNNER_TEMP/e5"
+          python scripts/smoke_test.py --data-dir "$RUNNER_TEMP/e5" --limit 2000 --expect e5
