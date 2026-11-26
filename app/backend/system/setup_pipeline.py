@@ -39,6 +39,11 @@ logger = logging.getLogger("pantrysense.setup")
 
 MINIMUM_RECIPES_FOR_FULL_DATASET = 15
 
+# The published corpus (the one eval/queries_v1.jsonl and the train/eval hash
+# splits were built on) starts at this id: an earlier run had used the ones
+# before it. A fresh database starts here too, so its ids line up.
+FIRST_RECIPE_ID = 286
+
 # (step, progress percent, message)
 StepReport = Callable[[int, float, str], None]
 
@@ -308,6 +313,9 @@ def ingest_dataset(db_path: Path, target_limit: int, report: StepReport = _log_s
     report(3, 35.0, f"Step 3/8: Ingesting and normalizing {total:,} recipes into SQLite database...")
     with get_connection(db_path) as conn:
         conn.execute("DELETE FROM recipes")
+        # Only ever moves the id counter forward, so ids of an earlier dataset
+        # are not handed out again.
+        conn.execute("UPDATE sqlite_sequence SET seq = MAX(seq, ?) WHERE name = 'recipes'", (FIRST_RECIPE_ID - 1,))
         batch_records = []
         for r in all_recipes:
             batch_records.append((
@@ -334,6 +342,11 @@ def ingest_dataset(db_path: Path, target_limit: int, report: StepReport = _log_s
             inserted_cnt = min(total, c_idx + len(slice_records))
             report(3, 35.0 + (inserted_cnt / total) * 3.0,
                    f"Step 3/8: Ingested {inserted_cnt:,} / {total:,} recipes into SQLite...")
+
+    # The app re-applies the seed recipes on every start (initialize_database
+    # upserts them by title); doing it now keeps the stored rows the same
+    # before and after the first restart.
+    initialize_database(db_path)
 
     # Dietary tags, allergens and nutrition are computed once here so
     # search can filter on them before retrieval.
