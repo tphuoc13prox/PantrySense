@@ -270,13 +270,16 @@ class RecordingRanker(MLRecipeRanker):
 def retrieval_config() -> dict[str, str]:
     """Which embedding model and index files produced the candidates."""
     from app.backend.config import (
+        display_path,
         get_bm25_index_path,
         get_embedding_model_name,
         get_vector_index_path,
     )
 
+    # display_path keeps a local model folder as data/models/<name>, which the
+    # ranker's mismatch check still matches, without this machine's prefix.
     return {
-        "embedding_model": get_embedding_model_name(),
+        "embedding_model": display_path(get_embedding_model_name()),
         "vector_index": get_vector_index_path().name,
         "bm25_index": get_bm25_index_path().name,
         "db": get_database_path().name,
