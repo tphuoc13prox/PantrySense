@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[2]
+DEFAULT_DATA_DIR = BASE_DIR / "data"
 DEFAULT_DB_PATH = BASE_DIR / "data" / "recipes.db"
 DEFAULT_VECTOR_INDEX_PATH = BASE_DIR / "data" / "recipe_vectors.index"
 DEFAULT_VECTOR_IDS_PATH = BASE_DIR / "data" / "recipe_vector_ids.json"
@@ -19,8 +20,26 @@ FINETUNED_VECTOR_IDS_PATH = BASE_DIR / "data" / "recipe_vector_ids_e5ft.json"
 DEFAULT_INGREDIENT_VOCAB_PATH = BASE_DIR / "data" / "ingredient_vocab.json"
 
 
+def get_data_dir() -> Path:
+    """Folder for the database, indices and models (PANTRYSENSE_DATA_DIR, default ``data/``)."""
+    env = os.getenv("PANTRYSENSE_DATA_DIR", "").strip()
+    return Path(env) if env else DEFAULT_DATA_DIR
+
+
+def _in_data_dir(default: Path) -> Path:
+    """``default`` (a path under ``data/``) moved into PANTRYSENSE_DATA_DIR when that is set."""
+    if not os.getenv("PANTRYSENSE_DATA_DIR", "").strip():
+        return default
+    return get_data_dir() / default.relative_to(DEFAULT_DATA_DIR)
+
+
+def _path_env(var: str, default: Path) -> Path:
+    env = os.getenv(var)
+    return Path(env) if env else _in_data_dir(default)
+
+
 def get_database_path() -> Path:
-    return Path(os.getenv("PANTRYSENSE_DB_PATH", DEFAULT_DB_PATH))
+    return _path_env("PANTRYSENSE_DB_PATH", DEFAULT_DB_PATH)
 
 
 def display_path(path: str | Path) -> str:
@@ -47,7 +66,7 @@ def display_path(path: str | Path) -> str:
 
 
 def get_ingredient_vocab_path() -> Path:
-    return Path(os.getenv("PANTRYSENSE_INGREDIENT_VOCAB_PATH", DEFAULT_INGREDIENT_VOCAB_PATH))
+    return _path_env("PANTRYSENSE_INGREDIENT_VOCAB_PATH", DEFAULT_INGREDIENT_VOCAB_PATH)
 
 
 def get_match_threshold() -> float:
@@ -69,19 +88,25 @@ def get_ranking_mode() -> str:
 
 
 def get_ranker_model_path() -> Path:
-    return Path(os.getenv("PANTRYSENSE_RANKER_MODEL_PATH", DEFAULT_RANKER_MODEL_PATH))
+    return _path_env("PANTRYSENSE_RANKER_MODEL_PATH", DEFAULT_RANKER_MODEL_PATH)
 
 
 def finetuned_files(data_dir: Path | None = None) -> tuple[Path, Path, Path]:
     """(model folder, index, id file) of the fine-tuned e5 setup.
 
     With ``data_dir`` the same file names are looked up in that folder instead of
-    the project's ``data/``.
+    the configured data directory.
     """
     if data_dir is None:
-        return FINETUNED_EMBEDDING_MODEL_DIR, FINETUNED_VECTOR_INDEX_PATH, FINETUNED_VECTOR_IDS_PATH
-    return (data_dir / FINETUNED_EMBEDDING_MODEL_DIR.relative_to(BASE_DIR / "data"),
+        return (_in_data_dir(FINETUNED_EMBEDDING_MODEL_DIR), _in_data_dir(FINETUNED_VECTOR_INDEX_PATH),
+                _in_data_dir(FINETUNED_VECTOR_IDS_PATH))
+    return (data_dir / FINETUNED_EMBEDDING_MODEL_DIR.relative_to(DEFAULT_DATA_DIR),
             data_dir / FINETUNED_VECTOR_INDEX_PATH.name, data_dir / FINETUNED_VECTOR_IDS_PATH.name)
+
+
+def has_finetuned_model(data_dir: Path | None = None) -> bool:
+    """True when the fine-tuned e5 model folder is present, whether or not its index is built."""
+    return (finetuned_files(data_dir)[0] / "config.json").is_file()
 
 
 def missing_finetuned_files(data_dir: Path | None = None) -> list[Path]:
@@ -126,9 +151,30 @@ def resolve_embedding_setup(data_dir: Path | None = None, prefer: str = "auto") 
         model_dir, index, ids = finetuned_files(data_dir)
         return EmbeddingSetup("e5-finetuned", str(model_dir), index, ids)
     if data_dir is None:
-        return EmbeddingSetup("minilm", DEFAULT_EMBEDDING_MODEL_NAME, DEFAULT_VECTOR_INDEX_PATH, DEFAULT_VECTOR_IDS_PATH)
+        return EmbeddingSetup("minilm", DEFAULT_EMBEDDING_MODEL_NAME, _in_data_dir(DEFAULT_VECTOR_INDEX_PATH),
+                              _in_data_dir(DEFAULT_VECTOR_IDS_PATH))
     return EmbeddingSetup("minilm", DEFAULT_EMBEDDING_MODEL_NAME, data_dir / DEFAULT_VECTOR_INDEX_PATH.name,
                           data_dir / DEFAULT_VECTOR_IDS_PATH.name)
+
+
+def get_index_build_setup() -> EmbeddingSetup:
+    """The embedding setup a new vector index should be built for.
+
+    Unlike resolve_embedding_setup(), this does not wait for the e5 index to
+    exist: once the fine-tuned model folder is present, the index is built with
+    it, at the paths resolve_embedding_setup() reads once the build is done.
+    PANTRYSENSE_EMBEDDING_MODEL and the index path variables win as usual.
+    """
+    env_model = os.getenv("PANTRYSENSE_EMBEDDING_MODEL", "").strip()
+    if env_model:
+        base = resolve_embedding_setup()
+        base = EmbeddingSetup(base.name, env_model, base.index_path, base.ids_path)
+    else:
+        base = resolve_embedding_setup(prefer="e5" if has_finetuned_model() else "minilm")
+    index = os.getenv("PANTRYSENSE_VECTOR_INDEX_PATH")
+    ids = os.getenv("PANTRYSENSE_VECTOR_IDS_PATH")
+    return EmbeddingSetup(base.name, base.model, Path(index) if index else base.index_path,
+                          Path(ids) if ids else base.ids_path)
 
 
 def get_embedding_model_name() -> str:
@@ -161,7 +207,7 @@ def get_vector_ids_path() -> Path:
 
 
 def get_bm25_index_path() -> Path:
-    return Path(os.getenv("PANTRYSENSE_BM25_INDEX_PATH", DEFAULT_BM25_INDEX_PATH))
+    return _path_env("PANTRYSENSE_BM25_INDEX_PATH", DEFAULT_BM25_INDEX_PATH)
 
 
 def get_rrf_k() -> int:
