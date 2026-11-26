@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tomllib
 import zipfile
 from pathlib import Path
 
@@ -121,8 +122,10 @@ def test_main_reports_errors(tmp_path: Path, capsys: pytest.CaptureFixture[str])
     assert "not found" in capsys.readouterr().err
 
 
-def test_tracked_manifest_is_consistent() -> None:
+def test_tracked_manifest_matches_this_release() -> None:
     manifest = fetch_models.load_manifest(fetch_models.DEFAULT_MANIFEST)
+    version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+    assert manifest["tag"] == f"v{version}"
     asset = manifest["asset"]
     assert asset["name"].endswith(f"{manifest['tag']}.zip")
     assert "models/e5-small-pantry/config.json" in asset["files"]

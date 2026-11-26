@@ -120,7 +120,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await monitor.stop()
 
 
-app = FastAPI(title="PantrySense API", version="1.1.0", lifespan=lifespan)
+app = FastAPI(title="PantrySense API", version="1.2.0", lifespan=lifespan)
 app.include_router(ingredients_router)
 app.include_router(recipes_router)
 app.include_router(pantry_router)

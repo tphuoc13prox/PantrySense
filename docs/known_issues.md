@@ -1,6 +1,6 @@
 # Known issues
 
-Open problems and limitations as of v1.1.0, roughly in order of impact. Each
+Open problems and limitations as of v1.2.0, roughly in order of impact. Each
 entry says what is wrong, what it affects and what a fix would involve.
 
 ## Data
