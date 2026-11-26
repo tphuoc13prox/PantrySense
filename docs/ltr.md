@@ -35,16 +35,18 @@ is in use.
 - Startup and the setup pipeline no longer train the ranker. Its dataset takes
   about 10k hybrid searches, so the ranker is built offline (below).
 
-To get the best configuration, all files are gitignored:
+The model files are gitignored. `python tasks.py fetch-models` installs the
+fine-tuned model and the v3 bundle from the GitHub release, and the next setup
+or app start builds the e5 index (see README.md). To build everything yourself
+instead, `python tasks.py reproduce` runs the whole chain (docs/reproduce.md).
+By hand:
 
 1. Fine-tuned model: train it with `scripts/finetune_embedder.py train --base
-   intfloat/e5-small-v2 ...` (docs/embedding.md, about 9 min on an RTX 4050), or
-   copy an existing `e5-small-pantry` folder into `data/models/`.
-2. Index: `python scripts/finetune_embedder.py --db data/recipes.db build-index
-   --model data/models/e5-small-pantry --index data/recipe_vectors_e5ft.index
-   --ids data/recipe_vector_ids_e5ft.json` (35 min on CPU for 315k recipes). A
-   copied index also works: the metadata check accepts a model folder with the
-   same name in another location.
+   intfloat/e5-small-v2 ...` (docs/embedding.md, about 9 min on an RTX 4050).
+2. Index: `python scripts/build_vector_index.py` builds the e5 index once the
+   model folder is in `data/` (35 min on CPU for 315k recipes). A copied index
+   also works: the metadata check accepts a model folder with the same name in
+   another location.
 3. Ranker: build the dataset with the e5 setup active, then train:
 
        python scripts/build_ltr_dataset.py --out-dir data/e5 --top-k 100

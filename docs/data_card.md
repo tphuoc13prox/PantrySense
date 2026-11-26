@@ -21,6 +21,25 @@ databases and indices derived from it are not redistributed with this
 repository (`data/` is git-ignored and excluded from the Docker image). Anyone
 rebuilding the corpus downloads it from Hugging Face themselves.
 
+Two trained models are published as a release asset (from v1.2.0): the
+fine-tuned e5-small-v2 embedding model and the LTR ranker bundle. They contain
+weights, tree ensembles, feature names and training statistics, but no recipe
+text, ids or ingredient lists. Before publishing them, these terms were checked
+(November 2026):
+
+- The Hugging Face dataset page states no license and no usage terms.
+- The most likely upstream, the Kaggle dataset "Food.com - Recipes and Reviews"
+  (`irkaal/foodcom-recipes-and-reviews`), is marked CC0: Public Domain.
+- Food.com's footer links the Discovery Visitor Agreement (last updated January
+  2023). It forbids distributing or reproducing copies of the site's materials,
+  and has no clause on derived data, data mining or model training.
+- The base model `intfloat/e5-small-v2` is MIT-licensed; its license is
+  included in the model folder.
+
+None of these forbids publishing models trained on the data. Whether the
+Kaggle CC0 label was the uploader's to give is unknown, which is one more
+reason the recipe data itself stays out of the repository and the release.
+
 The raw row count of the Parquet file was not measured here (the Parquet
 reader is not installed in the environment used to write this card). The Hub
 tags put it in the 100K to 1M range.
@@ -165,7 +184,13 @@ pool. Treat absolute metrics as optimistic.
 
 The in-app setup flow (`SetupManager`) downloads the Parquet file to
 `data/food_recipes.parquet`, parses it, fills `recipes.db`, then builds the
-FAISS and BM25 indices and trains the ranker. `scripts/build_vector_index.py`
-rebuilds only the indices from an existing database. Row ids are assigned at
-insert time, so rebuilding from a different row limit changes ids and therefore
-bucket membership; keep the same limit when comparing evaluation runs.
+FAISS and BM25 indices. It does not train the ranker. `scripts/build_database.py`
+runs only the database part, and `scripts/build_vector_index.py` rebuilds only
+the indices from an existing database.
+
+Row ids are assigned at insert time, so rebuilding from a different row limit
+changes ids and therefore bucket membership; keep the same limit when comparing
+evaluation runs. A fresh database built with the default limit numbers its
+recipes from 286, like the published corpus, and gives exactly that corpus:
+`build_database.py` checks it against the fingerprint in
+`eval/queries_v1.meta.json`.
