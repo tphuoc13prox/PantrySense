@@ -1,4 +1,4 @@
-"""Dataset onboarding pipeline: ingest, precompute metadata, embed, index, train."""
+"""Dataset onboarding pipeline: ingest, precompute metadata, embed, index."""
 from __future__ import annotations
 
 import json
@@ -6,6 +6,8 @@ import logging
 import os
 import threading
 import time
+from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from app.backend.config import (
@@ -13,17 +15,18 @@ from app.backend.config import (
     get_database_path,
     get_dataset_download_limit,
     get_embedder_engine,
+    get_index_build_setup,
     get_ranker_model_path,
     get_vector_ids_path,
     get_vector_index_path,
+    has_finetuned_model,
 )
 from app.backend.database.connection import get_connection
 from app.backend.database.init_db import initialize_database
 from app.backend.database.recipe_metadata import populate_recipe_metadata
-from app.backend.retrieval.bm25_store import BM25Store, bm25_index_exists
-from app.backend.retrieval.embedder import IngredientEmbedder, write_index_metadata
-from app.backend.retrieval.semantic import build_recipe_representation
-from app.backend.retrieval.vector_store import FaissVectorStore
+from app.backend.retrieval.bm25_store import bm25_index_exists
+from app.backend.retrieval.embedder import index_metadata_path
+from app.backend.retrieval.index_build import build_search_indices
 from app.backend.system.core_catalog import CORE_RECIPE_CATALOG
 from app.backend.system.dataset_sources import (
     download_full_hf_parquet_file,
@@ -35,6 +38,31 @@ from app.backend.system.dataset_sources import (
 logger = logging.getLogger("pantrysense.setup")
 
 MINIMUM_RECIPES_FOR_FULL_DATASET = 15
+
+# (step, progress percent, message)
+StepReport = Callable[[int, float, str], None]
+
+
+def _log_step(step: int, progress: float, message: str) -> None:
+    logger.info("[Step %d/8 - %d%%] %s", step, int(progress), message)
+
+
+def indices_ready() -> bool:
+    """True when BM25 and the dense index the app should use are built.
+
+    With the fine-tuned e5 model present that means the e5 index, so a MiniLM
+    index left from before the model was added does not count.
+    """
+    setup = get_index_build_setup()
+    dense = setup.index_path.exists() and setup.ids_path.exists() and index_metadata_path(setup.index_path).exists()
+    return dense and bm25_index_exists(get_bm25_index_path())
+
+
+def describe_embedding(engine: str) -> str:
+    """Short label for the embedding model and backend a build will use."""
+    if get_index_build_setup().name == "e5-finetuned":
+        return "fine-tuned e5-small, " + ("GPU" if engine == "cuda" else "CPU")
+    return "MiniLM, " + ("PyTorch CUDA (GPU)" if engine == "cuda" else "FastEmbed ONNX (CPU)")
 
 
 class SetupManager:
@@ -73,7 +101,7 @@ class SetupManager:
                 recipe_count = 0
 
         has_dataset = recipe_count >= MINIMUM_RECIPES_FOR_FULL_DATASET
-        has_indices = get_vector_ids_path().exists() and bm25_index_exists(get_bm25_index_path())
+        has_indices = indices_ready()
         has_model = get_ranker_model_path().exists()
 
         # The LTR model is optional: without it results keep the RRF order.
@@ -94,6 +122,8 @@ class SetupManager:
             "has_dataset": has_dataset,
             "has_indices": has_indices,
             "has_model": has_model,
+            "has_finetuned_model": has_finetuned_model(),
+            "embedding_setup": get_index_build_setup().name,
             "is_running": running,
             "progress": prog,
             "current_step": step,
@@ -105,7 +135,7 @@ class SetupManager:
             "selected_limit": limit,
         }
 
-    def start_setup(self, engine: str | None = None, limit: int | None = None) -> bool:
+    def _claim(self, engine: str | None, limit: int | None) -> bool:
         with self.lock:
             if self.is_running:
                 return False
@@ -118,9 +148,20 @@ class SetupManager:
             if limit and limit > 0:
                 self.selected_limit = limit
             self.message = "Step 1/8: Initializing recipe database schema..."
+        return True
 
+    def start_setup(self, engine: str | None = None, limit: int | None = None) -> bool:
+        if not self._claim(engine, limit):
+            return False
         threading.Thread(target=self._run_setup_pipeline, daemon=True).start()
         return True
+
+    def run_blocking(self, engine: str | None = None, limit: int | None = None) -> dict[str, Any]:
+        """Run the pipeline in the calling thread (scripts, smoke test); returns get_status()."""
+        if not self._claim(engine, limit):
+            raise RuntimeError("setup is already running")
+        self._run_setup_pipeline()
+        return self.get_status()
 
     def reset_dataset(self) -> dict[str, Any]:
         """Completely wipes local database, vector index, BM25 index, and ML model."""
@@ -145,9 +186,13 @@ class SetupManager:
             except Exception as e:
                 logger.warning("Could not clear recipes table: %s", e)
 
-        # 2. Delete index and model files
+        # 2. Delete index and model files. The fine-tuned model folder itself is
+        # kept: it is downloaded, not built here.
         bm25_path = get_bm25_index_path()
-        for p in [get_vector_index_path(), get_vector_ids_path(), bm25_path, bm25_path.with_suffix(".npz"), get_ranker_model_path()]:
+        build = get_index_build_setup()
+        vector_files = {get_vector_index_path(), get_vector_ids_path(), build.index_path, build.ids_path}
+        vector_files |= {index_metadata_path(p) for p in (get_vector_index_path(), build.index_path)}
+        for p in [*sorted(vector_files), bm25_path, bm25_path.with_suffix(".npz"), get_ranker_model_path()]:
             try:
                 if p.exists():
                     os.remove(p)
@@ -159,167 +204,34 @@ class SetupManager:
         logger.info("Local recipe dataset and AI indices reset successfully.")
         return {"success": True, "message": "Dataset reset successfully."}
 
-    def _update_step(self, step: int, progress: float, status: str, message: str) -> None:
+    def _update_step(self, step: int, progress: float, message: str) -> None:
+        status = "ready" if step == 8 else f"step{step}"
         with self.lock:
             self.current_step = step
             self.progress = progress
             self.status = status
             self.message = message
-        logger.info("[Step %d/8 - %d%%] %s", step, int(progress), message)
+        _log_step(step, progress, message)
 
     def _run_setup_pipeline(self) -> None:
         try:
             db_path = get_database_path()
-            target_limit = self.selected_limit or 50000
             engine = self.selected_engine or "onnx"
-
-            # Step 1: Database Schema
-            self._update_step(1, 10.0, "step1", "Step 1/8: Creating SQLite relational schema...")
-            initialize_database(db_path)
-            time.sleep(0.3)
-
-            # Step 2: Fetch & Parse Full Catalog from Hugging Face Parquet Archive
-            engine_name = "PyTorch CUDA (GPU)" if engine == "cuda" else "FastEmbed ONNX INT8 (CPU)"
-            self._update_step(2, 15.0, "step2", f"Step 2/8: Downloading Full Recipe Dataset ({target_limit} recipes)...")
-
-            def dl_cb(pct: float, msg: str) -> None:
-                step2_pct = 15.0 + (pct / 100.0) * 17.0
-                self._update_step(2, step2_pct, "step2", f"Step 2/8: {msg}...")
-
-            parquet_path = None
-            try:
-                parquet_path = download_full_hf_parquet_file(progress_callback=dl_cb)
-            except Exception as e:
-                logger.warning("Parquet download encountered error: %s (will use fallback online API)", e)
-
-            online_recipes = []
-            if parquet_path and parquet_path.exists():
-                def parse_cb(parsed_so_far: int, target: int) -> None:
-                    pct = 25.0 + (parsed_so_far / target) * 10.0
-                    self._update_step(2, pct, "step2", f"Step 2/8: Parsed {parsed_so_far:,} / {target:,} recipes from parquet archive...")
-
-                self._update_step(2, 25.0, "step2", f"Step 2/8: Parsing {target_limit:,} recipes from parquet archive...")
-                online_recipes = load_recipes_from_parquet(parquet_path, limit=target_limit, progress_callback=parse_cb)
-
-            if len(online_recipes) < min(100, target_limit):
-                self._update_step(2, 34.0, "step2", "Step 2/8: Fetching online recipes from Hugging Face...")
-                hf_rows = fetch_online_recipes_from_huggingface(limit=min(target_limit, 200))
-                for r in hf_rows:
-                    if not any(x["title"].lower() == r["title"].lower() for x in online_recipes):
-                        online_recipes.append(r)
-
-            all_recipes = list(CORE_RECIPE_CATALOG)
-            seen_titles = {r["title"].strip().lower() for r in all_recipes}
-            for r in online_recipes:
-                clean_t = r["title"].strip().lower()
-                if clean_t not in seen_titles:
-                    seen_titles.add(clean_t)
-                    all_recipes.append(r)
-            total = len(all_recipes)
-
-            # Step 3: Fast Batch Ingestion into SQLite
-            self._update_step(3, 35.0, "step3", f"Step 3/8: Ingesting and normalizing {total:,} recipes into SQLite database...")
-            with get_connection(db_path) as conn:
-                conn.execute("DELETE FROM recipes")
-                batch_records = []
-                for r in all_recipes:
-                    batch_records.append((
-                        r["title"],
-                        json.dumps(r["ingredients"]),
-                        json.dumps(r["ingredient_details"]),
-                        json.dumps(r["instructions"]),
-                        r["cooking_time"],
-                        r["difficulty"],
-                        r["servings"],
-                        r["category"],
-                    ))
-                chunk_size = 25000
-                for c_idx in range(0, len(batch_records), chunk_size):
-                    slice_records = batch_records[c_idx : c_idx + chunk_size]
-                    conn.executemany(
-                        """
-                        INSERT INTO recipes (title, ingredients, ingredient_details, instructions, cooking_time, difficulty, servings, category)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        """,
-                        slice_records,
-                    )
-                    conn.commit()
-                    inserted_cnt = min(total, c_idx + len(slice_records))
-                    step3_pct = 35.0 + (inserted_cnt / total) * 5.0
-                    self._update_step(3, step3_pct, "step3", f"Step 3/8: Ingested {inserted_cnt:,} / {total:,} recipes into SQLite...")
-
-            # Dietary tags, allergens and nutrition are computed once here so
-            # search can filter on them before retrieval.
-            def meta_cb(done: int, todo: int) -> None:
-                self._update_step(3, 38.0 + (done / max(todo, 1)) * 2.0, "step3",
-                                  f"Step 3/8: Precomputed dietary and nutrition data for {done:,} / {todo:,} recipes...")
-
-            if parquet_path and parquet_path.exists():
-                # Keywords, category and the ingredients past the stored twelve feed the dietary tags.
-                try:
-                    import_recipe_sources(db_path, parquet_path)
-                except Exception as e:
-                    logger.warning("Could not read recipe keywords from the parquet: %s", e)
-            populate_recipe_metadata(db_path, workers=max(1, (os.cpu_count() or 2) - 2), progress=meta_cb)
-            time.sleep(0.3)
-
-            # Step 4: AI Embedder Pre-warm & Embeddings
-            self._update_step(4, 40.0, "step4", f"Step 4/8: Computing 384-dim embeddings ({engine_name}) for {total:,} recipes...")
-            embedder = IngredientEmbedder(engine=engine)
-            with get_connection(db_path) as conn:
-                rows = conn.execute("SELECT id, title, ingredients FROM recipes ORDER BY id").fetchall()
-
-            recipe_ids: list[int] = []
-            recipe_texts: list[str] = []
-            for row in rows:
-                recipe_ids.append(row["id"])
-                ingredients = json.loads(row["ingredients"] or "[]")
-                recipe_texts.append(build_recipe_representation(row["title"], ingredients))
-
-            chunk_size = 10000
-            all_embeddings = []
-            for idx in range(0, total, chunk_size):
-                sub_texts = recipe_texts[idx : idx + chunk_size]
-                sub_emb = embedder.embed_texts(sub_texts)
-                all_embeddings.append(sub_emb)
-                done_count = min(total, idx + len(sub_texts))
-                pct = 40.0 + (done_count / total) * 28.0
-                self._update_step(4, pct, "step4", f"Step 4/8: Computed {done_count:,} / {total:,} embeddings ({engine_name})...")
-
-            import numpy as np
-            embeddings = np.vstack(all_embeddings) if all_embeddings else np.empty((0, embedder.dimension), dtype=np.float32)
-            time.sleep(0.3)
-
-            # Step 5: FAISS Dense Vector Index
-            self._update_step(5, 70.0, "step5", f"Step 5/8: Building FAISS IndexFlatIP dense vector store ({total:,} vectors)...")
-            vector_store = FaissVectorStore(dimension=embedder.dimension)
-            vector_store.add(embeddings, recipe_ids)
-            vector_store.save(get_vector_index_path(), get_vector_ids_path())
-            write_index_metadata(get_vector_index_path(), embedder, count=len(recipe_ids))
-            time.sleep(0.3)
-
-            # Step 6: BM25 Sparse Lexical Index
-            self._update_step(6, 80.0, "step6", f"Step 6/8: Building BM25Okapi sparse lexical search index ({total:,} docs)...")
-            bm25_store = BM25Store()
-            bm25_store.add_corpus(recipe_ids, recipe_texts)
-            bm25_path = get_bm25_index_path()
-            bm25_store.save(bm25_path.with_suffix(".npz"))
-            if bm25_path.suffix.lower() != ".npz":
-                # Kept for code that still checks for the JSON file.
-                bm25_store.save(bm25_path)
-            time.sleep(0.3)
+            total = ingest_dataset(db_path, self.selected_limit or 50000, self._update_step)
+            engine_name = build_indices_step(db_path, engine, total, self._update_step)
 
             # Step 7: the LTR ranker is not trained here (its dataset needs ~10k
             # hybrid searches); without a bundle, results keep the RRF order.
             if get_ranker_model_path().exists():
                 step7 = "Step 7/8: Using the existing learning-to-rank model."
             else:
-                step7 = "Step 7/8: No learning-to-rank model; results use hybrid RRF order (see docs/ltr.md)."
-            self._update_step(7, 90.0, "step7", step7)
+                step7 = ("Step 7/8: No learning-to-rank model; results use hybrid RRF order "
+                         "(python tasks.py fetch-models downloads it).")
+            self._update_step(7, 90.0, step7)
             time.sleep(0.4)
 
             # Step 8: Final Verification & Ready
-            self._update_step(8, 100.0, "ready", f"Step 8/8: Verified {total} recipes ready! Opening search...")
+            self._update_step(8, 100.0, f"Step 8/8: Verified {total} recipes ready! Opening search...")
 
             _drop_cached_search_components()
 
@@ -344,6 +256,122 @@ class SetupManager:
                 self.is_running = False
                 self.status = "error"
                 self.message = f"Setup failed: {e}"
+
+
+def ingest_dataset(db_path: Path, target_limit: int, report: StepReport = _log_step) -> int:
+    """Steps 1-3: schema, dataset download and parse, SQLite ingest, precomputed metadata.
+
+    Returns the number of recipes stored.
+    """
+    # Step 1: Database Schema
+    report(1, 10.0, "Step 1/8: Creating SQLite relational schema...")
+    initialize_database(db_path)
+
+    # Step 2: Fetch & Parse Full Catalog from Hugging Face Parquet Archive
+    report(2, 15.0, f"Step 2/8: Downloading Full Recipe Dataset ({target_limit} recipes)...")
+
+    def dl_cb(pct: float, msg: str) -> None:
+        report(2, 15.0 + (pct / 100.0) * 17.0, f"Step 2/8: {msg}...")
+
+    parquet_path = None
+    try:
+        parquet_path = download_full_hf_parquet_file(progress_callback=dl_cb)
+    except Exception as e:
+        logger.warning("Parquet download encountered error: %s (will use fallback online API)", e)
+
+    online_recipes = []
+    if parquet_path and parquet_path.exists():
+        def parse_cb(parsed_so_far: int, target: int) -> None:
+            report(2, 25.0 + (parsed_so_far / target) * 10.0,
+                   f"Step 2/8: Parsed {parsed_so_far:,} / {target:,} recipes from parquet archive...")
+
+        report(2, 25.0, f"Step 2/8: Parsing {target_limit:,} recipes from parquet archive...")
+        online_recipes = load_recipes_from_parquet(parquet_path, limit=target_limit, progress_callback=parse_cb)
+
+    if len(online_recipes) < min(100, target_limit):
+        report(2, 34.0, "Step 2/8: Fetching online recipes from Hugging Face...")
+        hf_rows = fetch_online_recipes_from_huggingface(limit=min(target_limit, 200))
+        for r in hf_rows:
+            if not any(x["title"].lower() == r["title"].lower() for x in online_recipes):
+                online_recipes.append(r)
+
+    all_recipes = list(CORE_RECIPE_CATALOG)
+    seen_titles = {r["title"].strip().lower() for r in all_recipes}
+    for r in online_recipes:
+        clean_t = r["title"].strip().lower()
+        if clean_t not in seen_titles:
+            seen_titles.add(clean_t)
+            all_recipes.append(r)
+    total = len(all_recipes)
+
+    # Step 3: Fast Batch Ingestion into SQLite
+    report(3, 35.0, f"Step 3/8: Ingesting and normalizing {total:,} recipes into SQLite database...")
+    with get_connection(db_path) as conn:
+        conn.execute("DELETE FROM recipes")
+        batch_records = []
+        for r in all_recipes:
+            batch_records.append((
+                r["title"],
+                json.dumps(r["ingredients"]),
+                json.dumps(r["ingredient_details"]),
+                json.dumps(r["instructions"]),
+                r["cooking_time"],
+                r["difficulty"],
+                r["servings"],
+                r["category"],
+            ))
+        chunk_size = 25000
+        for c_idx in range(0, len(batch_records), chunk_size):
+            slice_records = batch_records[c_idx : c_idx + chunk_size]
+            conn.executemany(
+                """
+                INSERT INTO recipes (title, ingredients, ingredient_details, instructions, cooking_time, difficulty, servings, category)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                slice_records,
+            )
+            conn.commit()
+            inserted_cnt = min(total, c_idx + len(slice_records))
+            report(3, 35.0 + (inserted_cnt / total) * 3.0,
+                   f"Step 3/8: Ingested {inserted_cnt:,} / {total:,} recipes into SQLite...")
+
+    # Dietary tags, allergens and nutrition are computed once here so
+    # search can filter on them before retrieval.
+    def meta_cb(done: int, todo: int) -> None:
+        report(3, 38.0 + (done / max(todo, 1)) * 2.0,
+               f"Step 3/8: Precomputed dietary and nutrition data for {done:,} / {todo:,} recipes...")
+
+    if parquet_path and parquet_path.exists():
+        # Keywords, category and the ingredients past the stored twelve feed the dietary tags.
+        try:
+            import_recipe_sources(db_path, parquet_path)
+        except Exception as e:
+            logger.warning("Could not read recipe keywords from the parquet: %s", e)
+    populate_recipe_metadata(db_path, workers=max(1, (os.cpu_count() or 2) - 2), progress=meta_cb)
+    return total
+
+
+def build_indices_step(db_path: Path, engine: str, total: int, report: StepReport = _log_step) -> str:
+    """Steps 4-6: embeddings, FAISS and BM25 for the setup get_index_build_setup() picks.
+
+    The vector index is written where resolve_embedding_setup() looks for it, so
+    with the fine-tuned e5 model present the app moves to e5 as soon as this
+    finishes. Returns a short label for the embedding setup.
+    """
+    engine_name = describe_embedding(engine)
+    report(4, 40.0, f"Step 4/8: Computing embeddings ({engine_name}) for {total:,} recipes...")
+
+    def progress(stage: str, done: int, todo: int) -> None:
+        if stage == "embed":
+            report(4, 40.0 + (done / max(todo, 1)) * 28.0,
+                   f"Step 4/8: Computed {done:,} / {todo:,} embeddings ({engine_name})...")
+        elif stage == "faiss":
+            report(5, 70.0, f"Step 5/8: Building FAISS dense vector index ({todo:,} vectors)...")
+        else:
+            report(6, 80.0, f"Step 6/8: Building BM25 sparse lexical index ({todo:,} docs)...")
+
+    build_search_indices(db_path, get_index_build_setup(), engine=engine, progress=progress)
+    return engine_name
 
 
 def _drop_cached_search_components() -> None:

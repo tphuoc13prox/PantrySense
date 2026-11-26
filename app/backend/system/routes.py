@@ -24,6 +24,8 @@ class SetupStatusResponse(BaseModel):
     has_dataset: bool
     has_indices: bool
     has_model: bool
+    has_finetuned_model: bool = False
+    embedding_setup: str = "minilm"
     is_running: bool
     progress: float
     current_step: int = 0
