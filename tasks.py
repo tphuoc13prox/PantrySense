@@ -2,8 +2,8 @@
 
     python tasks.py <command> [extra args passed to the underlying tool]
 
-Commands: install, test, test-all, lint, typecheck, run, build-index,
-train-ranker, docker-build, docker-run.
+Commands: install, test, test-all, lint, typecheck, run, fetch-models,
+build-index, train-ranker, docker-build, docker-run.
 """
 
 from __future__ import annotations
@@ -57,6 +57,11 @@ def run(extra: list[str]) -> int:
     return _run(PY, "-m", "uvicorn", "app.backend.main:app", "--reload", "--port", "8000", extra=extra)
 
 
+def fetch_models(extra: list[str]) -> int:
+    """Download the fine-tuned e5 model and the LTR ranker from the GitHub release."""
+    return _run(PY, "-m", "scripts.fetch_models", extra=extra)
+
+
 def build_index(extra: list[str]) -> int:
     """Build the FAISS and BM25 indices from data/recipes.db."""
     return _run(PY, "-m", "scripts.build_vector_index", extra=extra)
@@ -88,6 +93,7 @@ COMMANDS = {
     "lint": lint,
     "typecheck": typecheck,
     "run": run,
+    "fetch-models": fetch_models,
     "build-index": build_index,
     "train-ranker": train_ranker,
     "docker-build": docker_build,
