@@ -105,7 +105,7 @@ python tasks.py reproduce --quick     # tiny settings, checks the chain runs
 ```
 
 The defaults are the settings behind the published models. The full chain
-takes about two hours on the laptop above, with the fine-tune on its RTX 4050.
+takes about 1.5 hours on the laptop above, with the fine-tune on its RTX 4050.
 The steps, timings and what should come out are in
 [docs/reproduce.md](docs/reproduce.md).
 
