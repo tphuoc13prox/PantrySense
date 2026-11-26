@@ -18,6 +18,7 @@ const detailView = byId("detail-view");
 const progressBar = byId("setup-progress-bar");
 const statusText = byId("setup-status-text");
 const progressPercent = byId("setup-progress-percent");
+const modelHint = byId("setup-model-hint");
 
 let pollId = null;
 let onReady = () => {};
@@ -26,6 +27,26 @@ function showApp() {
   setupView.classList.add("hidden");
   searchView.classList.remove("hidden");
   onReady();
+}
+
+// The setup screen never downloads the pretrained models; it only says how.
+function showModelHint(data) {
+  const missing = [];
+  if (data.has_finetuned_model === false) missing.push("fine-tuned e5 model");
+  if (data.has_model === false) missing.push("learning-to-rank model");
+  if (missing.length === 0) {
+    modelHint.classList.add("hidden");
+    return;
+  }
+  modelHint.textContent = "";
+  modelHint.append(
+    `No ${missing.join(" or ")} found, so search uses the fallback (MiniLM, RRF order). ` +
+      "For the full pipeline, stop the app, run ",
+  );
+  const cmd = document.createElement("code");
+  cmd.textContent = "python tasks.py fetch-models";
+  modelHint.append(cmd, " and start it again.");
+  modelHint.classList.remove("hidden");
 }
 
 function updateStepper(currentStep) {
@@ -82,6 +103,8 @@ async function checkSetup() {
       showApp();
       return;
     }
+
+    showModelHint(data);
 
     hideTabViews();
     detailView.classList.add("hidden");
