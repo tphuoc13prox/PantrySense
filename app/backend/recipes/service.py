@@ -21,10 +21,12 @@ from app.backend.config import (
 from app.backend.database.connection import get_connection
 from app.backend.database.recipe_metadata import (
     METADATA_SELECT_COLUMNS,
+    SOURCE_JOIN,
+    SOURCE_SELECT_COLUMNS,
     MetadataIndex,
     RecipeMetadata,
-    compute_recipe_metadata,
-    metadata_from_row,
+    metadata_for_row,
+    source_tags,
 )
 from app.backend.ranking.ml_ranker import MLRecipeRanker
 from app.backend.recipes import dietary, nutrition, substitution
@@ -383,9 +385,10 @@ class RecipeSearchService:
             rows = connection.execute(
                 f"""
                 SELECT r.id, r.title, r.ingredients, r.ingredient_details, r.cooking_time, r.difficulty,
-                       r.servings, r.category, {METADATA_SELECT_COLUMNS}
+                       r.servings, r.category, {METADATA_SELECT_COLUMNS}, {SOURCE_SELECT_COLUMNS}
                 FROM recipes r
                 LEFT JOIN recipe_metadata m ON m.recipe_id = r.id
+                {SOURCE_JOIN}
                 WHERE r.id IN ({placeholders})
                 """,
                 candidate_ids,
@@ -397,9 +400,7 @@ class RecipeSearchService:
         for row in rows:
             recipe_id = row["id"]
             recipe_ingredients = json.loads(row["ingredients"] or "[]")
-            meta = metadata_from_row(row) or compute_recipe_metadata(
-                recipe_ingredients, row["servings"], json.loads(row["ingredient_details"] or "[]")
-            )
+            meta = metadata_for_row(row)
 
             if not _satisfies_filters(
                 dietary_tags=meta.dietary_tags,
@@ -444,18 +445,17 @@ class RecipeSearchService:
             rows = connection.execute(
                 f"""
                 SELECT r.id, r.title, r.ingredients, r.ingredient_details, r.cooking_time, r.servings,
-                       r.category, {METADATA_SELECT_COLUMNS}
+                       r.category, {METADATA_SELECT_COLUMNS}, {SOURCE_SELECT_COLUMNS}
                 FROM recipes r
                 LEFT JOIN recipe_metadata m ON m.recipe_id = r.id
+                {SOURCE_JOIN}
                 ORDER BY r.title
                 """
             ).fetchall()
 
         for row in rows:
             recipe_ingredients = json.loads(row["ingredients"] or "[]")
-            meta = metadata_from_row(row) or compute_recipe_metadata(
-                recipe_ingredients, row["servings"], json.loads(row["ingredient_details"] or "[]")
-            )
+            meta = metadata_for_row(row)
 
             if not _satisfies_filters(
                 dietary_tags=meta.dietary_tags,
@@ -475,19 +475,12 @@ class RecipeSearchService:
     def get_by_id(self, recipe_id: int) -> RecipeDetail | None:
         with get_connection(self.database_path) as connection:
             row = connection.execute(
-                """
-                SELECT
-                    id,
-                    title,
-                    ingredients,
-                    ingredient_details,
-                    instructions,
-                    cooking_time,
-                    difficulty,
-                    servings,
-                    category
-                FROM recipes
-                WHERE id = ?
+                f"""
+                SELECT r.id, r.title, r.ingredients, r.ingredient_details, r.instructions,
+                       r.cooking_time, r.difficulty, r.servings, r.category, {SOURCE_SELECT_COLUMNS}
+                FROM recipes r
+                {SOURCE_JOIN}
+                WHERE r.id = ?
                 """,
                 (recipe_id,),
             ).fetchone()
@@ -506,8 +499,10 @@ class RecipeSearchService:
 
         # A single recipe: compute everything fresh, including the
         # per-ingredient nutrition breakdown and substitutions.
-        dietary_tags = dietary.classify_recipe_dietary(raw_ingredients)
-        allergens = dietary.detect_recipe_allergens(raw_ingredients)
+        names = raw_ingredients + json.loads(row["src_extra_ingredients"] or "[]")
+        tags = source_tags(json.loads(row["src_keywords"] or "[]"), row["src_category"])
+        dietary_tags = dietary.classify_recipe_dietary(names, title=row["title"], tags=tags)
+        allergens = dietary.detect_recipe_allergens(names, title=row["title"], tags=tags)
         raw_nut = nutrition.calculate_recipe_nutrition(
             raw_ingredients, servings=row["servings"], ingredient_details=stored_details or None
         )

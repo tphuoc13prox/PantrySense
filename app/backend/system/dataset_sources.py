@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from app.backend.config import get_database_path
+from app.backend.database.recipe_metadata import RecipeSource, store_recipe_sources
 from app.backend.system.recipe_parsing import (
     _parse_c_vector,
     _parse_duration_minutes,
@@ -18,6 +19,65 @@ from app.backend.system.recipe_parsing import (
 )
 
 logger = logging.getLogger("pantrysense.setup")
+
+# Ingredients kept in recipes.ingredients; the rest go to recipe_source.
+MAX_STORED_INGREDIENTS = 12
+
+
+def _short_ingredient_name(item: str) -> str:
+    """The stored form of an ingredient name: cleaned, at most three words ("" if unusable)."""
+    clean_name = re.sub(r"[^\w\s-]", "", item.lower()).strip()
+    if not clean_name or len(clean_name) <= 1:
+        return ""
+    return " ".join(clean_name.split()[:3])
+
+
+def load_recipe_sources_from_parquet(parquet_path: Path) -> dict[str, RecipeSource]:
+    """Keywords, category and cut-off ingredients per recipe, keyed by lower-cased title.
+
+    Mirrors ``load_recipes_from_parquet``: the first usable row of a title wins,
+    as it does when the recipes are loaded.
+    """
+    import pyarrow.parquet as pq
+
+    sources: dict[str, RecipeSource] = {}
+    columns = ["Name", "Keywords", "RecipeCategory", "RecipeIngredientParts"]
+    for batch in pq.ParquetFile(parquet_path).iter_batches(batch_size=20000, columns=columns):
+        cols = batch.to_pydict()
+        for name, keywords, category, parts in zip(
+            cols["Name"], cols["Keywords"], cols["RecipeCategory"], cols["RecipeIngredientParts"], strict=True
+        ):
+            title = str(name or "").strip()
+            key = title.lower()
+            if len(title) < 2 or key in sources:
+                continue
+            names: list[str] = []
+            for item in _parse_c_vector(parts or []):
+                short = _short_ingredient_name(item)
+                if short and short not in names:
+                    names.append(short)
+            if not names:
+                continue
+            sources[key] = RecipeSource(
+                keywords=_parse_c_vector(keywords or []),
+                category=str(category).strip() if category else None,
+                extra_ingredients=names[MAX_STORED_INGREDIENTS:],
+            )
+    return sources
+
+
+def import_recipe_sources(database_path: Path | None, parquet_path: Path) -> int:
+    """Fill ``recipe_source`` from the dataset parquet; returns the rows written.
+
+    Curated recipes (core catalog, seed data) keep no source row even when the
+    dataset has a recipe of the same title, since theirs is not that recipe.
+    """
+    from app.backend.database.seed_data import SEED_RECIPES
+    from app.backend.system.core_catalog import CORE_RECIPE_CATALOG
+
+    sources = load_recipe_sources_from_parquet(parquet_path)
+    curated = [r["title"] for r in CORE_RECIPE_CATALOG] + [r["title"] for r in SEED_RECIPES]
+    return store_recipe_sources(database_path, sources, skip_titles=curated)
 
 
 def download_full_hf_parquet_file(progress_callback: Any = None) -> Path:
@@ -120,10 +180,8 @@ def load_recipes_from_parquet(
 
             raw_q = _parse_c_vector(ing_quants[i]) if i < len(ing_quants) else []
             for idx, item in enumerate(raw_items):
-                clean_name = re.sub(r"[^\w\s-]", "", item.lower()).strip()
-                if clean_name and len(clean_name) > 1:
-                    words = clean_name.split()
-                    short_name = " ".join(words[:3])
+                short_name = _short_ingredient_name(item)
+                if short_name:
                     if short_name not in parsed_ingredients:
                         parsed_ingredients.append(short_name)
                         q_val = 1.0
@@ -170,8 +228,8 @@ def load_recipes_from_parquet(
 
             recipes.append({
                 "title": title,
-                "ingredients": parsed_ingredients[:12],
-                "ingredient_details": ingredient_details[:12],
+                "ingredients": parsed_ingredients[:MAX_STORED_INGREDIENTS],
+                "ingredient_details": ingredient_details[:MAX_STORED_INGREDIENTS],
                 "instructions": parsed_instr[:10],
                 "cooking_time": min(max(cooking_time, 5), 180),
                 "difficulty": "medium" if cooking_time > 25 else "easy",

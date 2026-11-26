@@ -13,9 +13,15 @@ It only reads the data files; nothing is rebuilt or written next to them.
 File and model paths in the results are written relative to the project (or
 as <data-dir>/... for a data directory outside it), never as absolute paths.
 
+The embedding model and index are chosen as the app chooses them
+(``config.resolve_embedding_setup``): the fine-tuned e5 setup when all of its
+files are in the data directory, MiniLM otherwise. ``--embedding e5`` or
+``--embedding minilm`` forces one; the results record which one ran.
+
 Example:
     python scripts/run_eval.py --data-dir data
     python scripts/run_eval.py --data-dir ... --limit 50 --name smoke
+    python scripts/run_eval.py --data-dir data --embedding minilm
 """
 from __future__ import annotations
 
@@ -35,8 +41,6 @@ sys.path.insert(0, str(ROOT))
 
 DATA_FILES = {
     "PANTRYSENSE_DB_PATH": "recipes.db",
-    "PANTRYSENSE_VECTOR_INDEX_PATH": "recipe_vectors.index",
-    "PANTRYSENSE_VECTOR_IDS_PATH": "recipe_vector_ids.json",
     "PANTRYSENSE_BM25_INDEX_PATH": "recipe_bm25.json",
     "PANTRYSENSE_RANKER_MODEL_PATH": "ranker_model.joblib",
     "PANTRYSENSE_INGREDIENT_VOCAB_PATH": "ingredient_vocab.json",
@@ -76,6 +80,8 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--queries", type=Path, default=ROOT / "eval" / "queries_v1.jsonl")
     p.add_argument("--data-dir", type=Path, default=None,
                    help="folder with recipes.db, indices and ranker; sets any PANTRYSENSE_*_PATH not already set")
+    p.add_argument("--embedding", choices=("auto", "e5", "minilm"), default="auto",
+                   help="embedding model and index: the app default (auto), or force fine-tuned e5 or MiniLM")
     p.add_argument("--out-dir", type=Path, default=ROOT / "eval" / "results")
     p.add_argument("--name", default=None, help="result file stem (default: <queries stem>_topk<N>)")
     p.add_argument("--limit", type=int, default=None, help="only the first N queries")
@@ -97,10 +103,39 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
+EMBEDDING_VARS = ("PANTRYSENSE_EMBEDDING_MODEL", "PANTRYSENSE_VECTOR_INDEX_PATH", "PANTRYSENSE_VECTOR_IDS_PATH")
+
+
+def configure_embedding(data_dir: Path | None, prefer: str) -> str:
+    """Point the embedding env vars at the setup the app would pick (or the forced one).
+
+    Explicitly set variables are kept unless a setup is forced. Returns the
+    setup name ("e5-finetuned" or "minilm").
+    """
+    from app.backend import config as cfg
+
+    if prefer == "auto" and all(os.environ.get(v) for v in EMBEDDING_VARS):
+        return "e5-finetuned" if cfg.uses_finetuned_embedding(data_dir) else "minilm"
+    setup = cfg.resolve_embedding_setup(data_dir.resolve() if data_dir else None, prefer)
+    if setup.name == "e5-finetuned":
+        missing = cfg.missing_finetuned_files(data_dir.resolve() if data_dir else None)
+        if missing:
+            raise SystemExit("Fine-tuned e5 files missing: " + ", ".join(cfg.display_path(p) for p in missing))
+    values = {"PANTRYSENSE_EMBEDDING_MODEL": setup.model, "PANTRYSENSE_VECTOR_INDEX_PATH": str(setup.index_path),
+              "PANTRYSENSE_VECTOR_IDS_PATH": str(setup.ids_path)}
+    for var, value in values.items():
+        if prefer == "auto":
+            os.environ.setdefault(var, value)
+        else:
+            os.environ[var] = value
+    return setup.name
+
+
 def configure_env(args: argparse.Namespace) -> None:
     if args.data_dir is not None:
         for var, fname in DATA_FILES.items():
             os.environ.setdefault(var, str((args.data_dir / fname).resolve()))
+    args.embedding_setup = configure_embedding(args.data_dir, args.embedding)
     # The embedding model is expected in the local HF cache; skip network checks.
     os.environ.setdefault("HF_HUB_OFFLINE", "1")
     for var in ("PANTRYSENSE_AUTO_BUILD_INDEX", "PANTRYSENSE_AUTO_OPEN_BROWSER", "PANTRYSENSE_AUTO_SHUTDOWN"):
@@ -119,7 +154,8 @@ def configure_env(args: argparse.Namespace) -> None:
             os.environ["PANTRYSENSE_EMBEDDER_ENGINE"] = "cpu"
     if args.pipeline_top_k is not None:
         os.environ["PANTRYSENSE_SEMANTIC_TOP_K"] = str(args.pipeline_top_k)
-    missing = [v for v in DATA_FILES if not Path(os.environ.get(v, "")).is_file()]
+    file_vars = [*DATA_FILES, "PANTRYSENSE_VECTOR_INDEX_PATH", "PANTRYSENSE_VECTOR_IDS_PATH"]
+    missing = [v for v in file_vars if not Path(os.environ.get(v, "")).is_file()]
     if missing:
         raise SystemExit(f"Missing data files (set --data-dir or env vars): {', '.join(missing)}")
 
@@ -446,6 +482,8 @@ def main(argv: list[str] | None = None) -> int:
             "processor": platform.processor(),
             "embedder_engine": embedder.engine,
             "embedder_backend": embed_backend,
+            "embedding_setup": args.embedding_setup,
+            "embedding_choice": args.embedding,
             "embedding_model": cfg.display_path(embedder.model_name),
             "vector_index": cfg.get_vector_index_path().name,
             "vector_index_metadata": index_meta,
@@ -499,7 +537,8 @@ def render_markdown(res: dict) -> str:
         f"- Layer (a) candidate depth K={s['candidate_k']}; layer (b) pipeline SEMANTIC_TOP_K={s['pipeline_semantic_top_k']} "
         f"(lexical mode is hard-coded to {s['lexical_pipeline_top_k']}); semantic threshold {s['semantic_threshold']}; "
         f"RRF k={s['rrf_k']}; coverage threshold {s['coverage_threshold']} ({s['coverage_threshold_le2_ingredients']} for <=2 ingredients)",
-        f"- Embedder: {env['embedder_backend']}, model `{env.get('embedding_model', 'unknown')}`; "
+        f"- Embedder: {env['embedder_backend']}, model `{env.get('embedding_model', 'unknown')}`"
+        f" ({env.get('embedding_setup', 'unknown')}, chosen by {env.get('embedding_choice', 'auto')}); "
         f"ML ranker: {env['ml_ranker_model']} "
         f"(loaded={env['ml_ranker_loaded']}, produced scores on {env['ml_scored_queries']} queries)",
         f"- {env['platform']}, Python {env['python']}; single process, sequential queries, {s['warmup_queries']} warm-up queries",

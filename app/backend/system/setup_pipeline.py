@@ -28,6 +28,7 @@ from app.backend.system.core_catalog import CORE_RECIPE_CATALOG
 from app.backend.system.dataset_sources import (
     download_full_hf_parquet_file,
     fetch_online_recipes_from_huggingface,
+    import_recipe_sources,
     load_recipes_from_parquet,
 )
 
@@ -253,6 +254,12 @@ class SetupManager:
                 self._update_step(3, 38.0 + (done / max(todo, 1)) * 2.0, "step3",
                                   f"Step 3/8: Precomputed dietary and nutrition data for {done:,} / {todo:,} recipes...")
 
+            if parquet_path and parquet_path.exists():
+                # Keywords, category and the ingredients past the stored twelve feed the dietary tags.
+                try:
+                    import_recipe_sources(db_path, parquet_path)
+                except Exception as e:
+                    logger.warning("Could not read recipe keywords from the parquet: %s", e)
             populate_recipe_metadata(db_path, workers=max(1, (os.cpu_count() or 2) - 2), progress=meta_cb)
             time.sleep(0.3)
 
