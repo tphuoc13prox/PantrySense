@@ -1,0 +1,27 @@
+{
+  "tag": "v1.2.0",
+  "repository": "tphuoc13prox/pantrysense",
+  "asset": {
+    "name": "pantrysense-models-v1.2.0.zip",
+    "size": 116971218,
+    "sha256": "b93bf0b7a3b8ff46f77ff1b48b7c13d6fb69d383a40dc3f005f3020ed307d37a",
+    "replace": [
+      "models/e5-small-pantry",
+      "ranker_model.joblib"
+    ],
+    "files": {
+      "models/e5-small-pantry/1_Pooling/config.json": "bb80272f7adad76ce93073c25e18113ee66be1e91f60bcdd72aa41d05b28247e",
+      "models/e5-small-pantry/LICENSE": "7df20dcdf9197e9945c14858d41c60f11b52b93e5b69e2b63416b874d598d322",
+      "models/e5-small-pantry/README.md": "17cfdbaca23acd6d9583bd758d9cd9b221a4a002ad855ec0381e2939d647b966",
+      "models/e5-small-pantry/config.json": "6da7e25cb530a6b78afd1891047fccc381761dc40e0f7ea60f4e372f6c00c5a8",
+      "models/e5-small-pantry/config_sentence_transformers.json": "b749d6555854088309ea6b0f80757982d19c6e705538eeb79156ef5b75b02286",
+      "models/e5-small-pantry/model.safetensors": "935a31b301353d53986ec3e946bda19ff37fbb9bb7c81c96582fffa6de8fbb62",
+      "models/e5-small-pantry/modules.json": "5286260f53f0f5d318eb02f1565fd30f7ec7c6d305f41ad29e2bb3ec974046a6",
+      "models/e5-small-pantry/sentence_bert_config.json": "5fee3fcdc4a727fad422f0fed0c867b0921eefa9051de221521956ed42eb4c19",
+      "models/e5-small-pantry/tokenizer.json": "2fc687b11de0bc1b3d8348f92e3b49ef1089a621506c7661fbf3248fcd54947e",
+      "models/e5-small-pantry/tokenizer_config.json": "2cf5d6fba65b1febe4da54ad136c23158ad9879fa7a114bbd7d4df919e817ee4",
+      "models/e5-small-pantry/train_meta.json": "0d6b9f88cb78d84f02e908bf7650aed727d42b3dd18542ef3ab7845b8228db26",
+      "ranker_model.joblib": "196154d0d0403c783b4c0e8af286e0c451f7f9038295fa4fd2ab96601ba15273"
+    }
+  }
+}

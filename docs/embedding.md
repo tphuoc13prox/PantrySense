@@ -162,5 +162,6 @@ python scripts/finetune_embedder.py --db data/recipes.db build-index --model dat
   sentence-transformers at roughly 10x FastEmbed's latency. An ONNX export of the
   fine-tuned model, checked with `drift`, would bring that back down.
 - One seed, one epoch, no hyperparameter search. Variance between runs was not measured.
-- The fine-tuned models are not in git (`data/models/` is ignored) and have to be
-  retrained with the commands above or shipped separately.
+- The fine-tuned models are not in git (`data/models/` is ignored). The e5 model
+  is published as a release asset since v1.2.0 (`python tasks.py fetch-models`);
+  the MiniLM fine-tune is not published and has to be retrained with the command above.

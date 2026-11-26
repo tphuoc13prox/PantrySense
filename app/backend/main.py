@@ -22,10 +22,10 @@ from app.backend.config import (
     get_auto_open_browser,
     get_bm25_index_path,
     get_embedding_model_name,
+    get_index_build_setup,
     get_ranker_model_path,
     get_ranking_mode,
     get_retrieval_mode,
-    get_vector_ids_path,
     get_vector_index_path,
     missing_finetuned_files,
     uses_finetuned_embedding,
@@ -58,7 +58,7 @@ def log_search_setup() -> None:
     else:
         logger.info(
             "Ranking: no LTR bundle at %s, results keep the hybrid RRF order. "
-            "Build it with scripts/build_ltr_dataset.py and scripts/train_ranker.py (docs/ltr.md).",
+            "Download it with 'python tasks.py fetch-models' or train it (docs/ltr.md).",
             get_ranker_model_path(),
         )
 
@@ -83,7 +83,9 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     if get_auto_build_index():
         mode = get_retrieval_mode()
         if mode in ("semantic", "hybrid", "lexical"):
-            ids_path = get_vector_ids_path()
+            # The build target, not the current setup: with the fine-tuned model
+            # in data/ but no e5 index yet this builds the e5 index.
+            ids_path = get_index_build_setup().ids_path
             bm25_path = get_bm25_index_path()
 
             sem_missing = mode in ("semantic", "hybrid") and not ids_path.exists()
@@ -118,7 +120,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await monitor.stop()
 
 
-app = FastAPI(title="PantrySense API", version="1.1.0", lifespan=lifespan)
+app = FastAPI(title="PantrySense API", version="1.2.0", lifespan=lifespan)
 app.include_router(ingredients_router)
 app.include_router(recipes_router)
 app.include_router(pantry_router)
